@@ -5,7 +5,9 @@
 import { GpuSolver3D } from '../src/avbd3d/gpu/solver.ts';
 import { Rigid } from '../src/avbd3d/ref/body.ts';
 import { Solver } from '../src/avbd3d/ref/solver.ts';
-import { device } from './device.ts';
+import { device, skip } from './device.ts';
+
+if (skip) { console.log(`no GPU: ${skip}`); process.exit(0); }
 
 async function run(name: string, count: number, colorOf: (i: number) => number) {
   const make = (fuse: boolean) => {

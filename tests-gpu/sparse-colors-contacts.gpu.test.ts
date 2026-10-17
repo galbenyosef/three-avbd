@@ -7,8 +7,9 @@ import { gpuTest } from './device.ts';
 
 // The fused tail against the per-colour dispatches, with contacts in the tail colours (the other
 // fusion tests' bodies only have joints). Boxes land on the ground apart from each other, so any
-// colours are a proper colouring. `layout` puts them in the tail one per colour (single chunks),
-// all in one tail colour (several chunks), or below the tail (the control: both sides run `primal`).
+// colours are a proper colouring. `colorOf` puts them in the tail one per colour (single chunks),
+// all in one tail colour (several chunks), or below the tail (the control: a colour cap of 16 leaves
+// fusion inactive, so both sides run `primal`).
 for (const [name, colorOf] of [
   ['control below the tail', (i: number) => i % 16],
   ['one body per tail colour', (i: number) => 16 + i % 48],
