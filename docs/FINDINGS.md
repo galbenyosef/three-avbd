@@ -1538,7 +1538,9 @@ deferred-writes variant below gives a third result), and it is scheduling-depend
   recorded; medians of 7 trials, two runs each). It was not kept.
 
 Fusion stays off by default. The per-colour path is the replay reference only while no clash
-spans workgroups; the play session's baseline repeats match, but that is not guaranteed. An exact
+spans workgroups. In the play session, three recordings with fusion off agree on all 2,940
+hashes (the baseline, its repeat, and the merged main on published 0.3.0), but that is not
+guaranteed. An exact
 fused path needs the clashing colour dispatched on its own without encoding the rest of the tail,
 or clashes given one defined order in both paths (which changes the default path's results on
 clash steps and makes them deterministic).
