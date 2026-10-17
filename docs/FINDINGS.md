@@ -1498,3 +1498,35 @@ restored the first 900 frames. The focused synthetic tests did not expose this
 real contact/joint transition. Earlier fusion timings describe the experimental
 path, not a replay-safe default. The exact fused-entry-point difference remains
 unresolved; keep the original per-color dispatch path for deterministic replay.
+
+### STE-2538 fused tail: the frame-816 cause (2026-10-17)
+
+The divergence is a clashing colouring in a tail colour. When bodies of one colour share a
+constraint (the Jones-Plassmann rounds or the cap ran out; such bodies stay pending and are
+counted as clashes, and those with no colour go to the last colour, which is a tail colour once
+the cap passes 16), the colour's own dispatch solves its 8-body workgroups side by side, while
+`primalSparse` solves the same chunks one after another in one workgroup. With a proper colouring
+the two are bit-identical.
+
+- `tests-gpu/sparse-colors-contacts.gpu.test.ts`: fused equals per-colour bit for bit with
+  contacts in the tail (one body a colour, and one colour over five chunks), and in a control
+  below the tail.
+- `tests-gpu/sparse-colors-clash.diag.ts` (a diagnostic, not a test): equal for a proper tail
+  colouring over several chunks and for a clash inside one chunk; different from the first step
+  for 40 jointed bodies sharing one tail colour, in each of four runs. With all 40 sharing a
+  colour, two per-colour solvers on the same scene also differed from step 2 in one of four runs:
+  a clash across workgroups is scheduling-dependent in the default path too.
+- The play session (three-destruction, a local pack with fusion on): deferring a colour's writes
+  until all its chunks have read still stops at frame 816, with a different hash; falling back
+  to the per-colour dispatches on any step that counts a clash (`argsColors`:
+  `counters[C_CLASHES] == 0`) reproduces all 2,940 baseline hashes, in one replay.
+- The earlier "zero clashes": `beginFrame` clears `C_CLASHES` every step, and the destruction
+  engine copies the counters once a readback, so a clash in any other step is never seen.
+- That fallback kept every per-colour dispatch encoded (zero-sized in the tail when fused), and a
+  zero-sized indirect dispatch costs as much as a real one: 400 bodies, 64 colours, 10
+  iterations, wall time a step, per-colour 6.5-6.7 ms, fused 2.9 ms, fused with the fallback
+  6.7-7.0 ms. It was not kept.
+
+Fusion stays off by default. An exact fused path needs the clashing colour dispatched on its own
+without encoding the rest of the tail, or clashes given one defined order in both paths (which
+changes the default path's results on clash steps).
