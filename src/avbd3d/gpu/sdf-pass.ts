@@ -5,7 +5,7 @@ import { collisionParams, type CollisionParams } from '../ref/sdf/manifold.ts';
 import { sdfHistoryWGSL } from './wgsl-sdf-history.ts';
 import { sdfNarrowphaseWGSL } from './wgsl-sdf.ts';
 import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, SDF_BODY_WORDS, SDF_RESULT_WORDS, type SdfAtlas, type SdfPair, type GpuSdfResult } from './sdf-layout.ts';
-export interface SdfPassOptions { maxBodies: number; maxPairs: number; maxAtlasBytes?: number; meshPlaneContacts?: boolean }
+export interface SdfPassOptions { maxBodies: number; maxPairs: number; maxAtlasBytes?: number; meshVertexContacts?: boolean }
 /** Standalone pass, also used by the internal production collision bridge.
  * Pairs are supplied by the caller; previous slots explicitly remap cache across
  * pair reorderings. Change pair keys when body slots are recycled or fields change.
@@ -31,7 +31,7 @@ export class SdfNarrowphasePass {
     const limit = Math.min(device.limits.maxBufferSize, device.limits.maxStorageBufferBindingSize);
     if (options.maxBodies*SDF_BODY_WORDS*4>limit || options.maxPairs*SDF_RESULT_WORDS*4>limit || Math.ceil(options.maxPairs/64)>device.limits.maxComputeWorkgroupsPerDimension) throw new Error('SDF pass capacities exceed device limits');
     if (device.limits.maxStorageBuffersPerShaderStage<5 || device.limits.maxComputeInvocationsPerWorkgroup<64) throw new Error('Device cannot run the SDF pass');
-    const atlas=packSdfAtlas(fields,Math.min(options.maxAtlasBytes ?? 64*1024*1024,limit),options.meshPlaneContacts);
+    const atlas=packSdfAtlas(fields,Math.min(options.maxAtlasBytes ?? 64*1024*1024,limit),options.meshVertexContacts);
     const module=device.createShaderModule({ label: 'experimental sdf narrowphase', code: sdfNarrowphaseWGSL });
     const info=await module.getCompilationInfo(); const errors=info.messages.filter(m=>m.type==='error');
     if(errors.length) throw new Error(errors.map(m=>`${m.lineNum}:${m.linePos} ${m.message}`).join('\n'));
@@ -64,7 +64,7 @@ export class SdfNarrowphasePass {
    * unsubmitted encoder. No implicit readback or solver integration. */
   step(bodies: readonly SdfBody[], pairs: readonly SdfPair[], dt: number, params: CollisionParams=collisionParams()): void {
     if(this.disposed) throw new Error('SDF pass is disposed');
-    if(params.meshPlaneContacts && !this.options.meshPlaneContacts)throw new Error('Mesh plane supports must be enabled when creating the SDF pass');
+    if(params.meshVertexContacts && !this.options.meshVertexContacts)throw new Error('meshVertexContacts must be enabled when creating the SDF pass');
     if(bodies.length>this.options.maxBodies || pairs.length>this.options.maxPairs) throw new Error('SDF pass capacity exceeded');
     const packedBodies=packSdfBodies(bodies,this.atlas), packedPairs=packSdfPairs(pairs,bodies.length,this.count);
     const packedParams=packSdfParams(pairs.length,this.stepIndex,dt,params);
@@ -84,7 +84,7 @@ export class SdfNarrowphasePass {
   /** The caller submits this pass before preparing another step. No implicit readback. */
   encodeFromGpu(pass: GPUComputePassEncoder, bodyCount: number, pairs: readonly SdfPair[], dt: number, params: CollisionParams, preparePairs?: () => void): void {
     if(this.disposed) throw new Error('SDF pass is disposed');
-    if(params.meshPlaneContacts && !this.options.meshPlaneContacts)throw new Error('Mesh plane supports must be enabled when creating the SDF pass');
+    if(params.meshVertexContacts && !this.options.meshVertexContacts)throw new Error('meshVertexContacts must be enabled when creating the SDF pass');
     if(bodyCount>this.options.maxBodies || pairs.length>this.options.maxPairs) throw new Error('SDF pass capacity exceeded');
     const packedPairs=packSdfPairs(pairs,bodyCount,this.count);
     const packedParams=packSdfParams(pairs.length,this.stepIndex,dt,params);
@@ -98,7 +98,7 @@ export class SdfNarrowphasePass {
   /** GPU broadphase fills candidates and remaps previous slots before dispatch. */
   encodeGeneratedPairs(pass: GPUComputePassEncoder, dt: number, params: CollisionParams, preparePairs: () => void): void {
     if(this.disposed) throw new Error('SDF pass is disposed');
-    if(params.meshPlaneContacts && !this.options.meshPlaneContacts)throw new Error('Mesh plane supports must be enabled when creating the SDF pass');
+    if(params.meshVertexContacts && !this.options.meshVertexContacts)throw new Error('meshVertexContacts must be enabled when creating the SDF pass');
     const count=this.options.maxPairs;
     this.device.queue.writeBuffer(this.paramsBuffer,0,packSdfParams(count,this.stepIndex,dt,params));
     preparePairs();

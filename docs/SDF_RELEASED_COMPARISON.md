@@ -223,23 +223,26 @@ open issue. The next experiment should ensure deterministic extremity coverage a
 contact retention, with single-body fixtures before repeating the piles.
 
 
-## Experimental deterministic plane supports (disabled in the demo)
+## Mesh vertex contacts (enabled in Mesh quality)
 
-`meshPlaneContacts: true` can be passed to `World.enableSdfCollisions` for isolated
-GPU experiments with mesh fields carrying `surfaceTriangles`. It retains exact
-convex-hull vertices only for plane support queries; mesh-to-mesh collision still
-uses the non-convex field. One supplemental extremity contact fits inside the
-existing five-point pair budget, with a persistent vertex ID. A box face must cover
-the moving AABB completely; other cases fall back to the general search. The CPU
-reference rejects this GPU-only option. Standalone `SdfNarrowphasePass` users must
-also request it in construction options. Default snapshots and atlases incur no
-support-data storage or hull-building work. Opt-in query statistics include support
-vertex evaluations, so they are not purely SDF sample counts.
+`meshVertexContacts: true` (formerly `meshPlaneContacts`) can be passed to
+`World.enableSdfCollisions` for mesh fields that carry `surfaceTriangles`. The atlas packs
+every unique source vertex, up to 4096 per field.
+- **Static box top face:** the deepest vertex becomes one supplemental support contact. The
+  face must cover the moving AABB completely; other cases fall back to the general search.
+- **Two dynamic meshes:** the deepest vertex of either body inside the other's field (within
+  the trigger distance) becomes one supplemental witness contact.
 
-Isolated tilted chair/bunny tests pass with zero sampled overlap, but full-pile
-penetration regresses. Consequently **neither Released settings nor Mesh quality
-enables it**. See `measurements/sdf-plane-supports-2026-10-14.json` for the trials.
-This is a tested experimental building block, not a completed pile-penetration fix.
+Each supplemental contact fills the fifth slot of the five-point pair budget, keeps a
+persistent vertex ID, and leaves the four optimizer contacts unchanged. The CPU reference
+rejects this GPU-only option. Standalone `SdfNarrowphasePass` users must also request it in
+construction options. Without the option, snapshots and atlases carry no vertex data.
+Query statistics with the option include vertex evaluations.
+
+Mesh quality enables it for the mesh scenes. Released settings do not. The 11-seed ensembles,
+decision rule and costs are in FINDINGS (2026-10-17) and
+`measurements/sdf-mesh-witness-ensemble-2026-10-17.json`. The earlier hull-only trials are in
+`measurements/sdf-plane-supports-2026-10-14.json`.
 
 The retained-anchor audit can be reproduced with:
 

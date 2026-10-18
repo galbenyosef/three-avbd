@@ -686,7 +686,7 @@ export class World {
         if(binding.body.world!==this || !binding.body.alive || seen.has(binding.body)) throw new Error('Invalid or duplicate SDF body binding');
         seen.add(binding.body);
         let field=snapshots.get(binding.field);
-        if(!field){field=snapshotSdfField(binding.field,collision.meshPlaneContacts);snapshots.set(binding.field,field);}
+        if(!field){field=snapshotSdfField(binding.field,collision.meshVertexContacts);snapshots.set(binding.field,field);}
         assigned.set(binding.body,{field,scale:binding.scale,rotation:binding.rotation ? normalised(binding.rotation) : undefined});
       }
       this.flush();

@@ -3,8 +3,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { Quaternion, Vector3 } from 'three';
 import { create, globals } from 'webgpu';
 import { loadReleasedScene, instantiateReleased, type ReadAsset } from '../src/sdf-released/scenes.ts';
-const sceneId=Number(process.argv[2]),frames=Number(process.argv[3]),output=process.argv[4],meshPlaneContacts=process.argv[5]==='mesh-plane';
-if(![6,9].includes(sceneId)||!Number.isInteger(frames)||frames<1||frames>360||!output||(process.argv[5]!==undefined&&!meshPlaneContacts))throw new Error('Usage: sdf-contact-audit.ts scene(6|9) frames(1..360) output.json [mesh-plane]');
+const sceneId=Number(process.argv[2]),frames=Number(process.argv[3]),output=process.argv[4],meshVertexContacts=process.argv[5]==='mesh-plane';
+if(![6,9].includes(sceneId)||!Number.isInteger(frames)||frames<1||frames>360||!output||(process.argv[5]!==undefined&&!meshVertexContacts))throw new Error('Usage: sdf-contact-audit.ts scene(6|9) frames(1..360) output.json [mesh-plane]');
 const read:ReadAsset=async path=>{const b=await readFile(new URL(`../tests/fixtures/${path}`,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength) as ArrayBuffer;};
 Object.assign(globalThis,globals);
 const gpu=create([]),adapter=await gpu.requestAdapter();if(!adapter)throw new Error('No GPU adapter');
@@ -12,7 +12,7 @@ const device=await adapter.requestDevice({requiredLimits:{maxStorageBuffersPerSh
 (globalThis as typeof globalThis & {__sdfAuditGpu?:unknown}).__sdfAuditGpu=[gpu,adapter,device];
 const errors:string[]=[];device.onuncapturederror=e=>errors.push(e.error.message);
 const source=await loadReleasedScene(sceneId,read);
-const scene=meshPlaneContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshPlaneContacts:true}}}:source;
+const scene=meshVertexContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshVertexContacts:true}}}:source;
 const {world,bodies}=await instantiateReleased(scene,{device});
 try{
   for(let frame=1;frame<=frames;frame++){
@@ -29,5 +29,5 @@ try{
       normal:c.normal,force:c.lam};
   });
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(output,JSON.stringify({sceneId,frames,meshPlaneContacts,contacts:audited},null,2)+'\n');
+  await writeFile(output,JSON.stringify({sceneId,frames,meshVertexContacts,contacts:audited},null,2)+'\n');
 }finally{world.destroy();scene.dispose();device.destroy();}

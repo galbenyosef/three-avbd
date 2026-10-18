@@ -8,7 +8,7 @@ import { SdfBody } from '../src/avbd3d/ref/sdf/body.ts';
 import type { Quat, Vec3 } from '../src/lib/world.ts';
 import { jitterReleased } from './sdf-jitter.ts';
 const [sceneId,bodyA,bodyB,frames,every]=process.argv.slice(2,7).map(Number),output=process.argv[7],flags=process.argv.slice(8);
-const meshPlaneContacts=flags.includes('mesh-plane'),alphaFlag=flags.find(f=>f.startsWith('alpha='));
+const meshVertexContacts=flags.includes('mesh-plane'),alphaFlag=flags.find(f=>f.startsWith('alpha='));
 const jitter=Number(flags.find(f=>f.startsWith('jitter='))?.slice(7)??0);
 const alpha=alphaFlag?Number(alphaFlag.slice(6)):undefined;
 if(![6,9].includes(sceneId)||![bodyA,bodyB].every(i=>Number.isInteger(i)&&i>=0&&i<=27)||bodyA===bodyB||!Number.isInteger(frames)||frames<1||frames>360||!Number.isInteger(every)||every<1||!output
@@ -21,7 +21,7 @@ const device=await adapter.requestDevice({requiredLimits:{maxStorageBuffersPerSh
 (globalThis as typeof globalThis & {__sdfPairGpu?:unknown}).__sdfPairGpu=[gpu,adapter,device];
 const errors:string[]=[];device.onuncapturederror=e=>errors.push(e.error.message);
 const source=await loadReleasedScene(sceneId,read);
-const scene=jitterReleased(meshPlaneContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshPlaneContacts:true}}}:source,jitter);
+const scene=jitterReleased(meshVertexContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshVertexContacts:true}}}:source,jitter);
 const {world,bodies}=await instantiateReleased(scene,{device});
 if(alpha!==undefined)world.solver.params.alpha=alpha;
 /** Deepest vertex of `from` inside `into`'s field (positive = penetration depth). */
@@ -56,5 +56,5 @@ try{
     await device.queue.onSubmittedWorkDone();await new Promise(resolve=>setTimeout(resolve,5));
   }
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(output,JSON.stringify({sceneId,bodyA,bodyB,frames,every,meshPlaneContacts,jitter,alpha:world.solver.params.alpha,samples},null,2)+'\n');
+  await writeFile(output,JSON.stringify({sceneId,bodyA,bodyB,frames,every,meshVertexContacts,jitter,alpha:world.solver.params.alpha,samples},null,2)+'\n');
 }finally{world.destroy();scene.dispose();device.destroy();}

@@ -33,6 +33,6 @@ export function meshSurfaceVertices(field:Field):Vec[] {
   const unique=new Map<string,Vec>(),surface=field.surfaceTriangles;
   for(let i=0;i<surface.length;i+=3)unique.set(`${surface[i]},${surface[i+1]},${surface[i+2]}`,[surface[i],surface[i+1],surface[i+2]]);
   // One GPU thread scans these per pair and substep: refuse rather than risk a stalled dispatch.
-  if(unique.size>MESH_WITNESS_MAX_VERTICES)throw new Error(`meshPlaneContacts supports at most ${MESH_WITNESS_MAX_VERTICES} unique surface vertices per field (got ${unique.size}); decimate the source mesh`);
+  if(unique.size>MESH_WITNESS_MAX_VERTICES)throw new Error(`meshVertexContacts supports at most ${MESH_WITNESS_MAX_VERTICES} unique surface vertices per field (got ${unique.size}); decimate the source mesh`);
   return [...unique.values()].sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]);
 }

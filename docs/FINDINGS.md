@@ -2,6 +2,35 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — SDF interlocks: two rules tried, neither accepted
+
+Full `pnpm check` on `main` 686d4e3 (sequential, nice 15, nothing excluded): typecheck,
+142 CPU and 156 GPU tests including the five heavy workloads, and both builds pass.
+
+Bunny seed 3's remaining failure (0.058 J) is an interlock. Pair 22/5 point 179 is inside
+both meshes (phiA ≈ -2 mm, phiB ≈ -9 mm) but their outward gradients are aligned
+(∇A·∇B > 0). It pushes A down at -8 to -12 mm while B's vertices sit 0.3–1 mm inside A's
+underside, so the vertex witness is right and point 179 is wrong. With aligned gradients,
+phiA+phiB along either gradient gives no direction that resolves the overlap.
+
+- **Aligned both-inside points are not contacts** (moving pairs, `signedSeparation`): this fixes
+  the bunnies (failures 1 → 0, probes ≥5 mm 14 → 1, max peak 15.4 → 6.9 mm) but chair seed 3 now
+  fails at 0.0377 J. Trace: chair 25's floor point 719 sits 5 mm above the box face.
+  It takes the both-positive branch, whose unsigned gap normal points *down* because the chair
+  surface below it faces up and lies about 1 mm under the box face. It pushes at 257 N against
+  neighbour 270 (+y, 233 N) and pumps the chair upward. Rejected under the decision rule.
+- **Also applying static-box signed projection to every sign:** both fixtures settle, but the
+  ensemble has 3 failures per scene and chair probes ≥5 mm rise 37 → 188. Rejected.
+
+The shader is unchanged from `main`. Both mechanisms are opposing contacts within a single
+pair (mesh-mesh or mesh-floor). The next attempt should resolve such a conflict per pair: detect
+opposed active normals and keep the one consistent with the exact vertex witness or box face.
+Single-sample rules so far only move the heavy-tail failure to another seed.
+Measurements: `measurements/sdf-interlock-2026-10-18.json`.
+
+The opt-in is renamed `meshPlaneContacts` → `meshVertexContacts` (unreleased API, no alias), since it
+now covers mesh-mesh pairs. Earlier entries and measurement files keep the name they were recorded with.
+
 ## 2026-10-17 — Mesh-to-mesh vertex witnesses; mesh vertex contacts enabled for mesh piles
 
 **Fixture (chairs, jitter=1, supports on).** `sdf-pair-trace.ts` on the failing pair 10/20

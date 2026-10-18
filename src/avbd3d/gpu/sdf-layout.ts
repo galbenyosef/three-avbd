@@ -17,10 +17,10 @@ function finite(data: Float32Array, label: string): void {
   if (!data.every(Number.isFinite)) throw new Error(`${label} exceeds finite float32 range`);
 }
 /** Float4 reference storage first: no optional GPU features or lossy quantization. */
-export function packSdfAtlas(fields: readonly Field[], maxBytes = 64 * 1024 * 1024, meshPlaneContacts = false): SdfAtlas {
+export function packSdfAtlas(fields: readonly Field[], maxBytes = 64 * 1024 * 1024, meshVertexContacts = false): SdfAtlas {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 16) throw new Error('Invalid SDF atlas byte limit');
   const unique = [...new Set(fields)], offsets = new Map<Field, number>(); let words = 0;
-  const supports=new Map(unique.map(field=>[field,meshPlaneContacts?meshSurfaceVertices(field):[]]));
+  const supports=new Map(unique.map(field=>[field,meshVertexContacts?meshSurfaceVertices(field):[]]));
   for (const field of unique) {
     if (!(field instanceof VoxelField) && !(field instanceof AnalyticField && Object.hasOwn(kinds, field.spec.kind))) throw new Error('Unsupported GPU SDF: bake custom fields to voxels first');
     offsets.set(field, words / 4); words += SDF_HEADER_WORDS + (field.seeds.length + supports.get(field)!.length) * 4 + (field instanceof VoxelField ? field.grid.length : 0);
@@ -92,7 +92,7 @@ export function packSdfParams(pairCount: number, step: number, dt: number, p: Co
   const data = new Uint32Array(16), f = new Float32Array(data.buffer);
   data.set([pairCount, step, p.cacheSize, p.randomSamples]);
   f.set([dt, p.epsilon, p.alpha, p.tolerance], 4);
-  f.set([p.margin, p.replacementThreshold, +(p.signedSeparation ?? false), +(p.meshPlaneContacts ?? false)], 8);
+  f.set([p.margin, p.replacementThreshold, +(p.signedSeparation ?? false), +(p.meshVertexContacts ?? false)], 8);
   data.set([p.maxIterations, +p.warmStart, +p.curvatureSampling, +p.skipConvexSamples], 12);
   finite(f.subarray(4, 12), 'SDF parameters'); return data;
 }
