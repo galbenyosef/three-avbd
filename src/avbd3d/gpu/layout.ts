@@ -283,9 +283,12 @@ fn orthonormal(n: vec3f) -> mat3x3f {
 export const TOPOLOGY_ACCESSORS_3D = /* wgsl */ `
 alias TopoItem = Manifold;
 
-/** A body pair has one manifold, so the other body alone orders a body's contacts. */
+// SDF pairs have multiple one-point manifolds; atomic export slots are not stable.
+@group(0) @binding(8) var<storage, read> contactPoints: array<Contact>;
 fn topoSecondary(i: u32) -> u32 {
-  return 0u;
+  let m=contacts[i];
+  if((m.ids.w&15u)==0u) { return 0u; }
+  return contactPoints[m.ids.z].key & ~STICK_BIT;
 }
 
 fn topoCount() -> u32 {

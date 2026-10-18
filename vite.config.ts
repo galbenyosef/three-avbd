@@ -17,6 +17,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
+        sdf: 'sdf.html',
+        sdfReleased: 'sdf-released.html',
         demo2d: '2d.html',
         bench: 'bench.html',
         bench3d: 'bench3d.html',

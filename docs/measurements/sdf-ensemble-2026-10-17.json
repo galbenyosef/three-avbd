@@ -1,0 +1,289 @@
+{
+ "date": "2026-10-17",
+ "command": "nice -n 15 node --experimental-transform-types scripts/sdf-released-compare.ts 360 OUT mesh-quality 6,9 5 [mesh-plane] jitter=SEED",
+ "perturbation": "deterministic per-body initial position offsets, uniform +-10 um, static bodies unchanged",
+ "probe": "vertex-sampled depth every 5 frames; mm = probes >= 5 mm whose witness is mesh-to-mesh (not floor body 0)",
+ "variants": {
+  "orig": "working tree narrowphase as handed off",
+  "sign": "experimental: signedSeparation also negates mixed-sign facing moving-surface samples when dot(na,nb)>0 and dot(offsetA-offsetB,na)<0 (reverted, not retained)"
+ },
+ "runs": [
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.010343726724386215,
+   "finalDepth": 0,
+   "probesOver5mm": 2,
+   "meshMeshProbesOver5mm": 2,
+   "finalEnergy": 2.66032222534324e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0027052792720496655,
+   "finalDepth": 0.0021911177318543196,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 9.110929448352213e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 2.2621022135383965e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.03435558080673218,
+   "finalDepth": 0,
+   "probesOver5mm": 11,
+   "meshMeshProbesOver5mm": 11,
+   "finalEnergy": 0.11850109294265067
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012851163744926453,
+   "finalDepth": 0,
+   "probesOver5mm": 9,
+   "meshMeshProbesOver5mm": 9,
+   "finalEnergy": 3.859464279399166e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": true,
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.0001594418499213788
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.01132182963192463,
+   "finalDepth": 0,
+   "probesOver5mm": 10,
+   "meshMeshProbesOver5mm": 10,
+   "finalEnergy": 1.292993886841018e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.025794565677642822,
+   "finalDepth": 0.003634154796600342,
+   "probesOver5mm": 2,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 7.616506739747836e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.002225220203399658,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 6.277421892490508e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.03435558080673218,
+   "finalDepth": 0,
+   "probesOver5mm": 16,
+   "meshMeshProbesOver5mm": 11,
+   "finalEnergy": 0.12220484071443767
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012851163744926453,
+   "finalDepth": 0,
+   "probesOver5mm": 9,
+   "meshMeshProbesOver5mm": 9,
+   "finalEnergy": 9.074668578128766e-05
+  },
+  {
+   "variant": "orig",
+   "meshPlaneContacts": false,
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.020105600357055664,
+   "finalDepth": 0,
+   "probesOver5mm": 4,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.00013809068978557786
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.008126026950776577,
+   "finalDepth": 0,
+   "probesOver5mm": 2,
+   "meshMeshProbesOver5mm": 1,
+   "finalEnergy": 1.4806159779898925e-05
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.00037980009696964945
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.0040710417550439346
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.016742724925279617,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "meshMeshProbesOver5mm": 1,
+   "finalEnergy": 0.1041247847451877
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012813333421945572,
+   "finalDepth": 0,
+   "probesOver5mm": 11,
+   "meshMeshProbesOver5mm": 11,
+   "finalEnergy": 2.307327564043269e-05
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": true,
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.03061220608651638,
+   "finalDepth": 0,
+   "probesOver5mm": 5,
+   "meshMeshProbesOver5mm": 5,
+   "finalEnergy": 0.0005600055249513112
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.011291940696537495,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "meshMeshProbesOver5mm": 1,
+   "finalEnergy": 7.120184982250154e-05
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.02348637580871582,
+   "finalDepth": 0,
+   "probesOver5mm": 16,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 10.451839730131766
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.002225220203399658,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.0009775967895882583
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.020130693912506104,
+   "finalDepth": 0.0014469576999545097,
+   "probesOver5mm": 8,
+   "meshMeshProbesOver5mm": 1,
+   "finalEnergy": 0.011170073290171898
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.013914704322814941,
+   "finalDepth": 0,
+   "probesOver5mm": 15,
+   "meshMeshProbesOver5mm": 11,
+   "finalEnergy": 1.1016625960138159e-05
+  },
+  {
+   "variant": "sign",
+   "meshPlaneContacts": false,
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.021054863929748535,
+   "finalDepth": 9.626150131225586e-05,
+   "probesOver5mm": 11,
+   "meshMeshProbesOver5mm": 0,
+   "finalEnergy": 0.0003113833022192611
+  }
+ ],
+ "canonicalCurrentBaseline": {
+  "chairs": {
+   "peakDepth": 0.008101,
+   "finalDepth": 0,
+   "finalEnergy": 1.9541e-05
+  },
+  "bunnies": {
+   "peakDepth": 0.027359,
+   "finalDepth": 0.008264,
+   "finalEnergy": 0.000445598
+  },
+  "note": "jitter=0, current working tree, bit-identical across two runs; differs from sdf-stable-order-2026-10-14.json from bunny frame 16 / chair frame 77"
+ }
+}

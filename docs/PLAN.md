@@ -17,6 +17,89 @@
 | 10 library 0.2 ("usable in a game") | built 2026-09-26, not published: ball joints and springs (done); public hulls (done); impulses and forces (done); raycasts (done); contact events (done); kinematic bodies (done); collision groups (done); tracked readback (done). Also fixed the GPU tests' intermittent crash (FINDINGS 2026-09-26). |
 | 11 library 0.3 (joints that bend) | built 2026-10-06, not published: a rest rotation per joint (the angle lock holds `rotB = rotA·rest`), per-joint break thresholds in `appendJoints`, plastic joints (`yield`: the rest moves and the force is cut back, on the GPU) that break on how far they have bent (`breakBend`), what a joint carries readable (`Joint.force`, `Joint.bend`, `decodeJoint`), the Plastic Beam demo. The joint record is 40 floats: breaking in `three-avbd/advanced` (FINDINGS 2026-10-06). |
 
+### SDF collision follow-on (2026-10-14)
+
+- Phase 0: pinned headless oracle fixtures, seed sets and released-scene baselines captured.
+- Phase 1: CPU fields/optimizer/manifold port and opt-in AVBD bridge implemented;
+  101 CPU tests, typecheck and builds pass. GPU/full gate deferred at user request.
+- CPU baking/public preparation API: mesh BVH + winding votes, bounded grids,
+  async/worker cancellation, mass integration and area-weighted voxel/projected
+  analytic curvature seeds. Seed-only API and explicit world-unit parameter scaling
+  are implemented and covered by CPU tests.
+  See `docs/SDF_BAKING.md`; unpublished, CPU-only. Four voxel assets match the
+  pinned C++ seed fixtures. GPU World bindings remain deferred.
+- CPU audit: direct baker comparison over 26,082 oracle nodes, cavity/disconnected
+  mesh checks, 30-second mixed-size settling, public input validation and stale-doc
+  cleanup complete. 121 CPU tests/typecheck/builds pass; GPU/full gate deferred.
+- GPU narrowphase implementation draft: standalone atlas/pass/WGSL written;
+  129 CPU tests/typecheck/builds pass after independent static review and fixes
+  for float32 scale validation and failed-construction buffer cleanup.
+  First small GPU validation passes: 73 selected GPU tests, including three SDF
+  tests, after fixing reserved WGSL names. Five stress/showcase tests excluded
+  to limit load. Production solver and public API unchanged. See `docs/SDF_GPU_DRAFT.md`.
+- Bounded temporal GPU validation: five SDF tests pass, including 72 moving-body
+  updates and 65-pair cache reorder across workgroups. Production integration must
+  preserve independent SDF normals and separate pair cache from solver manifolds.
+- Internal production bridge implemented: explicit candidates, GPU pose preparation,
+  one manifold per SDF contact, identity-based basis-transported warm starts.
+  79 bounded GPU tests, 129 CPU tests, typecheck/builds pass.
+  See `docs/SDF_PRODUCTION_BRIDGE.md`; default collisions unchanged when detached.
+- Bounded automatic candidates and World binding implemented: GPU SDF bounds,
+  masks and shared joint exclusions; `World.enableSdfCollisions()` supports up to
+  64 dense fixed slots. 83 bounded GPU tests and 129 CPU tests pass; nine targeted
+  bridge/World checks pass after the final async-teardown guard (one additional
+  regression). Typecheck/builds pass. See `docs/SDF_WORLD.md` for limitations.
+- Pair contact-event aggregation and bounded SDF raycasts implemented: 130 CPU
+  tests, 88 selected GPU tests, typecheck and both builds pass. Final eight World
+  checks pass after backend-switch coverage; five heavy cases remain excluded.
+  Query limits are documented in `docs/SDF_WORLD.md`.
+- Event/query review fixes complete: pending ray input/body snapshots and
+  scale-independent slab parallel checks. Independent re-review clean; 130 CPU
+  and 90 bounded GPU tests, typecheck and both builds pass.
+- Bounded non-convex/friction validation added: analytic/baked torus cavities,
+  crossed-ring temporal contacts, World cavity/rim impacts and CPU/GPU Coulomb
+  sliding/incline checks. 130 CPU and 95 selected GPU tests, typecheck and builds
+  pass. Default contact-distribution regularization induces measured frictionless
+  drag; defaults unchanged, tradeoff documented in FINDINGS and SDF_WORLD.
+- Spatial broadphase implemented: GPU hashed grid, oversized list, compact candidates
+  and exact pair-history lookup; explicit capacity/overflow, no 64-slot cap.
+  Five bounded regressions cover coverage, sparse scaling, oversized bodies, overflow
+  and warm-start churn. See SDF_WORLD for configuration and pathological cases.
+- Runtime body/field refresh and automatic SDF candidate growth implemented.
+  GPU history migration retains unchanged pairs and invalidates changed/reused slots.
+  Updates rebuild the atlas; incremental voxel allocation remains open.
+- Lifecycle review: fixed reuse of an unflushed body slot (replace its queued
+  record rather than appending another GPU body). Independent static re-review
+  found no remaining actionable issues; added query/failure-path regressions.
+- Next major checkpoints, in order:
+  1. Interactive browser SDF showcase implemented at `/sdf.html`: non-convex
+     rings, warped boxes and a mesh-baked gear pile, with contact points/normals,
+     SDF picking, joint dragging and spawning. Capped at 36 dynamic bodies;
+     mass/inertia remain box proxies, not a paper reproduction.
+  2. Released gear/box stacks and chair/bunny piles implemented at `/sdf-released.html`,
+     with original fields, mass/full inertia, and six-second reference comparisons.
+     Sticking-anchor consistency corrected; earlier mesh activation reduces motion
+     and sampled impact penetration. Opt-in signed projection against static boxes
+     corrects embedded surfaces reported as gaps; deeper relocated contacts can
+     refresh obsolete sticking anchors while retaining warm forces. The chair settling regression
+     stays unchanged. SDF adjacency now orders same-pair manifolds by persistent
+     point ID; a two-run bunny test verifies same-device bitwise repeatability.
+     Five-frame probes still find 8.1 mm chair / 6.8 mm bunny transient depth; see
+     `SDF_RELEASED_COMPARISON.md`. Substep traces now isolate missing mesh
+     extremity coverage (about 9 mm floor overlap); random support-seed trials
+     regressed bunny settling and were removed. Next: deterministic support
+     candidate retention implemented as an experimental GPU plane-support option.
+     Isolated chair/bunny tests pass; full-pile overlap regresses, so it stays off
+     in the demo. Next: mesh-to-mesh coverage/constraint diagnosis; anchor auditing
+     ruled out stale sticking anchors in the measured embedded bunny case.
+     This is not paper experiment parity.
+  3. Reconstruct paper penetration/energy experiments and larger scenes; validate
+     mixed-size scaling, memory use and target-device performance. Resolve measured
+     regularization/friction tradeoffs. No published GPU timing claims yet.
+  4. Package/document/review the release after these gates. Incremental voxel-atlas
+     allocation and generation-aware contact events remain separate follow-ons.
+  `docs/SDF_CPU_REFERENCE.md` records the collision scope and limitations.
+
 ### Stage 5 go/no-go for 3D: go
 Everything around the per-body solve carries over unchanged in design: SoA layout, grid
 broadphase (27 neighbour cells), hash persistence, CSR adjacency, Jones-Plassmann colouring,

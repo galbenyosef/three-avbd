@@ -25,6 +25,10 @@
       "types": "./build/lib/index.d.ts",
       "import": "./build/lib/index.js"
     },
+    "./sdf": {
+      "types": "./build/lib/sdf.d.ts",
+      "import": "./build/lib/sdf.js"
+    },
     "./advanced": {
       "types": "./build/lib/advanced.d.ts",
       "import": "./build/lib/advanced.js"

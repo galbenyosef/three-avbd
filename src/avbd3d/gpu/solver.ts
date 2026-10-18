@@ -420,8 +420,23 @@ function mortonOrder(bodies: Rigid[]): number[] {
 /** Evaluated lazily: under Node the WebGPU globals appear only once a device module loads. */
 const storageUsage = () => GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST;
 
+/** Internal collision replacement. Encoding runs after beginFrame and before adjacency.
+ * The solver owns the installed backend and destroys it on replacement/destruction.
+ */
+export interface GpuCollisionBackend3D {
+  prepare(solver: GpuSolver3D): void;
+  encode(pass: GPUComputePassEncoder, context: GpuCollisionContext3D): void;
+  destroy(): void;
+}
+export interface GpuCollisionContext3D {
+  bodies: GPUBuffer; params: GPUBuffer; counters: GPUBuffer;
+  statics: GPUBuffer; joints: GPUBuffer; filters: GPUBuffer;
+  contacts: GPUBuffer; previousContacts: GPUBuffer; manifolds: GPUBuffer;
+}
+
 export class GpuSolver3D {
   readonly device: GPUDevice;
+  private collisionBackend: GpuCollisionBackend3D | null = null;
   readonly params: GpuParams3D = gpuParams3D();
 
   bodyCount = 0;
@@ -562,6 +577,8 @@ export class GpuSolver3D {
   private timingCallback: ((profile: StepProfile) => void) | null = null;
   private timingBusy = false;
   private destroyed = false;
+  /** Internal async backend setup must not bind buffers after teardown. */
+  get isDestroyed(): boolean {return this.destroyed;}
 
   constructor(device: GPUDevice, ref: Solver, options: GpuSolverOptions = {}) {
     this.device = device;
@@ -674,7 +691,7 @@ export class GpuSolver3D {
     return {
       broad: layout('broadphase 3d', [U, R, W, W, W, R, R, R]),
       contacts: layout('contacts 3d', [U, R, R, W, R, W, R, W, W, ...(this.hulls ? [R] : [])]),
-      topo: layout('topology 3d', [U, R, R, R, R, W, W, W]),
+      topo: layout('topology 3d', [U, R, R, R, R, W, W, W, R]),
       solve: layout('solve 3d', [U, W, W, R, W, R, R, R, R]),
       pass: d.createBindGroupLayout({
         label: 'pass',
@@ -790,8 +807,8 @@ export class GpuSolver3D {
         group(this.layouts.contacts, [P, this.bodyBuffer, this.pairBuffer, c0, c1, m0, m1, T, C, ...(this.hulls ? [this.hullBuffer] : [])]),
         group(this.layouts.contacts, [P, this.bodyBuffer, this.pairBuffer, c1, c0, m1, m0, T, C, ...(this.hulls ? [this.hullBuffer] : [])]),
       ],
-      topo: [m0, m1].map((m) =>
-        group(this.layouts.topo, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, m, C, adj, this.colorBuffer]),
+      topo: [m0, m1].map((m, i) =>
+        group(this.layouts.topo, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, m, C, adj, this.colorBuffer, [c0, c1][i]]),
       ) as [GPUBindGroup, GPUBindGroup],
       solve: [0, 1].map((i) =>
         group(this.layouts.solve, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, [c0, c1][i], adj, this.colorBuffer, C, [m0, m1][i]]),
@@ -1392,7 +1409,29 @@ export class GpuSolver3D {
     this.device.queue.writeBuffer(this.passBuffer!, 0, data);
   }
 
+  /** Internal backend capacity reservation; existing warm-start buffers are preserved. */
+  reserveCollisionCapacity(points: number): void {
+    const limit=Math.min(this.device.limits.maxBufferSize,this.device.limits.maxStorageBufferBindingSize);
+    if(!Number.isSafeInteger(points)||points<1||points*CONTACT_WORDS*4>limit) throw new Error('Invalid collision capacity');
+    if(points>this.contactCapacity||points>this.manifoldCapacity) {
+      this.allocateContacts(Math.max(points,this.contactCapacity),Math.max(points,this.pairCapacity),Math.max(points,this.manifoldCapacity));
+    }
+  }
+
+  /** Internal opt-in backend; replacing it drops collision warm starts, not joints. */
+  setCollisionBackend(backend: GpuCollisionBackend3D | null): void {
+    if (this.destroyed) throw new Error('Solver is destroyed');
+    if (backend === this.collisionBackend) return;
+    backend?.prepare(this);
+    this.collisionBackend?.destroy();
+    this.collisionBackend = backend;
+    const encoder = this.device.createCommandEncoder();
+    encoder.clearBuffer(this.counterBuffer);
+    this.device.queue.submit([encoder.finish()]);
+  }
+
   step(): void {
+    this.collisionBackend?.prepare(this);
     if (this.radiiDirty || this.noCollideDirty) this.uploadStatics();
     const p = this.params;
     if (this.fixedColors) {
@@ -1441,15 +1480,24 @@ export class GpuSolver3D {
     // Collision
     beginPhase();
     run('beginFrame', G.broad, 1);
-    if (p.reuseContacts) run('updateRefs', G.refs, groups(N));
-    run('argsPrev', G.args, 1);
-    runIndirect('hashInsert', G.contacts[cur], IA_PREV);
-    run('gridCount', G.broad, groups(N));
-    this.gridScan.encode(pass);
-    run('gridScatter', G.broad, groups(N));
-    run('findPairs', G.broad, groups(N));
-    run('argsPairs', G.args, 1);
-    runIndirect('narrowphase', G.contacts[cur], IA_PAIRS);
+    if (this.collisionBackend) {
+      this.collisionBackend.encode(pass, {
+        bodies: this.bodyBuffer, params: this.paramsBuffer, counters: this.counterBuffer,
+        statics: this.staticBuffer!, joints: this.jointBuffer, filters: this.filterBuffer,
+        contacts: this.contactBuffers[cur], previousContacts: this.contactBuffers[1-cur],
+        manifolds: this.manifoldBuffers[cur],
+      });
+    } else {
+      if (p.reuseContacts) run('updateRefs', G.refs, groups(N));
+      run('argsPrev', G.args, 1);
+      runIndirect('hashInsert', G.contacts[cur], IA_PREV);
+      run('gridCount', G.broad, groups(N));
+      this.gridScan.encode(pass);
+      run('gridScatter', G.broad, groups(N));
+      run('findPairs', G.broad, groups(N));
+      run('argsPairs', G.args, 1);
+      runIndirect('narrowphase', G.contacts[cur], IA_PAIRS);
+    }
     run('argsContacts', G.args, 1);
 
     // Adjacency
@@ -1662,6 +1710,8 @@ export class GpuSolver3D {
   }
 
   destroy(): void {
+    this.collisionBackend?.destroy();
+    this.collisionBackend = null;
     if (this.ownsBodyBuffer) this.bodyBuffer.destroy();
     const buffers = [
       this.jointBuffer, this.infoBuffer, ...this.contactBuffers, ...this.manifoldBuffers, this.pairBuffer, this.tableBuffer, this.gridBuffer, this.staticBuffer,

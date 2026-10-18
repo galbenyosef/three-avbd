@@ -1,0 +1,5538 @@
+{
+  "scene": "Falling Boxes: Displace",
+  "sceneIndex": 5,
+  "frames": 360,
+  "warpOverride": "0.20",
+  "solver": {
+    "type": "upstream sequential impulses",
+    "dt": 0.0166666675,
+    "substeps": 4,
+    "iterations": 20,
+    "gravity": [
+      0,
+      -9.81000042,
+      0
+    ],
+    "baumgarte": 0.200000003,
+    "maxCorrection": 2
+  },
+  "params": {
+    "optimizer": 0,
+    "cacheSize": 4,
+    "randomSamples": 1,
+    "warmStart": true,
+    "curvatureSampling": true,
+    "skipConvexSamples": true,
+    "epsilon": 0.100000001,
+    "alpha": 0.00999999978,
+    "replacementThreshold": 0.00999999978,
+    "tolerance": 0.00999999978,
+    "maxIterations": 50,
+    "stepSize": 0.100000001,
+    "margin": 0.0199999996,
+    "allowedPenetration": 0.00999999978
+  },
+  "initialBodies": [
+    {
+      "origin": [
+        0,
+        -1,
+        0
+      ],
+      "position": [
+        0,
+        -1,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": 1,
+      "static": true,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -60,
+          -2,
+          -60
+        ],
+        "max": [
+          60,
+          0,
+          60
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -60,
+            -1,
+            -60
+          ],
+          "max": [
+            60,
+            1,
+            60
+          ]
+        },
+        "centerOfMass": [
+          0,
+          0,
+          0
+        ],
+        "convex": true,
+        "kind": "box",
+        "halfExtents": [
+          60,
+          1,
+          60
+        ]
+      },
+      "friction": 0.5,
+      "mass": 0,
+      "inertia": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "origin": [
+        -1.93345749,
+        2.20000005,
+        -0.825845718
+      ],
+      "position": [
+        -1.93345749,
+        2.20000005,
+        -0.825845718
+      ],
+      "orientation": [
+        -0.448420197,
+        -0.220590368,
+        0.466452479,
+        -0.729850233
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -2.94613218,
+          0.962083936,
+          -2.2570641
+        ],
+        "max": [
+          -0.920782924,
+          3.43791628,
+          0.605372667
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        -0.0179471523,
+        2.54999995,
+        -0.704079986
+      ],
+      "position": [
+        -0.0179471262,
+        2.54999995,
+        -0.704079986
+      ],
+      "orientation": [
+        0.101376995,
+        -0.318513662,
+        0.0328417867,
+        -0.941909313
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -1.39448142,
+          1.85939026,
+          -2.04072261
+        ],
+        "max": [
+          1.35858727,
+          3.24060965,
+          0.632562637
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        1.75623477,
+        2.9000001,
+        -0.74306047
+      ],
+      "position": [
+        1.75623477,
+        2.9000001,
+        -0.74306047
+      ],
+      "orientation": [
+        -0.800621867,
+        -0.565786481,
+        0.0902387872,
+        0.175348639
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          0.729728937,
+          1.51135182,
+          -1.5964855
+        ],
+        "max": [
+          2.78274059,
+          4.28864861,
+          0.110364556
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        -1.85229862,
+        2.54999995,
+        0.724435627
+      ],
+      "position": [
+        -1.85229862,
+        2.54999995,
+        0.724435627
+      ],
+      "orientation": [
+        -0.49443984,
+        -0.523712277,
+        -0.651980519,
+        0.237014905
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -2.96158838,
+          1.53061688,
+          -0.579609096
+        ],
+        "max": [
+          -0.743008971,
+          3.56938314,
+          2.02848029
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        0.0249443203,
+        2.9000001,
+        0.715523183
+      ],
+      "position": [
+        0.0249443185,
+        2.9000001,
+        0.715523183
+      ],
+      "orientation": [
+        0.473846406,
+        0.576436877,
+        0.106771752,
+        -0.657107234
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -1.09458089,
+          1.67516243,
+          -0.620394886
+        ],
+        "max": [
+          1.1444695,
+          4.12483788,
+          2.05144119
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        1.83904958,
+        3.25,
+        0.812360764
+      ],
+      "position": [
+        1.83904958,
+        3.25,
+        0.812360764
+      ],
+      "orientation": [
+        0.157135963,
+        -0.754173398,
+        0.134281158,
+        -0.623297155
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          0.934941888,
+          2.359061,
+          -0.576949358
+        ],
+        "max": [
+          2.74315739,
+          4.14093876,
+          2.20167089
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        -1.89031303,
+        5.19999981,
+        -0.815711558
+      ],
+      "position": [
+        -1.89031303,
+        5.19999981,
+        -0.815711558
+      ],
+      "orientation": [
+        0.0488678589,
+        0.274305791,
+        0.698420048,
+        0.659225166
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -2.71989918,
+          3.82498574,
+          -1.93574667
+        ],
+        "max": [
+          -1.06072676,
+          6.57501411,
+          0.304323614
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        0.0598357245,
+        5.54999971,
+        -0.770895541
+      ],
+      "position": [
+        0.0598357394,
+        5.54999971,
+        -0.770895541
+      ],
+      "orientation": [
+        0.547412694,
+        0.484588325,
+        -0.0770323798,
+        0.677922964
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -1.23099649,
+          4.31294346,
+          -2.00659108
+        ],
+        "max": [
+          1.35066807,
+          6.78705597,
+          0.46480006
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        1.77799237,
+        5.89999962,
+        -0.78242445
+      ],
+      "position": [
+        1.77799237,
+        5.89999962,
+        -0.78242445
+      ],
+      "orientation": [
+        -0.14485167,
+        0.313072085,
+        -0.614188612,
+        0.709771991
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          0.960276961,
+          4.52174568,
+          -1.87552536
+        ],
+        "max": [
+          2.59570789,
+          7.27825356,
+          0.310676455
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        -1.93992782,
+        5.54999971,
+        0.680727422
+      ],
+      "position": [
+        -1.93992782,
+        5.54999971,
+        0.680727422
+      ],
+      "orientation": [
+        0.702092528,
+        -0.603495419,
+        0.334783822,
+        0.175440162
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -2.58876443,
+          4.13333702,
+          -0.698003471
+        ],
+        "max": [
+          -1.2910912,
+          6.96666241,
+          2.05945826
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        0.0782721862,
+        5.89999962,
+        0.818679273
+      ],
+      "position": [
+        0.0782722086,
+        5.89999962,
+        0.818679273
+      ],
+      "orientation": [
+        0.799766302,
+        -0.209436223,
+        0.347915739,
+        0.442114234
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          -1.26425469,
+          5.06582022,
+          -0.572731316
+        ],
+        "max": [
+          1.42079914,
+          6.73417902,
+          2.21008992
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    },
+    {
+      "origin": [
+        1.77648222,
+        6.25,
+        0.767497957
+      ],
+      "position": [
+        1.77648222,
+        6.25,
+        0.767497957
+      ],
+      "orientation": [
+        -0.148419201,
+        0.0505567044,
+        0.848670244,
+        -0.505148172
+      ],
+      "scale": 0.899999976,
+      "static": false,
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "angularVelocity": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "min": [
+          0.666645885,
+          4.93740273,
+          -0.220182717
+        ],
+        "max": [
+          2.88631868,
+          7.56259727,
+          1.75517869
+        ]
+      },
+      "shape": {
+        "bounds": {
+          "min": [
+            -1.35000002,
+            -0.480000019,
+            -0.75
+          ],
+          "max": [
+            1.35000002,
+            0.480000019,
+            0.75
+          ]
+        },
+        "centerOfMass": [
+          2.95609812e-08,
+          -8.77253292e-09,
+          9.34517796e-09
+        ],
+        "convex": false,
+        "kind": "warp",
+        "type": 2,
+        "k": 0.200000003,
+        "halfExtents": [
+          1.14999998,
+          0.280000001,
+          0.550000012
+        ]
+      },
+      "friction": 0.5,
+      "mass": 1.10224795,
+      "inertia": [
+        [
+          0.14079915,
+          -3.20888177e-11,
+          -2.22872241e-11
+        ],
+        [
+          -3.20888177e-11,
+          0.529301882,
+          -9.33127187e-12
+        ],
+        [
+          -2.22872241e-11,
+          -9.33127187e-12,
+          0.446030706
+        ]
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "frame": 1,
+      "stats": {
+        "pairs": 22,
+        "contacts": 16,
+        "iterations": 7323,
+        "queries": 14828
+      },
+      "kineticEnergy": 0.176609352,
+      "maxContactPenetration": 0.369597495,
+      "minCenterY": 2.19968224
+    },
+    {
+      "frame": 2,
+      "stats": {
+        "pairs": 22,
+        "contacts": 14,
+        "iterations": 6137,
+        "queries": 12823
+      },
+      "kineticEnergy": 0.705848932,
+      "maxContactPenetration": 0.336687267,
+      "minCenterY": 2.19697928
+    },
+    {
+      "frame": 3,
+      "stats": {
+        "pairs": 22,
+        "contacts": 15,
+        "iterations": 6095,
+        "queries": 12695
+      },
+      "kineticEnergy": 1.58683789,
+      "maxContactPenetration": 0.323287606,
+      "minCenterY": 2.1905632
+    },
+    {
+      "frame": 4,
+      "stats": {
+        "pairs": 22,
+        "contacts": 12,
+        "iterations": 6034,
+        "queries": 12611
+      },
+      "kineticEnergy": 2.81869674,
+      "maxContactPenetration": 0.323982865,
+      "minCenterY": 2.18095922
+    },
+    {
+      "frame": 5,
+      "stats": {
+        "pairs": 22,
+        "contacts": 14,
+        "iterations": 6005,
+        "queries": 12548
+      },
+      "kineticEnergy": 4.4005475,
+      "maxContactPenetration": 0.31877023,
+      "minCenterY": 2.16848516
+    },
+    {
+      "frame": 6,
+      "stats": {
+        "pairs": 22,
+        "contacts": 14,
+        "iterations": 5883,
+        "queries": 12357
+      },
+      "kineticEnergy": 6.33151388,
+      "maxContactPenetration": 0.320740908,
+      "minCenterY": 2.15323758
+    },
+    {
+      "frame": 7,
+      "stats": {
+        "pairs": 22,
+        "contacts": 15,
+        "iterations": 6039,
+        "queries": 12665
+      },
+      "kineticEnergy": 8.61072254,
+      "maxContactPenetration": 0.313844383,
+      "minCenterY": 2.13525176
+    },
+    {
+      "frame": 8,
+      "stats": {
+        "pairs": 22,
+        "contacts": 13,
+        "iterations": 5846,
+        "queries": 12283
+      },
+      "kineticEnergy": 11.237298,
+      "maxContactPenetration": 0.295081317,
+      "minCenterY": 2.11454797
+    },
+    {
+      "frame": 9,
+      "stats": {
+        "pairs": 22,
+        "contacts": 18,
+        "iterations": 5883,
+        "queries": 12374
+      },
+      "kineticEnergy": 14.2103701,
+      "maxContactPenetration": 0.281028032,
+      "minCenterY": 2.09113431
+    },
+    {
+      "frame": 10,
+      "stats": {
+        "pairs": 22,
+        "contacts": 16,
+        "iterations": 6028,
+        "queries": 12659
+      },
+      "kineticEnergy": 17.529068,
+      "maxContactPenetration": 0.262098283,
+      "minCenterY": 2.06501484
+    },
+    {
+      "frame": 11,
+      "stats": {
+        "pairs": 22,
+        "contacts": 20,
+        "iterations": 5849,
+        "queries": 12306
+      },
+      "kineticEnergy": 21.1925278,
+      "maxContactPenetration": 0.213025957,
+      "minCenterY": 2.03619289
+    },
+    {
+      "frame": 12,
+      "stats": {
+        "pairs": 23,
+        "contacts": 16,
+        "iterations": 6141,
+        "queries": 12925
+      },
+      "kineticEnergy": 25.1998825,
+      "maxContactPenetration": 0.178096443,
+      "minCenterY": 2.0046711
+    },
+    {
+      "frame": 13,
+      "stats": {
+        "pairs": 23,
+        "contacts": 20,
+        "iterations": 5953,
+        "queries": 12632
+      },
+      "kineticEnergy": 29.5502548,
+      "maxContactPenetration": 0.14036271,
+      "minCenterY": 1.97045195
+    },
+    {
+      "frame": 14,
+      "stats": {
+        "pairs": 23,
+        "contacts": 16,
+        "iterations": 6057,
+        "queries": 12717
+      },
+      "kineticEnergy": 34.2428017,
+      "maxContactPenetration": 0.0890814066,
+      "minCenterY": 1.93353772
+    },
+    {
+      "frame": 15,
+      "stats": {
+        "pairs": 23,
+        "contacts": 13,
+        "iterations": 5728,
+        "queries": 12140
+      },
+      "kineticEnergy": 39.2766685,
+      "maxContactPenetration": 0.0358549505,
+      "minCenterY": 1.89393067
+    },
+    {
+      "frame": 16,
+      "stats": {
+        "pairs": 23,
+        "contacts": 12,
+        "iterations": 5988,
+        "queries": 12596
+      },
+      "kineticEnergy": 44.650959,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.85163307
+    },
+    {
+      "frame": 17,
+      "stats": {
+        "pairs": 23,
+        "contacts": 14,
+        "iterations": 5972,
+        "queries": 12571
+      },
+      "kineticEnergy": 50.3648567,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.80664706
+    },
+    {
+      "frame": 18,
+      "stats": {
+        "pairs": 23,
+        "contacts": 16,
+        "iterations": 6091,
+        "queries": 12781
+      },
+      "kineticEnergy": 56.4174919,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.75897491
+    },
+    {
+      "frame": 19,
+      "stats": {
+        "pairs": 23,
+        "contacts": 14,
+        "iterations": 5964,
+        "queries": 12604
+      },
+      "kineticEnergy": 62.807972,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.708619
+    },
+    {
+      "frame": 20,
+      "stats": {
+        "pairs": 23,
+        "contacts": 15,
+        "iterations": 5767,
+        "queries": 12268
+      },
+      "kineticEnergy": 69.5354996,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.65558136
+    },
+    {
+      "frame": 21,
+      "stats": {
+        "pairs": 23,
+        "contacts": 16,
+        "iterations": 5698,
+        "queries": 12148
+      },
+      "kineticEnergy": 76.5992126,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.59986448
+    },
+    {
+      "frame": 22,
+      "stats": {
+        "pairs": 23,
+        "contacts": 16,
+        "iterations": 5951,
+        "queries": 12591
+      },
+      "kineticEnergy": 83.9982605,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.54147029
+    },
+    {
+      "frame": 23,
+      "stats": {
+        "pairs": 23,
+        "contacts": 17,
+        "iterations": 5676,
+        "queries": 12041
+      },
+      "kineticEnergy": 91.7317505,
+      "maxContactPenetration": 0.0180467721,
+      "minCenterY": 1.48040128
+    },
+    {
+      "frame": 24,
+      "stats": {
+        "pairs": 23,
+        "contacts": 17,
+        "iterations": 5990,
+        "queries": 12663
+      },
+      "kineticEnergy": 99.7988968,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.41665947
+    },
+    {
+      "frame": 25,
+      "stats": {
+        "pairs": 24,
+        "contacts": 16,
+        "iterations": 5987,
+        "queries": 12734
+      },
+      "kineticEnergy": 108.198853,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.35024726
+    },
+    {
+      "frame": 26,
+      "stats": {
+        "pairs": 24,
+        "contacts": 15,
+        "iterations": 6193,
+        "queries": 13196
+      },
+      "kineticEnergy": 116.930763,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.28116667
+    },
+    {
+      "frame": 27,
+      "stats": {
+        "pairs": 25,
+        "contacts": 15,
+        "iterations": 6235,
+        "queries": 13263
+      },
+      "kineticEnergy": 125.993767,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.2094202
+    },
+    {
+      "frame": 28,
+      "stats": {
+        "pairs": 25,
+        "contacts": 16,
+        "iterations": 6289,
+        "queries": 13385
+      },
+      "kineticEnergy": 135.386993,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.13500977
+    },
+    {
+      "frame": 29,
+      "stats": {
+        "pairs": 25,
+        "contacts": 15,
+        "iterations": 6087,
+        "queries": 13074
+      },
+      "kineticEnergy": 145.10965,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.05793786
+    },
+    {
+      "frame": 30,
+      "stats": {
+        "pairs": 25,
+        "contacts": 18,
+        "iterations": 6057,
+        "queries": 13027
+      },
+      "kineticEnergy": 145.416336,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.03870523,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 200291
+    },
+    {
+      "frame": 31,
+      "stats": {
+        "pairs": 25,
+        "contacts": 15,
+        "iterations": 6257,
+        "queries": 13346
+      },
+      "kineticEnergy": 155.14975,
+      "maxContactPenetration": 0,
+      "minCenterY": 1.01750946
+    },
+    {
+      "frame": 32,
+      "stats": {
+        "pairs": 25,
+        "contacts": 17,
+        "iterations": 6245,
+        "queries": 13366
+      },
+      "kineticEnergy": 165.198517,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.994649947
+    },
+    {
+      "frame": 33,
+      "stats": {
+        "pairs": 25,
+        "contacts": 17,
+        "iterations": 6067,
+        "queries": 13038
+      },
+      "kineticEnergy": 175.563416,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.970026612
+    },
+    {
+      "frame": 34,
+      "stats": {
+        "pairs": 27,
+        "contacts": 16,
+        "iterations": 6506,
+        "queries": 13896
+      },
+      "kineticEnergy": 186.243958,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.896083534
+    },
+    {
+      "frame": 35,
+      "stats": {
+        "pairs": 27,
+        "contacts": 17,
+        "iterations": 7003,
+        "queries": 14810
+      },
+      "kineticEnergy": 186.776428,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.803088486
+    },
+    {
+      "frame": 36,
+      "stats": {
+        "pairs": 27,
+        "contacts": 14,
+        "iterations": 6773,
+        "queries": 14430
+      },
+      "kineticEnergy": 180.090729,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.70797509
+    },
+    {
+      "frame": 37,
+      "stats": {
+        "pairs": 29,
+        "contacts": 11,
+        "iterations": 7161,
+        "queries": 15157
+      },
+      "kineticEnergy": 189.273361,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.610727072
+    },
+    {
+      "frame": 38,
+      "stats": {
+        "pairs": 30,
+        "contacts": 14,
+        "iterations": 7427,
+        "queries": 15820
+      },
+      "kineticEnergy": 195.554993,
+      "maxContactPenetration": 0.0522973612,
+      "minCenterY": 0.510836482
+    },
+    {
+      "frame": 39,
+      "stats": {
+        "pairs": 31,
+        "contacts": 13,
+        "iterations": 7707,
+        "queries": 16404
+      },
+      "kineticEnergy": 205.048965,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.408305526
+    },
+    {
+      "frame": 40,
+      "stats": {
+        "pairs": 31,
+        "contacts": 18,
+        "iterations": 7709,
+        "queries": 16483
+      },
+      "kineticEnergy": 189.781189,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.353499562
+    },
+    {
+      "frame": 41,
+      "stats": {
+        "pairs": 31,
+        "contacts": 14,
+        "iterations": 7875,
+        "queries": 16722
+      },
+      "kineticEnergy": 189.594666,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35387823
+    },
+    {
+      "frame": 42,
+      "stats": {
+        "pairs": 31,
+        "contacts": 13,
+        "iterations": 7970,
+        "queries": 16826
+      },
+      "kineticEnergy": 197.793839,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.359590918
+    },
+    {
+      "frame": 43,
+      "stats": {
+        "pairs": 33,
+        "contacts": 16,
+        "iterations": 8578,
+        "queries": 18013
+      },
+      "kineticEnergy": 204.793137,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.380126059
+    },
+    {
+      "frame": 44,
+      "stats": {
+        "pairs": 35,
+        "contacts": 16,
+        "iterations": 9247,
+        "queries": 19427
+      },
+      "kineticEnergy": 192.119141,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.397838145
+    },
+    {
+      "frame": 45,
+      "stats": {
+        "pairs": 37,
+        "contacts": 11,
+        "iterations": 10177,
+        "queries": 21113
+      },
+      "kineticEnergy": 189.193054,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.414133728
+    },
+    {
+      "frame": 46,
+      "stats": {
+        "pairs": 39,
+        "contacts": 14,
+        "iterations": 10179,
+        "queries": 21418
+      },
+      "kineticEnergy": 190.509048,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.428144753
+    },
+    {
+      "frame": 47,
+      "stats": {
+        "pairs": 38,
+        "contacts": 19,
+        "iterations": 9817,
+        "queries": 20796
+      },
+      "kineticEnergy": 179.806305,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.349737614
+    },
+    {
+      "frame": 48,
+      "stats": {
+        "pairs": 40,
+        "contacts": 23,
+        "iterations": 9944,
+        "queries": 20971
+      },
+      "kineticEnergy": 129.231476,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.330905437
+    },
+    {
+      "frame": 49,
+      "stats": {
+        "pairs": 41,
+        "contacts": 25,
+        "iterations": 10712,
+        "queries": 22468
+      },
+      "kineticEnergy": 127.287636,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.335405082
+    },
+    {
+      "frame": 50,
+      "stats": {
+        "pairs": 40,
+        "contacts": 22,
+        "iterations": 10350,
+        "queries": 21670
+      },
+      "kineticEnergy": 127.572906,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.339789242
+    },
+    {
+      "frame": 51,
+      "stats": {
+        "pairs": 41,
+        "contacts": 19,
+        "iterations": 10750,
+        "queries": 22435
+      },
+      "kineticEnergy": 132.142044,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.342780918
+    },
+    {
+      "frame": 52,
+      "stats": {
+        "pairs": 41,
+        "contacts": 18,
+        "iterations": 10592,
+        "queries": 22188
+      },
+      "kineticEnergy": 136.377014,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.346428007
+    },
+    {
+      "frame": 53,
+      "stats": {
+        "pairs": 42,
+        "contacts": 18,
+        "iterations": 10794,
+        "queries": 22546
+      },
+      "kineticEnergy": 128.187241,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.350892544
+    },
+    {
+      "frame": 54,
+      "stats": {
+        "pairs": 45,
+        "contacts": 21,
+        "iterations": 11311,
+        "queries": 23829
+      },
+      "kineticEnergy": 132.875916,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355264902
+    },
+    {
+      "frame": 55,
+      "stats": {
+        "pairs": 44,
+        "contacts": 20,
+        "iterations": 11093,
+        "queries": 23505
+      },
+      "kineticEnergy": 137.076691,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.36013332
+    },
+    {
+      "frame": 56,
+      "stats": {
+        "pairs": 45,
+        "contacts": 17,
+        "iterations": 11523,
+        "queries": 24245
+      },
+      "kineticEnergy": 122.743385,
+      "maxContactPenetration": 0.0114274034,
+      "minCenterY": 0.359140754
+    },
+    {
+      "frame": 57,
+      "stats": {
+        "pairs": 44,
+        "contacts": 21,
+        "iterations": 11797,
+        "queries": 24724
+      },
+      "kineticEnergy": 106.518677,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354410827
+    },
+    {
+      "frame": 58,
+      "stats": {
+        "pairs": 44,
+        "contacts": 25,
+        "iterations": 11472,
+        "queries": 24195
+      },
+      "kineticEnergy": 81.4732361,
+      "maxContactPenetration": 0.00332269678,
+      "minCenterY": 0.355878502
+    },
+    {
+      "frame": 59,
+      "stats": {
+        "pairs": 45,
+        "contacts": 22,
+        "iterations": 11395,
+        "queries": 24052
+      },
+      "kineticEnergy": 72.0837402,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355999917
+    },
+    {
+      "frame": 60,
+      "stats": {
+        "pairs": 45,
+        "contacts": 29,
+        "iterations": 11345,
+        "queries": 24032
+      },
+      "kineticEnergy": 49.7456398,
+      "maxContactPenetration": 0.0586697385,
+      "minCenterY": 0.352712035,
+      "maxVertexPenetration": 0.0119081736,
+      "vertexQueries": 358068
+    },
+    {
+      "frame": 61,
+      "stats": {
+        "pairs": 45,
+        "contacts": 27,
+        "iterations": 12025,
+        "queries": 25253
+      },
+      "kineticEnergy": 50.4107933,
+      "maxContactPenetration": 0.046786312,
+      "minCenterY": 0.354543239
+    },
+    {
+      "frame": 62,
+      "stats": {
+        "pairs": 47,
+        "contacts": 27,
+        "iterations": 12189,
+        "queries": 25487
+      },
+      "kineticEnergy": 52.2893219,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354548275
+    },
+    {
+      "frame": 63,
+      "stats": {
+        "pairs": 48,
+        "contacts": 24,
+        "iterations": 12138,
+        "queries": 25666
+      },
+      "kineticEnergy": 54.2952003,
+      "maxContactPenetration": 0.0631205514,
+      "minCenterY": 0.354551464
+    },
+    {
+      "frame": 64,
+      "stats": {
+        "pairs": 48,
+        "contacts": 27,
+        "iterations": 12585,
+        "queries": 26566
+      },
+      "kineticEnergy": 49.6716843,
+      "maxContactPenetration": 0.0554863103,
+      "minCenterY": 0.358920455
+    },
+    {
+      "frame": 65,
+      "stats": {
+        "pairs": 49,
+        "contacts": 26,
+        "iterations": 12866,
+        "queries": 26978
+      },
+      "kineticEnergy": 44.8925476,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.366440892
+    },
+    {
+      "frame": 66,
+      "stats": {
+        "pairs": 49,
+        "contacts": 29,
+        "iterations": 12922,
+        "queries": 26990
+      },
+      "kineticEnergy": 45.4162216,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.372438222
+    },
+    {
+      "frame": 67,
+      "stats": {
+        "pairs": 49,
+        "contacts": 29,
+        "iterations": 13016,
+        "queries": 27198
+      },
+      "kineticEnergy": 40.349575,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.376994908
+    },
+    {
+      "frame": 68,
+      "stats": {
+        "pairs": 48,
+        "contacts": 25,
+        "iterations": 12222,
+        "queries": 25793
+      },
+      "kineticEnergy": 40.9305801,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.380221158
+    },
+    {
+      "frame": 69,
+      "stats": {
+        "pairs": 48,
+        "contacts": 21,
+        "iterations": 12292,
+        "queries": 25954
+      },
+      "kineticEnergy": 39.3572998,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.381888092
+    },
+    {
+      "frame": 70,
+      "stats": {
+        "pairs": 46,
+        "contacts": 21,
+        "iterations": 11904,
+        "queries": 25087
+      },
+      "kineticEnergy": 34.1183777,
+      "maxContactPenetration": 0.0579407625,
+      "minCenterY": 0.381530195
+    },
+    {
+      "frame": 71,
+      "stats": {
+        "pairs": 44,
+        "contacts": 25,
+        "iterations": 11636,
+        "queries": 24474
+      },
+      "kineticEnergy": 31.6812954,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.378485948
+    },
+    {
+      "frame": 72,
+      "stats": {
+        "pairs": 44,
+        "contacts": 15,
+        "iterations": 11530,
+        "queries": 24226
+      },
+      "kineticEnergy": 33.2780533,
+      "maxContactPenetration": 0.0783473551,
+      "minCenterY": 0.373875588
+    },
+    {
+      "frame": 73,
+      "stats": {
+        "pairs": 44,
+        "contacts": 17,
+        "iterations": 11459,
+        "queries": 24077
+      },
+      "kineticEnergy": 32.5071945,
+      "maxContactPenetration": 0.0149192102,
+      "minCenterY": 0.368074656
+    },
+    {
+      "frame": 74,
+      "stats": {
+        "pairs": 45,
+        "contacts": 20,
+        "iterations": 11485,
+        "queries": 24311
+      },
+      "kineticEnergy": 32.0765381,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.362714976
+    },
+    {
+      "frame": 75,
+      "stats": {
+        "pairs": 45,
+        "contacts": 22,
+        "iterations": 12092,
+        "queries": 25293
+      },
+      "kineticEnergy": 33.6832695,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.358702302
+    },
+    {
+      "frame": 76,
+      "stats": {
+        "pairs": 45,
+        "contacts": 21,
+        "iterations": 11860,
+        "queries": 24931
+      },
+      "kineticEnergy": 34.3522224,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.357354939
+    },
+    {
+      "frame": 77,
+      "stats": {
+        "pairs": 45,
+        "contacts": 29,
+        "iterations": 11568,
+        "queries": 24310
+      },
+      "kineticEnergy": 34.7540169,
+      "maxContactPenetration": 0.0133706303,
+      "minCenterY": 0.357317537
+    },
+    {
+      "frame": 78,
+      "stats": {
+        "pairs": 45,
+        "contacts": 27,
+        "iterations": 11618,
+        "queries": 24461
+      },
+      "kineticEnergy": 36.4862747,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.358481646
+    },
+    {
+      "frame": 79,
+      "stats": {
+        "pairs": 44,
+        "contacts": 22,
+        "iterations": 11459,
+        "queries": 24082
+      },
+      "kineticEnergy": 38.6131477,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35896033
+    },
+    {
+      "frame": 80,
+      "stats": {
+        "pairs": 44,
+        "contacts": 23,
+        "iterations": 11316,
+        "queries": 23728
+      },
+      "kineticEnergy": 39.4963455,
+      "maxContactPenetration": 0.0455007181,
+      "minCenterY": 0.351092339
+    },
+    {
+      "frame": 81,
+      "stats": {
+        "pairs": 44,
+        "contacts": 22,
+        "iterations": 10959,
+        "queries": 23209
+      },
+      "kineticEnergy": 31.2076855,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.338411123
+    },
+    {
+      "frame": 82,
+      "stats": {
+        "pairs": 44,
+        "contacts": 23,
+        "iterations": 11131,
+        "queries": 23474
+      },
+      "kineticEnergy": 29.9563503,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.348633438
+    },
+    {
+      "frame": 83,
+      "stats": {
+        "pairs": 44,
+        "contacts": 26,
+        "iterations": 10892,
+        "queries": 23077
+      },
+      "kineticEnergy": 31.1118927,
+      "maxContactPenetration": 0.0485914946,
+      "minCenterY": 0.354618639
+    },
+    {
+      "frame": 84,
+      "stats": {
+        "pairs": 44,
+        "contacts": 24,
+        "iterations": 11036,
+        "queries": 23327
+      },
+      "kineticEnergy": 25.750227,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.352228999
+    },
+    {
+      "frame": 85,
+      "stats": {
+        "pairs": 44,
+        "contacts": 29,
+        "iterations": 10890,
+        "queries": 22934
+      },
+      "kineticEnergy": 24.6021748,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.348455995
+    },
+    {
+      "frame": 86,
+      "stats": {
+        "pairs": 43,
+        "contacts": 23,
+        "iterations": 10827,
+        "queries": 22795
+      },
+      "kineticEnergy": 25.1507587,
+      "maxContactPenetration": 0.014752618,
+      "minCenterY": 0.355331391
+    },
+    {
+      "frame": 87,
+      "stats": {
+        "pairs": 42,
+        "contacts": 31,
+        "iterations": 10633,
+        "queries": 22446
+      },
+      "kineticEnergy": 23.1823807,
+      "maxContactPenetration": 0.0263578407,
+      "minCenterY": 0.355334938
+    },
+    {
+      "frame": 88,
+      "stats": {
+        "pairs": 42,
+        "contacts": 26,
+        "iterations": 10513,
+        "queries": 22091
+      },
+      "kineticEnergy": 23.7937069,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355341405
+    },
+    {
+      "frame": 89,
+      "stats": {
+        "pairs": 42,
+        "contacts": 32,
+        "iterations": 10770,
+        "queries": 22655
+      },
+      "kineticEnergy": 22.6591263,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.356321186
+    },
+    {
+      "frame": 90,
+      "stats": {
+        "pairs": 41,
+        "contacts": 34,
+        "iterations": 10640,
+        "queries": 22436
+      },
+      "kineticEnergy": 23.5278111,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.356607765,
+      "maxVertexPenetration": 0.0129747391,
+      "vertexQueries": 315458
+    },
+    {
+      "frame": 91,
+      "stats": {
+        "pairs": 41,
+        "contacts": 35,
+        "iterations": 10530,
+        "queries": 22177
+      },
+      "kineticEnergy": 20.1164398,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.356293112
+    },
+    {
+      "frame": 92,
+      "stats": {
+        "pairs": 41,
+        "contacts": 34,
+        "iterations": 10642,
+        "queries": 22302
+      },
+      "kineticEnergy": 20.9073353,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35629347
+    },
+    {
+      "frame": 93,
+      "stats": {
+        "pairs": 40,
+        "contacts": 35,
+        "iterations": 10586,
+        "queries": 22114
+      },
+      "kineticEnergy": 21.8885307,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.356294811
+    },
+    {
+      "frame": 94,
+      "stats": {
+        "pairs": 40,
+        "contacts": 40,
+        "iterations": 10546,
+        "queries": 22016
+      },
+      "kineticEnergy": 12.0248861,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354367346
+    },
+    {
+      "frame": 95,
+      "stats": {
+        "pairs": 42,
+        "contacts": 40,
+        "iterations": 10754,
+        "queries": 22462
+      },
+      "kineticEnergy": 10.2400951,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35440293
+    },
+    {
+      "frame": 96,
+      "stats": {
+        "pairs": 43,
+        "contacts": 35,
+        "iterations": 10698,
+        "queries": 22564
+      },
+      "kineticEnergy": 10.7683935,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354563355
+    },
+    {
+      "frame": 97,
+      "stats": {
+        "pairs": 42,
+        "contacts": 35,
+        "iterations": 11130,
+        "queries": 23280
+      },
+      "kineticEnergy": 11.3924561,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354770184
+    },
+    {
+      "frame": 98,
+      "stats": {
+        "pairs": 42,
+        "contacts": 32,
+        "iterations": 10625,
+        "queries": 22358
+      },
+      "kineticEnergy": 11.867959,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35497728
+    },
+    {
+      "frame": 99,
+      "stats": {
+        "pairs": 42,
+        "contacts": 31,
+        "iterations": 10613,
+        "queries": 22231
+      },
+      "kineticEnergy": 12.0712662,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355231851
+    },
+    {
+      "frame": 100,
+      "stats": {
+        "pairs": 42,
+        "contacts": 32,
+        "iterations": 10603,
+        "queries": 22313
+      },
+      "kineticEnergy": 12.8402548,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088294
+    },
+    {
+      "frame": 101,
+      "stats": {
+        "pairs": 42,
+        "contacts": 34,
+        "iterations": 10553,
+        "queries": 22222
+      },
+      "kineticEnergy": 13.6930599,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088264
+    },
+    {
+      "frame": 102,
+      "stats": {
+        "pairs": 42,
+        "contacts": 36,
+        "iterations": 10442,
+        "queries": 22032
+      },
+      "kineticEnergy": 8.82691765,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088174
+    },
+    {
+      "frame": 103,
+      "stats": {
+        "pairs": 42,
+        "contacts": 28,
+        "iterations": 10596,
+        "queries": 22379
+      },
+      "kineticEnergy": 6.77642679,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088204
+    },
+    {
+      "frame": 104,
+      "stats": {
+        "pairs": 42,
+        "contacts": 31,
+        "iterations": 10435,
+        "queries": 22087
+      },
+      "kineticEnergy": 7.02603912,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088204
+    },
+    {
+      "frame": 105,
+      "stats": {
+        "pairs": 42,
+        "contacts": 29,
+        "iterations": 10406,
+        "queries": 21986
+      },
+      "kineticEnergy": 7.48696136,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088234
+    },
+    {
+      "frame": 106,
+      "stats": {
+        "pairs": 42,
+        "contacts": 32,
+        "iterations": 10333,
+        "queries": 21914
+      },
+      "kineticEnergy": 7.88393784,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088234
+    },
+    {
+      "frame": 107,
+      "stats": {
+        "pairs": 42,
+        "contacts": 37,
+        "iterations": 10460,
+        "queries": 22050
+      },
+      "kineticEnergy": 8.07544994,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088234
+    },
+    {
+      "frame": 108,
+      "stats": {
+        "pairs": 42,
+        "contacts": 39,
+        "iterations": 10767,
+        "queries": 22633
+      },
+      "kineticEnergy": 4.85836554,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.3477301
+    },
+    {
+      "frame": 109,
+      "stats": {
+        "pairs": 42,
+        "contacts": 37,
+        "iterations": 10611,
+        "queries": 22389
+      },
+      "kineticEnergy": 4.99235058,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.351029724
+    },
+    {
+      "frame": 110,
+      "stats": {
+        "pairs": 40,
+        "contacts": 33,
+        "iterations": 10427,
+        "queries": 21899
+      },
+      "kineticEnergy": 3.44065428,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.352255493
+    },
+    {
+      "frame": 111,
+      "stats": {
+        "pairs": 40,
+        "contacts": 34,
+        "iterations": 10083,
+        "queries": 21195
+      },
+      "kineticEnergy": 3.30051255,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35390088
+    },
+    {
+      "frame": 112,
+      "stats": {
+        "pairs": 40,
+        "contacts": 34,
+        "iterations": 10269,
+        "queries": 21448
+      },
+      "kineticEnergy": 3.04588652,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.353396684
+    },
+    {
+      "frame": 113,
+      "stats": {
+        "pairs": 41,
+        "contacts": 35,
+        "iterations": 10347,
+        "queries": 21729
+      },
+      "kineticEnergy": 1.77955639,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.353515029
+    },
+    {
+      "frame": 114,
+      "stats": {
+        "pairs": 41,
+        "contacts": 41,
+        "iterations": 10738,
+        "queries": 22498
+      },
+      "kineticEnergy": 1.50897181,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354249954
+    },
+    {
+      "frame": 115,
+      "stats": {
+        "pairs": 41,
+        "contacts": 37,
+        "iterations": 10625,
+        "queries": 22257
+      },
+      "kineticEnergy": 1.42686081,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354352266
+    },
+    {
+      "frame": 116,
+      "stats": {
+        "pairs": 41,
+        "contacts": 39,
+        "iterations": 10772,
+        "queries": 22495
+      },
+      "kineticEnergy": 1.25513804,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354345232
+    },
+    {
+      "frame": 117,
+      "stats": {
+        "pairs": 41,
+        "contacts": 43,
+        "iterations": 10550,
+        "queries": 21988
+      },
+      "kineticEnergy": 1.22151816,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354351401
+    },
+    {
+      "frame": 118,
+      "stats": {
+        "pairs": 41,
+        "contacts": 41,
+        "iterations": 10524,
+        "queries": 22068
+      },
+      "kineticEnergy": 1.19800735,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354334056
+    },
+    {
+      "frame": 119,
+      "stats": {
+        "pairs": 41,
+        "contacts": 39,
+        "iterations": 10683,
+        "queries": 22322
+      },
+      "kineticEnergy": 1.19412458,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354311258
+    },
+    {
+      "frame": 120,
+      "stats": {
+        "pairs": 41,
+        "contacts": 44,
+        "iterations": 10393,
+        "queries": 21820
+      },
+      "kineticEnergy": 1.11963046,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35495764,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 311269
+    },
+    {
+      "frame": 121,
+      "stats": {
+        "pairs": 41,
+        "contacts": 39,
+        "iterations": 10804,
+        "queries": 22548
+      },
+      "kineticEnergy": 1.05974829,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354954004
+    },
+    {
+      "frame": 122,
+      "stats": {
+        "pairs": 41,
+        "contacts": 44,
+        "iterations": 10867,
+        "queries": 22498
+      },
+      "kineticEnergy": 0.957385957,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354961783
+    },
+    {
+      "frame": 123,
+      "stats": {
+        "pairs": 40,
+        "contacts": 44,
+        "iterations": 10741,
+        "queries": 22291
+      },
+      "kineticEnergy": 0.923576176,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.354954898
+    },
+    {
+      "frame": 124,
+      "stats": {
+        "pairs": 40,
+        "contacts": 41,
+        "iterations": 10597,
+        "queries": 22089
+      },
+      "kineticEnergy": 0.819499135,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.35497734
+    },
+    {
+      "frame": 125,
+      "stats": {
+        "pairs": 40,
+        "contacts": 41,
+        "iterations": 10456,
+        "queries": 21881
+      },
+      "kineticEnergy": 0.725513518,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088979
+    },
+    {
+      "frame": 126,
+      "stats": {
+        "pairs": 40,
+        "contacts": 49,
+        "iterations": 10612,
+        "queries": 22044
+      },
+      "kineticEnergy": 0.565679789,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089009
+    },
+    {
+      "frame": 127,
+      "stats": {
+        "pairs": 40,
+        "contacts": 38,
+        "iterations": 10759,
+        "queries": 22323
+      },
+      "kineticEnergy": 0.476634443,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088949
+    },
+    {
+      "frame": 128,
+      "stats": {
+        "pairs": 40,
+        "contacts": 38,
+        "iterations": 10604,
+        "queries": 22030
+      },
+      "kineticEnergy": 0.397353679,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089247
+    },
+    {
+      "frame": 129,
+      "stats": {
+        "pairs": 40,
+        "contacts": 37,
+        "iterations": 10760,
+        "queries": 22360
+      },
+      "kineticEnergy": 0.313902706,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089188
+    },
+    {
+      "frame": 130,
+      "stats": {
+        "pairs": 40,
+        "contacts": 37,
+        "iterations": 10657,
+        "queries": 22153
+      },
+      "kineticEnergy": 0.271177381,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088651
+    },
+    {
+      "frame": 131,
+      "stats": {
+        "pairs": 40,
+        "contacts": 39,
+        "iterations": 10657,
+        "queries": 22085
+      },
+      "kineticEnergy": 0.240575865,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089396
+    },
+    {
+      "frame": 132,
+      "stats": {
+        "pairs": 40,
+        "contacts": 36,
+        "iterations": 10690,
+        "queries": 22186
+      },
+      "kineticEnergy": 0.208910838,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089366
+    },
+    {
+      "frame": 133,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10737,
+        "queries": 22332
+      },
+      "kineticEnergy": 0.205087692,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355089068
+    },
+    {
+      "frame": 134,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10370,
+        "queries": 21718
+      },
+      "kineticEnergy": 0.207955703,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088323
+    },
+    {
+      "frame": 135,
+      "stats": {
+        "pairs": 40,
+        "contacts": 45,
+        "iterations": 10636,
+        "queries": 22093
+      },
+      "kineticEnergy": 0.171030566,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088145
+    },
+    {
+      "frame": 136,
+      "stats": {
+        "pairs": 40,
+        "contacts": 44,
+        "iterations": 10504,
+        "queries": 21898
+      },
+      "kineticEnergy": 0.178739727,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355088383
+    },
+    {
+      "frame": 137,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10259,
+        "queries": 21516
+      },
+      "kineticEnergy": 0.200084358,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355087638
+    },
+    {
+      "frame": 138,
+      "stats": {
+        "pairs": 40,
+        "contacts": 45,
+        "iterations": 10519,
+        "queries": 22013
+      },
+      "kineticEnergy": 0.213169619,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355087548
+    },
+    {
+      "frame": 139,
+      "stats": {
+        "pairs": 40,
+        "contacts": 47,
+        "iterations": 10623,
+        "queries": 22164
+      },
+      "kineticEnergy": 0.252504826,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355087459
+    },
+    {
+      "frame": 140,
+      "stats": {
+        "pairs": 40,
+        "contacts": 48,
+        "iterations": 10677,
+        "queries": 22159
+      },
+      "kineticEnergy": 0.271130919,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355086625
+    },
+    {
+      "frame": 141,
+      "stats": {
+        "pairs": 40,
+        "contacts": 46,
+        "iterations": 10436,
+        "queries": 21768
+      },
+      "kineticEnergy": 0.206723824,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355085969
+    },
+    {
+      "frame": 142,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10411,
+        "queries": 21680
+      },
+      "kineticEnergy": 0.205036119,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355086237
+    },
+    {
+      "frame": 143,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10277,
+        "queries": 21462
+      },
+      "kineticEnergy": 0.230175331,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355086207
+    },
+    {
+      "frame": 144,
+      "stats": {
+        "pairs": 40,
+        "contacts": 44,
+        "iterations": 10635,
+        "queries": 22073
+      },
+      "kineticEnergy": 0.151179075,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084449
+    },
+    {
+      "frame": 145,
+      "stats": {
+        "pairs": 40,
+        "contacts": 43,
+        "iterations": 10687,
+        "queries": 22130
+      },
+      "kineticEnergy": 0.164449438,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083972
+    },
+    {
+      "frame": 146,
+      "stats": {
+        "pairs": 40,
+        "contacts": 44,
+        "iterations": 10463,
+        "queries": 21743
+      },
+      "kineticEnergy": 0.17758067,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083674
+    },
+    {
+      "frame": 147,
+      "stats": {
+        "pairs": 40,
+        "contacts": 45,
+        "iterations": 10745,
+        "queries": 22223
+      },
+      "kineticEnergy": 0.187596738,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083734
+    },
+    {
+      "frame": 148,
+      "stats": {
+        "pairs": 40,
+        "contacts": 48,
+        "iterations": 10625,
+        "queries": 22037
+      },
+      "kineticEnergy": 0.158177719,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 149,
+      "stats": {
+        "pairs": 40,
+        "contacts": 46,
+        "iterations": 10555,
+        "queries": 21926
+      },
+      "kineticEnergy": 0.171163425,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002
+    },
+    {
+      "frame": 150,
+      "stats": {
+        "pairs": 40,
+        "contacts": 46,
+        "iterations": 10262,
+        "queries": 21476
+      },
+      "kineticEnergy": 0.144364953,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 302747
+    },
+    {
+      "frame": 151,
+      "stats": {
+        "pairs": 40,
+        "contacts": 47,
+        "iterations": 9975,
+        "queries": 20971
+      },
+      "kineticEnergy": 0.148246378,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002
+    },
+    {
+      "frame": 152,
+      "stats": {
+        "pairs": 40,
+        "contacts": 46,
+        "iterations": 10163,
+        "queries": 21316
+      },
+      "kineticEnergy": 0.158284232,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002
+    },
+    {
+      "frame": 153,
+      "stats": {
+        "pairs": 40,
+        "contacts": 46,
+        "iterations": 10263,
+        "queries": 21440
+      },
+      "kineticEnergy": 0.169729903,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002
+    },
+    {
+      "frame": 154,
+      "stats": {
+        "pairs": 40,
+        "contacts": 47,
+        "iterations": 10198,
+        "queries": 21341
+      },
+      "kineticEnergy": 0.183141008,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 155,
+      "stats": {
+        "pairs": 40,
+        "contacts": 48,
+        "iterations": 10124,
+        "queries": 21235
+      },
+      "kineticEnergy": 0.198183507,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 156,
+      "stats": {
+        "pairs": 40,
+        "contacts": 50,
+        "iterations": 10327,
+        "queries": 21588
+      },
+      "kineticEnergy": 0.214980036,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 157,
+      "stats": {
+        "pairs": 40,
+        "contacts": 50,
+        "iterations": 10547,
+        "queries": 21965
+      },
+      "kineticEnergy": 0.226371005,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 158,
+      "stats": {
+        "pairs": 40,
+        "contacts": 52,
+        "iterations": 10563,
+        "queries": 21970
+      },
+      "kineticEnergy": 0.220387027,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 159,
+      "stats": {
+        "pairs": 40,
+        "contacts": 50,
+        "iterations": 10428,
+        "queries": 21714
+      },
+      "kineticEnergy": 0.214005172,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083913
+    },
+    {
+      "frame": 160,
+      "stats": {
+        "pairs": 40,
+        "contacts": 51,
+        "iterations": 10143,
+        "queries": 21219
+      },
+      "kineticEnergy": 0.210901871,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083913
+    },
+    {
+      "frame": 161,
+      "stats": {
+        "pairs": 40,
+        "contacts": 52,
+        "iterations": 10300,
+        "queries": 21508
+      },
+      "kineticEnergy": 0.207035303,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 162,
+      "stats": {
+        "pairs": 40,
+        "contacts": 51,
+        "iterations": 9995,
+        "queries": 21033
+      },
+      "kineticEnergy": 0.20527038,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 163,
+      "stats": {
+        "pairs": 41,
+        "contacts": 51,
+        "iterations": 10581,
+        "queries": 22028
+      },
+      "kineticEnergy": 0.20443365,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 164,
+      "stats": {
+        "pairs": 41,
+        "contacts": 54,
+        "iterations": 10317,
+        "queries": 21707
+      },
+      "kineticEnergy": 0.205033928,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 165,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10524,
+        "queries": 21970
+      },
+      "kineticEnergy": 0.207869053,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 166,
+      "stats": {
+        "pairs": 41,
+        "contacts": 51,
+        "iterations": 10540,
+        "queries": 22000
+      },
+      "kineticEnergy": 0.210458383,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084121
+    },
+    {
+      "frame": 167,
+      "stats": {
+        "pairs": 41,
+        "contacts": 54,
+        "iterations": 10583,
+        "queries": 22071
+      },
+      "kineticEnergy": 0.215174824,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084002
+    },
+    {
+      "frame": 168,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10629,
+        "queries": 22161
+      },
+      "kineticEnergy": 0.221426561,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084032
+    },
+    {
+      "frame": 169,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10609,
+        "queries": 22059
+      },
+      "kineticEnergy": 0.229858279,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084181
+    },
+    {
+      "frame": 170,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10282,
+        "queries": 21635
+      },
+      "kineticEnergy": 0.239968628,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084181
+    },
+    {
+      "frame": 171,
+      "stats": {
+        "pairs": 41,
+        "contacts": 51,
+        "iterations": 10554,
+        "queries": 22064
+      },
+      "kineticEnergy": 0.251381159,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084181
+    },
+    {
+      "frame": 172,
+      "stats": {
+        "pairs": 41,
+        "contacts": 54,
+        "iterations": 10544,
+        "queries": 22074
+      },
+      "kineticEnergy": 0.264626682,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 173,
+      "stats": {
+        "pairs": 41,
+        "contacts": 51,
+        "iterations": 10648,
+        "queries": 22187
+      },
+      "kineticEnergy": 0.278611094,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084211
+    },
+    {
+      "frame": 174,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10497,
+        "queries": 21992
+      },
+      "kineticEnergy": 0.295871496,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 175,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10427,
+        "queries": 21854
+      },
+      "kineticEnergy": 0.31444189,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 176,
+      "stats": {
+        "pairs": 41,
+        "contacts": 51,
+        "iterations": 10640,
+        "queries": 22187
+      },
+      "kineticEnergy": 0.335884154,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 177,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10630,
+        "queries": 22142
+      },
+      "kineticEnergy": 0.359835714,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 178,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10703,
+        "queries": 22273
+      },
+      "kineticEnergy": 0.386680901,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 179,
+      "stats": {
+        "pairs": 41,
+        "contacts": 53,
+        "iterations": 10702,
+        "queries": 22245
+      },
+      "kineticEnergy": 0.41695869,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 180,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10411,
+        "queries": 21778
+      },
+      "kineticEnergy": 0.450401723,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 306984
+    },
+    {
+      "frame": 181,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10603,
+        "queries": 22088
+      },
+      "kineticEnergy": 0.486195326,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 182,
+      "stats": {
+        "pairs": 41,
+        "contacts": 49,
+        "iterations": 10452,
+        "queries": 21835
+      },
+      "kineticEnergy": 0.526289701,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 183,
+      "stats": {
+        "pairs": 41,
+        "contacts": 49,
+        "iterations": 10546,
+        "queries": 22054
+      },
+      "kineticEnergy": 0.570557237,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 184,
+      "stats": {
+        "pairs": 41,
+        "contacts": 50,
+        "iterations": 10513,
+        "queries": 22010
+      },
+      "kineticEnergy": 0.619228601,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 185,
+      "stats": {
+        "pairs": 41,
+        "contacts": 49,
+        "iterations": 10506,
+        "queries": 21972
+      },
+      "kineticEnergy": 0.673063576,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 186,
+      "stats": {
+        "pairs": 42,
+        "contacts": 52,
+        "iterations": 10759,
+        "queries": 22430
+      },
+      "kineticEnergy": 0.732174933,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355084151
+    },
+    {
+      "frame": 187,
+      "stats": {
+        "pairs": 42,
+        "contacts": 51,
+        "iterations": 10501,
+        "queries": 22072
+      },
+      "kineticEnergy": 0.190005541,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355083406
+    },
+    {
+      "frame": 188,
+      "stats": {
+        "pairs": 42,
+        "contacts": 44,
+        "iterations": 10871,
+        "queries": 22687
+      },
+      "kineticEnergy": 0.113731489,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355081201
+    },
+    {
+      "frame": 189,
+      "stats": {
+        "pairs": 42,
+        "contacts": 45,
+        "iterations": 10815,
+        "queries": 22720
+      },
+      "kineticEnergy": 0.0659341365,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355080634
+    },
+    {
+      "frame": 190,
+      "stats": {
+        "pairs": 42,
+        "contacts": 50,
+        "iterations": 10959,
+        "queries": 22968
+      },
+      "kineticEnergy": 0.0431499109,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079114
+    },
+    {
+      "frame": 191,
+      "stats": {
+        "pairs": 42,
+        "contacts": 47,
+        "iterations": 10773,
+        "queries": 22519
+      },
+      "kineticEnergy": 0.0168826953,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 192,
+      "stats": {
+        "pairs": 43,
+        "contacts": 49,
+        "iterations": 10991,
+        "queries": 23078
+      },
+      "kineticEnergy": 0.00739658484,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079532
+    },
+    {
+      "frame": 193,
+      "stats": {
+        "pairs": 43,
+        "contacts": 49,
+        "iterations": 11184,
+        "queries": 23364
+      },
+      "kineticEnergy": 0.00441331696,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079323
+    },
+    {
+      "frame": 194,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 11069,
+        "queries": 23225
+      },
+      "kineticEnergy": 0.00250487356,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079055
+    },
+    {
+      "frame": 195,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10976,
+        "queries": 22992
+      },
+      "kineticEnergy": 0.00114833785,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 196,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10931,
+        "queries": 22912
+      },
+      "kineticEnergy": 0.000318446429,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079114
+    },
+    {
+      "frame": 197,
+      "stats": {
+        "pairs": 43,
+        "contacts": 49,
+        "iterations": 11115,
+        "queries": 23195
+      },
+      "kineticEnergy": 3.73199828e-06,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079114
+    },
+    {
+      "frame": 198,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10964,
+        "queries": 23014
+      },
+      "kineticEnergy": 0.000193703672,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079114
+    },
+    {
+      "frame": 199,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10957,
+        "queries": 23020
+      },
+      "kineticEnergy": 0.000884565059,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079114
+    },
+    {
+      "frame": 200,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10689,
+        "queries": 22497
+      },
+      "kineticEnergy": 0.00208607968,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 201,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10935,
+        "queries": 22977
+      },
+      "kineticEnergy": 0.00382290827,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 202,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10978,
+        "queries": 22989
+      },
+      "kineticEnergy": 0.00600178353,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 203,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10980,
+        "queries": 22985
+      },
+      "kineticEnergy": 0.00883921515,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 204,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 11050,
+        "queries": 23091
+      },
+      "kineticEnergy": 0.0123193208,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 205,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10902,
+        "queries": 22857
+      },
+      "kineticEnergy": 0.0164280161,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 206,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 11023,
+        "queries": 23059
+      },
+      "kineticEnergy": 0.0208588429,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 207,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10967,
+        "queries": 22922
+      },
+      "kineticEnergy": 0.0170698576,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 208,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10846,
+        "queries": 22684
+      },
+      "kineticEnergy": 0.0135766156,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 209,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 11116,
+        "queries": 23234
+      },
+      "kineticEnergy": 0.0105458163,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 210,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10585,
+        "queries": 22291
+      },
+      "kineticEnergy": 0.00792919099,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    },
+    {
+      "frame": 211,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10947,
+        "queries": 22940
+      },
+      "kineticEnergy": 0.00573652331,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 212,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10939,
+        "queries": 22892
+      },
+      "kineticEnergy": 0.00392481312,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 213,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10744,
+        "queries": 22589
+      },
+      "kineticEnergy": 0.00247430475,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 214,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10743,
+        "queries": 22611
+      },
+      "kineticEnergy": 0.0013681117,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 215,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 11119,
+        "queries": 23243
+      },
+      "kineticEnergy": 0.000593759643,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 216,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10882,
+        "queries": 22907
+      },
+      "kineticEnergy": 0.00014036354,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 217,
+      "stats": {
+        "pairs": 43,
+        "contacts": 49,
+        "iterations": 10858,
+        "queries": 22871
+      },
+      "kineticEnergy": 3.58784803e-07,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 218,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 11148,
+        "queries": 23295
+      },
+      "kineticEnergy": 0.000168991115,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 219,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10698,
+        "queries": 22531
+      },
+      "kineticEnergy": 0.00064422685,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 220,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10861,
+        "queries": 22829
+      },
+      "kineticEnergy": 0.00142671296,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 221,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 11060,
+        "queries": 23210
+      },
+      "kineticEnergy": 0.00251976191,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 222,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10993,
+        "queries": 23060
+      },
+      "kineticEnergy": 0.0039293454,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 223,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 11016,
+        "queries": 23085
+      },
+      "kineticEnergy": 0.00566413393,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 224,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10760,
+        "queries": 22603
+      },
+      "kineticEnergy": 0.0077355667,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 225,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10842,
+        "queries": 22736
+      },
+      "kineticEnergy": 0.0101578739,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 226,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10903,
+        "queries": 22853
+      },
+      "kineticEnergy": 0.0129482308,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 227,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10674,
+        "queries": 22477
+      },
+      "kineticEnergy": 0.0161012579,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 228,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10827,
+        "queries": 22712
+      },
+      "kineticEnergy": 0.0137765761,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 229,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 11237,
+        "queries": 23452
+      },
+      "kineticEnergy": 0.00999477319,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 230,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10694,
+        "queries": 22577
+      },
+      "kineticEnergy": 0.00681322394,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 231,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10788,
+        "queries": 22695
+      },
+      "kineticEnergy": 0.00428403681,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 232,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10825,
+        "queries": 22741
+      },
+      "kineticEnergy": 0.00238277647,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 233,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10850,
+        "queries": 22777
+      },
+      "kineticEnergy": 0.00104686199,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 234,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10681,
+        "queries": 22583
+      },
+      "kineticEnergy": 0.000256341969,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 235,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10828,
+        "queries": 22772
+      },
+      "kineticEnergy": 4.38946195e-08,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 236,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10657,
+        "queries": 22470
+      },
+      "kineticEnergy": 0.000283280155,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 237,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10671,
+        "queries": 22489
+      },
+      "kineticEnergy": 0.00112589879,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 238,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10967,
+        "queries": 22956
+      },
+      "kineticEnergy": 0.0024549535,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 239,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10796,
+        "queries": 22712
+      },
+      "kineticEnergy": 0.00428808108,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 240,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10956,
+        "queries": 22973
+      },
+      "kineticEnergy": 0.00664510438,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    },
+    {
+      "frame": 241,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10859,
+        "queries": 22828
+      },
+      "kineticEnergy": 0.00958252698,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 242,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10656,
+        "queries": 22531
+      },
+      "kineticEnergy": 0.0132391844,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 243,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10557,
+        "queries": 22323
+      },
+      "kineticEnergy": 0.010542402,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 244,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10982,
+        "queries": 22997
+      },
+      "kineticEnergy": 0.00784851983,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 245,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10590,
+        "queries": 22378
+      },
+      "kineticEnergy": 0.00558807934,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 246,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10583,
+        "queries": 22361
+      },
+      "kineticEnergy": 0.00373679353,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 247,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10840,
+        "queries": 22778
+      },
+      "kineticEnergy": 0.0022742562,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 248,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10635,
+        "queries": 22480
+      },
+      "kineticEnergy": 0.00118358247,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 249,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10938,
+        "queries": 22906
+      },
+      "kineticEnergy": 0.000451232598,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 250,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10800,
+        "queries": 22644
+      },
+      "kineticEnergy": 6.68658904e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 251,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10823,
+        "queries": 22730
+      },
+      "kineticEnergy": 2.32388138e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 252,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10630,
+        "queries": 22384
+      },
+      "kineticEnergy": 0.000316118269,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 253,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10684,
+        "queries": 22443
+      },
+      "kineticEnergy": 0.000944175874,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 254,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10681,
+        "queries": 22497
+      },
+      "kineticEnergy": 0.00190913305,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 255,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10624,
+        "queries": 22404
+      },
+      "kineticEnergy": 0.00321550295,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 256,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10759,
+        "queries": 22613
+      },
+      "kineticEnergy": 0.00487075001,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 257,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10705,
+        "queries": 22558
+      },
+      "kineticEnergy": 0.00688529899,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 258,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10938,
+        "queries": 22921
+      },
+      "kineticEnergy": 0.00927260425,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 259,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10707,
+        "queries": 22490
+      },
+      "kineticEnergy": 0.0120215481,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 260,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10858,
+        "queries": 22744
+      },
+      "kineticEnergy": 0.00770051545,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 261,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10785,
+        "queries": 22656
+      },
+      "kineticEnergy": 0.00491575478,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 262,
+      "stats": {
+        "pairs": 43,
+        "contacts": 49,
+        "iterations": 10777,
+        "queries": 22656
+      },
+      "kineticEnergy": 0.00277482253,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 263,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10776,
+        "queries": 22674
+      },
+      "kineticEnergy": 0.00125549152,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 264,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10829,
+        "queries": 22769
+      },
+      "kineticEnergy": 0.000325196801,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 265,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10852,
+        "queries": 22794
+      },
+      "kineticEnergy": 5.49674382e-07,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 266,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10852,
+        "queries": 22717
+      },
+      "kineticEnergy": 0.000271740544,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 267,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10459,
+        "queries": 22116
+      },
+      "kineticEnergy": 0.00113477302,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 268,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10742,
+        "queries": 22556
+      },
+      "kineticEnergy": 0.00258044642,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 269,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10813,
+        "queries": 22705
+      },
+      "kineticEnergy": 0.004614871,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 270,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10950,
+        "queries": 22936
+      },
+      "kineticEnergy": 0.00725347409,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    },
+    {
+      "frame": 271,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10854,
+        "queries": 22785
+      },
+      "kineticEnergy": 0.00804596208,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 272,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10750,
+        "queries": 22576
+      },
+      "kineticEnergy": 0.00568866543,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 273,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10735,
+        "queries": 22610
+      },
+      "kineticEnergy": 0.0037710648,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 274,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10947,
+        "queries": 22900
+      },
+      "kineticEnergy": 0.00226392015,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 275,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10828,
+        "queries": 22774
+      },
+      "kineticEnergy": 0.00114973076,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 276,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10495,
+        "queries": 22131
+      },
+      "kineticEnergy": 0.000414527749,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 277,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10791,
+        "queries": 22699
+      },
+      "kineticEnergy": 4.7715519e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 278,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10694,
+        "queries": 22525
+      },
+      "kineticEnergy": 4.19743956e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 279,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10471,
+        "queries": 22166
+      },
+      "kineticEnergy": 0.000393169204,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 280,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10685,
+        "queries": 22460
+      },
+      "kineticEnergy": 0.00110029255,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 281,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10568,
+        "queries": 22340
+      },
+      "kineticEnergy": 0.00216542999,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 282,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10741,
+        "queries": 22572
+      },
+      "kineticEnergy": 0.0035883314,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 283,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10799,
+        "queries": 22632
+      },
+      "kineticEnergy": 0.00537373777,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 284,
+      "stats": {
+        "pairs": 43,
+        "contacts": 57,
+        "iterations": 10793,
+        "queries": 22663
+      },
+      "kineticEnergy": 0.00565664703,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 285,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10758,
+        "queries": 22580
+      },
+      "kineticEnergy": 0.00336404797,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 286,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10717,
+        "queries": 22508
+      },
+      "kineticEnergy": 0.00168911531,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 287,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10696,
+        "queries": 22503
+      },
+      "kineticEnergy": 0.000574169098,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 288,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10843,
+        "queries": 22738
+      },
+      "kineticEnergy": 4.63548677e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 289,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10758,
+        "queries": 22658
+      },
+      "kineticEnergy": 0.000105370214,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 290,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10715,
+        "queries": 22588
+      },
+      "kineticEnergy": 0.000745283207,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 291,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10739,
+        "queries": 22606
+      },
+      "kineticEnergy": 0.00196579285,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 292,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 11111,
+        "queries": 23236
+      },
+      "kineticEnergy": 0.00377218751,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 293,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10610,
+        "queries": 22391
+      },
+      "kineticEnergy": 0.0045059016,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 294,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10633,
+        "queries": 22382
+      },
+      "kineticEnergy": 0.00280395709,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 295,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10761,
+        "queries": 22656
+      },
+      "kineticEnergy": 0.00152098597,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 296,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10612,
+        "queries": 22397
+      },
+      "kineticEnergy": 0.000634258788,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 297,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10656,
+        "queries": 22407
+      },
+      "kineticEnergy": 0.000131699431,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 298,
+      "stats": {
+        "pairs": 43,
+        "contacts": 50,
+        "iterations": 10808,
+        "queries": 22677
+      },
+      "kineticEnergy": 4.6468449e-06,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 299,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10812,
+        "queries": 22699
+      },
+      "kineticEnergy": 0.000247760094,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 300,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10978,
+        "queries": 22993
+      },
+      "kineticEnergy": 0.000858852174,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    },
+    {
+      "frame": 301,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10868,
+        "queries": 22808
+      },
+      "kineticEnergy": 0.00183917605,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 302,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10792,
+        "queries": 22635
+      },
+      "kineticEnergy": 0.00318418141,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 303,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10920,
+        "queries": 22919
+      },
+      "kineticEnergy": 0.00190280983,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 304,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10838,
+        "queries": 22734
+      },
+      "kineticEnergy": 0.000678901328,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 305,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10917,
+        "queries": 22871
+      },
+      "kineticEnergy": 7.42689954e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 306,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10829,
+        "queries": 22724
+      },
+      "kineticEnergy": 7.62921773e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 307,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10654,
+        "queries": 22447
+      },
+      "kineticEnergy": 0.000309623429,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 308,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10781,
+        "queries": 22710
+      },
+      "kineticEnergy": 0.00121904456,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 309,
+      "stats": {
+        "pairs": 43,
+        "contacts": 58,
+        "iterations": 10562,
+        "queries": 22245
+      },
+      "kineticEnergy": 0.00177197787,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 310,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10705,
+        "queries": 22478
+      },
+      "kineticEnergy": 0.000785561453,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 311,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10870,
+        "queries": 22778
+      },
+      "kineticEnergy": 0.00019981357,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 312,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10726,
+        "queries": 22479
+      },
+      "kineticEnergy": 1.06558261e-07,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 313,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10669,
+        "queries": 22476
+      },
+      "kineticEnergy": 0.000180356219,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 314,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10690,
+        "queries": 22459
+      },
+      "kineticEnergy": 0.000737816095,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 315,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10683,
+        "queries": 22434
+      },
+      "kineticEnergy": 0.00167302985,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 316,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10687,
+        "queries": 22478
+      },
+      "kineticEnergy": 0.00045203499,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 317,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10580,
+        "queries": 22335
+      },
+      "kineticEnergy": 1.40371394e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 318,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10644,
+        "queries": 22385
+      },
+      "kineticEnergy": 0.000187525162,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 319,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10694,
+        "queries": 22424
+      },
+      "kineticEnergy": 0.000967387226,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 320,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10659,
+        "queries": 22390
+      },
+      "kineticEnergy": 0.000242530354,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 321,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10895,
+        "queries": 22804
+      },
+      "kineticEnergy": 2.75308275e-06,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 322,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10778,
+        "queries": 22590
+      },
+      "kineticEnergy": 0.000148804858,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 323,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10765,
+        "queries": 22567
+      },
+      "kineticEnergy": 0.000677576172,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 324,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10775,
+        "queries": 22614
+      },
+      "kineticEnergy": 5.1488405e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 325,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10862,
+        "queries": 22783
+      },
+      "kineticEnergy": 0.000106442094,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 326,
+      "stats": {
+        "pairs": 43,
+        "contacts": 51,
+        "iterations": 10903,
+        "queries": 22798
+      },
+      "kineticEnergy": 0.000123753736,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 327,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10531,
+        "queries": 22187
+      },
+      "kineticEnergy": 7.96067252e-06,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 328,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10816,
+        "queries": 22696
+      },
+      "kineticEnergy": 0.000100926874,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 329,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10861,
+        "queries": 22776
+      },
+      "kineticEnergy": 1.12227599e-05,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 330,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10920,
+        "queries": 22854
+      },
+      "kineticEnergy": 7.47515344e-07,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    },
+    {
+      "frame": 331,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 11039,
+        "queries": 23073
+      },
+      "kineticEnergy": 6.26156516e-10,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 332,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10761,
+        "queries": 22612
+      },
+      "kineticEnergy": 1.59516151e-08,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 333,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10661,
+        "queries": 22434
+      },
+      "kineticEnergy": 8.33587865e-09,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 334,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10731,
+        "queries": 22514
+      },
+      "kineticEnergy": 1.81488491e-09,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 335,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10857,
+        "queries": 22781
+      },
+      "kineticEnergy": 2.02127592e-10,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 336,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10729,
+        "queries": 22538
+      },
+      "kineticEnergy": 7.94955681e-12,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 337,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10634,
+        "queries": 22361
+      },
+      "kineticEnergy": 1.91390903e-13,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 338,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10608,
+        "queries": 22401
+      },
+      "kineticEnergy": 5.86957403e-13,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 339,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10732,
+        "queries": 22572
+      },
+      "kineticEnergy": 1.7710719e-13,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 340,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10689,
+        "queries": 22495
+      },
+      "kineticEnergy": 3.41652603e-14,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 341,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10738,
+        "queries": 22590
+      },
+      "kineticEnergy": 3.60794658e-15,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 342,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10723,
+        "queries": 22546
+      },
+      "kineticEnergy": 1.90654093e-16,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 343,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10777,
+        "queries": 22646
+      },
+      "kineticEnergy": 7.31276829e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 344,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10830,
+        "queries": 22716
+      },
+      "kineticEnergy": 1.76330634e-16,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 345,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10957,
+        "queries": 22899
+      },
+      "kineticEnergy": 1.28384891e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 346,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10749,
+        "queries": 22597
+      },
+      "kineticEnergy": 1.43822939e-16,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 347,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10949,
+        "queries": 22882
+      },
+      "kineticEnergy": 5.71055187e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 348,
+      "stats": {
+        "pairs": 43,
+        "contacts": 56,
+        "iterations": 10844,
+        "queries": 22751
+      },
+      "kineticEnergy": 2.00086851e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 349,
+      "stats": {
+        "pairs": 43,
+        "contacts": 52,
+        "iterations": 10687,
+        "queries": 22507
+      },
+      "kineticEnergy": 4.49110037e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 350,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10625,
+        "queries": 22397
+      },
+      "kineticEnergy": 8.17085039e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 351,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10854,
+        "queries": 22801
+      },
+      "kineticEnergy": 4.34460735e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 352,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10781,
+        "queries": 22639
+      },
+      "kineticEnergy": 2.73709532e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 353,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10526,
+        "queries": 22183
+      },
+      "kineticEnergy": 1.40280223e-16,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 354,
+      "stats": {
+        "pairs": 43,
+        "contacts": 55,
+        "iterations": 10638,
+        "queries": 22438
+      },
+      "kineticEnergy": 7.02845374e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 355,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10541,
+        "queries": 22268
+      },
+      "kineticEnergy": 3.63974756e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 356,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10725,
+        "queries": 22618
+      },
+      "kineticEnergy": 9.70096379e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 357,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10901,
+        "queries": 22878
+      },
+      "kineticEnergy": 2.17597156e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 358,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10859,
+        "queries": 22826
+      },
+      "kineticEnergy": 6.89171748e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 359,
+      "stats": {
+        "pairs": 43,
+        "contacts": 54,
+        "iterations": 10754,
+        "queries": 22610
+      },
+      "kineticEnergy": 9.45784151e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085
+    },
+    {
+      "frame": 360,
+      "stats": {
+        "pairs": 43,
+        "contacts": 53,
+        "iterations": 10935,
+        "queries": 22938
+      },
+      "kineticEnergy": 3.0539409e-17,
+      "maxContactPenetration": 0,
+      "minCenterY": 0.355079085,
+      "maxVertexPenetration": 0,
+      "vertexQueries": 315506
+    }
+  ]
+}

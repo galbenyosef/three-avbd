@@ -1,0 +1,48 @@
+{
+  "revision": "1dcdf1e7fa07d16fda15826ad8c2e6697075a76e",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.3.19.1)",
+  "flags": [
+    "-O2",
+    "-std=c++17",
+    "-ffp-contract=off",
+    "-fno-fast-math"
+  ],
+  "format": "little-endian float32 phi,gx,gy,gz; x-fastest",
+  "driverSha256": "4c9c06173b7b696d8d4a4ce83d5bd83f8c39d53d0136f9856432fe9002005e2b",
+  "inputs": {
+    "source/shapes.cpp": "f35d36fb8ec5a858f2bac6aba608a0cb4f4d1181e0bcaa5f8145acbc704a18c6",
+    "source/voxel.cpp": "b5847b1664ad831457848182ef80c267ab8c8fa5877db3fa66d4713844931428",
+    "source/mesh.cpp": "1986cbc4712e86b0b9d5581dc92a2974d6183c57a24b19a7e80b7383dddb6060",
+    "source/body.h": "f53894259a7ed04fc2942548f756b4d564c2aab5f74d5dbb9d48a2a4ab1415e7",
+    "source/collide.h": "919c80cb36a6dbdca2969f806efb244b418b9ef24386629659b1b1de56ac6abf",
+    "source/gl.h": "c856f28e5a0da559b6009878a8227f4f3c84b9293e4554d6a3b888e34a3ab2ce",
+    "source/maths.h": "418905266178617c9d1b7592cbaf83d12d4c0eed57a74498ce36abab9318b969",
+    "source/mesh.h": "61e166471dffc7086e3c347098e3547699ba7c2cbb221336a423edf41d1d3113",
+    "source/render.h": "33cf6da441308642d04b3ed5007255a6478ee431c0cf6e1a8bfc022c1b5a18a2",
+    "source/scenes.h": "120f90780f6599e45871344137cb7adbc8da119cc9262d45d943121404cba093",
+    "source/shapes.h": "86543e5baab47ae6ed6793b6799840091097f73a7e21c52340b2835ce519c9c6",
+    "source/solver.h": "862e2bffda9e8da81c0baef89f81dd54e7f422f81c1829f0457fc109b2a87f4c",
+    "assets/bunny.obj": "b6474a38f8dd8176d5b9d71c1f495d938c80fa50530009c0d08260c472856609",
+    "assets/chair.obj": "ff511b308844d86fef745bf66502e05946055d02e3ba0df5db8c4f2b995dde79",
+    "assets/cow.obj": "2cd62666d585060d8e39a20ca7dc56d3c2e5c2b0a45af6a208b85bc26a47c37a",
+    "assets/gear.obj": "a8670d53222b2e86b600877143004330c4cde13bce010d0cfaae2605edf643b1"
+  },
+  "grids": {
+    "bunny": {
+      "bytes": 169280,
+      "sha256": "f440bdff66475802b2fbf4561c206b86bcf2695745a7dc64cf231bf890cad935"
+    },
+    "gear": {
+      "bytes": 84640,
+      "sha256": "660966874ad9b4059b5dd9fe8da4e787a9f740a179904fe9462e10200e8e519b"
+    },
+    "cow": {
+      "bytes": 75072,
+      "sha256": "69182ade7d5df07e97547502ce5f182b120600fb64a92f738a1c4dd28862d217"
+    },
+    "chair": {
+      "bytes": 88320,
+      "sha256": "f9f4e44dae1437bf3f7cec910deaac7b3bc124ae29242cfd17b03085aa303caa"
+    }
+  }
+}

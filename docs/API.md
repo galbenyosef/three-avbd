@@ -60,6 +60,21 @@ renderer.setAnimationLoop(() => {
   terms (`alpha`, `betaLin`, `betaAng`, `gamma`), with the paper's defaults.
 - `destroy()` releases the GPU buffers.
 
+### Experimental SDF mode (unpublished source build)
+
+`await world.enableSdfCollisions([{ body, field, scale?, rotation? }], params?, broadphase?)` installs SDF
+collisions for allocated body slots. Unassigned boxes/spheres use
+analytic fields. The spatial grid accepts optional `{ cellSize, maxPairs, autoGrow }`;
+World grows capacity after overflow unless `autoGrow: false`. Overflowing frames
+remain incomplete; `adaptSdfCollisions()` can explicitly check/grow capacity.
+GPU bounds, collision masks and joint exclusions select candidates;
+contacts retain independent normals and identity-based warm starts.
+`world.disableSdfCollisions()` restores normal collisions. Body additions/removals
+require `await world.updateSdfCollisions(bindings?, broadphase?)` before the next
+step/query. Omitted fields persist; replaced fields/recycled slots lose warm history.
+`sdfCollisionsNeedUpdate`, `sdfCollisionCapacity`, and `sdfCollisionError` expose status. Contact events aggregate per pair; raycasts query SDF
+surfaces, with at most 256 rays per call. Field rotation maps into the body principal frame. Explicit `massProperties: { mass, moments }` on body creation overrides dynamic proxy inertia; rendered geometry remains caller-owned. See [SDF World API](SDF_WORLD.md).
+
 ### Bodies
 
 - `addBox({ size, position, rotation?, velocity?, angularVelocity?, density?, friction?, fixed? })`

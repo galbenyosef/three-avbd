@@ -346,7 +346,7 @@ function mergeTriangles(positions: ArrayLike<number>, indices: ArrayLike<number>
 }
 
 /** Eigenvalues and eigenvectors (columns, right-handed) of a symmetric 3×3 matrix, by Jacobi rotations. */
-function eigenSymmetric(m: number[][]): { values: V3; vectors: number[][] } {
+export function eigenSymmetric(m: number[][]): { values: V3; vectors: number[][] } {
   const a = m.map((r) => [...r]);
   const v = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
   for (let sweep = 0; sweep < 50; sweep++) {
@@ -386,7 +386,7 @@ function eigenSymmetric(m: number[][]): { values: V3; vectors: number[][] } {
 }
 
 /** Quaternion (x, y, z, w) of a rotation matrix given as rows. */
-function quatFromBasis(m: number[][]): [number, number, number, number] {
+export function quatFromBasis(m: number[][]): [number, number, number, number] {
   const tr = m[0][0] + m[1][1] + m[2][2];
   let x: number, y: number, z: number, w: number;
   if (tr > 0) {

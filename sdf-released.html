@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Released SDF scenes · three-avbd</title></head><body>
+<header><a href="/sdf.html">three-avbd / SDF</a><span>RELEASED SCENE COMPARISON</span></header>
+<aside><h1>Collision studies.</h1><p>Original geometry, poses, mass and full inertia. GPU AVBD against the released CPU reference.</p>
+<label>Released scene<select id="scene"><option value="0">Box Stack · 28 bodies</option><option value="1">Gear Stack · 10 bodies</option><option value="6">Pile of Chairs · 27 bodies</option><option value="9">Bunny Pile · 27 bodies</option></select></label>
+<label>Contact settings<select id="profile"><option value="mesh-quality">Mesh quality</option><option value="reference">Released settings</option></select></label>
+<div class="row"><button id="run" disabled>Run</button><button id="reset" disabled>Reset</button></div>
+<output id="status" role="status">Loading reference assets…</output>
+<table><thead><tr><th>Metric</th><th>GPU AVBD</th><th>CPU SI</th></tr></thead><tbody id="metrics"></tbody></table>
+<p class="hint">Drag to orbit · scroll to zoom. Six simulated seconds; playback capped at 30 reference frames/s. Stops automatically.</p>
+<small>Both profiles: 4 substeps and 5 candidates. Mesh quality activates contacts earlier (4 cm) with the same resting gap and adds exact mesh vertex contacts (floor and mesh-to-mesh). GPU: 20 AVBD iterations. CPU reference: 4 substeps, 20 velocity + 20 correction iterations. Different solvers and random streams. Not a paper performance reproduction. Mesh fields retain the original resolution-100 bake.</small>
+</aside><script type="module" src="/src/sdf-released/main.ts"></script></body></html>

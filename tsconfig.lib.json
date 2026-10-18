@@ -1,5 +1,5 @@
 {
-  // The npm package (three-avbd): src/lib's two entry points and what they reach, emitted as
+  // The npm package (three-avbd): src/lib's entry points and what they reach, emitted as
   // ES modules with declarations into build/ (the site builds to dist/ with Vite)
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -13,5 +13,5 @@
     "types": ["@webgpu/types"]
   },
   "include": [],
-  "files": ["src/lib/index.ts", "src/lib/advanced.ts"]
+  "files": ["src/lib/index.ts", "src/lib/advanced.ts", "src/lib/sdf.ts"]
 }
