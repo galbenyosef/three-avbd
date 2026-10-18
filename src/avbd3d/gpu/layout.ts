@@ -88,6 +88,8 @@ export const K_PEN = 8; // penalty xyz, w: C0 tangent 1
 export const K_LAM = 12; // lambda xyz, w: C0 tangent 2
 /** Static friction held last step (features use bits 0-25). */
 export const STICK_BIT = 0x80000000;
+/** SDF contact on a rolling analytic body: lever arms use the step-start rotation (wgsl-solve.ts). */
+export const SDF_ROLLING_BIT = 0x20000000;
 
 // Counter words beyond the shared ones (../../avbd2d/gpu/layout.ts uses 0-5)
 export const C_MANIFOLDS = 6;
@@ -154,6 +156,9 @@ const C_MANIFOLDS = ${C_MANIFOLDS}u;
 const C_PREV_MANIFOLDS = ${C_PREV_MANIFOLDS}u;
 /** Feature key of every contact involving a sphere (one contact per pair). */
 const SPHERE_FEATURE = 3u << 24u;
+// SDF contact on a rolling analytic body (sphere..torus): evaluate lever arms at the step-start
+// rotation, like SPHERE_FEATURE. Ordinary SDF ids stay below it; built-in features never set it.
+const SDF_ROLLING_BIT = ${SDF_ROLLING_BIT}u;
 
 const FLAG_MATCH_NEAREST = ${FLAG_MATCH_NEAREST}u;
 const FLAG_FACE_BIAS = ${FLAG_FACE_BIAS}u;

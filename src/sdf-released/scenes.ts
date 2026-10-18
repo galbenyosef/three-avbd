@@ -1,14 +1,19 @@
 // Released scene inputs are immutable oracle captures, not regenerated goldens.
 import * as THREE from 'three';
 import { World, type Body, type Quat, type Vec3, type WorldOptions } from '../lib/world.ts';
-import { AnalyticField, VoxelField, curvatureSeeds, principalInertia, type Field, type CollisionParams } from '../lib/sdf.ts';
+import { AnalyticField, VoxelField, curvatureSeeds, principalInertia, type AnalyticSpec, type Field, type CollisionParams } from '../lib/sdf.ts';
+import { fieldSurface } from './mesher.ts';
 
-export const releasedScenes = [{id:0,name:'Box Stack'}, {id:1,name:'Gear Stack'}, {id:6,name:'Pile of Chairs'}, {id:9,name:'Bunny Pile'}] as const;
+/** All eleven sdf-dcd-demo scenes, in its own order. */
+export const releasedScenes = [{id:0,name:'Box Stack'}, {id:1,name:'Gear Stack'}, {id:2,name:'Falling Boxes'}, {id:3,name:'Falling Boxes: Bend'},
+  {id:4,name:'Falling Boxes: Twist'}, {id:5,name:'Falling Boxes: Displace'}, {id:6,name:'Pile of Chairs'}, {id:7,name:'Spiky Wheel'},
+  {id:8,name:'Cows on Spikes'}, {id:9,name:'Bunny Pile'}, {id:10,name:'Primitives'}] as const;
 export type ReadAsset = (path: string) => Promise<ArrayBuffer>;
 export interface RecordedBody {
   position: Vec3; origin: Vec3; orientation: Quat; scale: number; static: boolean;
   velocity: Vec3; angularVelocity: Vec3; mass: number; inertia: number[][]; friction: number;
-  shape: {kind: 'box' | 'voxel'; asset?: string; halfExtents?: Vec3; centerOfMass: Vec3; bounds: {min:Vec3;max:Vec3}; convex:boolean};
+  /** An AnalyticSpec (box, sphere, …, warp, spike-plate, spiky-wheel) or a voxel asset reference. */
+  shape: {kind: AnalyticSpec['kind'] | 'voxel'; asset?: string; halfExtents?: Vec3; centerOfMass: Vec3; bounds: {min:Vec3;max:Vec3}; convex:boolean; [parameter:string]:unknown};
 }
 export interface Sample {
   frame: number; stats: {pairs:number;contacts:number;queries:number;iterations:number};
@@ -54,16 +59,21 @@ export async function loadReleasedScene(id:number,read:ReadAsset):Promise<Releas
   const bodies:PreparedBody[]=[];
   try {
     for(const original of capture.initialBodies) {
-      const key=JSON.stringify(original.shape);
+      // Upstream finalizes every library shape except Ground, its only static box.
+      const ground=original.static&&original.shape.kind==='box';
+      const key=JSON.stringify([original.shape,ground]);
       let shape=fields.get(key);
       if(!shape) {
-        if(original.shape.kind==='box') {
-          const half=original.shape.halfExtents!;
-          const field=new AnalyticField({kind:'box',halfExtents:half});
-          field.centerOfMass=[...original.shape.centerOfMass];
-          // The released Ground is deliberately not finalized (no curvature seeds).
-          field.seeds=original.static?[]:curvatureSeeds(field);
-          shape={field,geometry:new THREE.BoxGeometry(2*half[0],2*half[1],2*half[2]).toNonIndexed()};
+        if(original.shape.kind!=='voxel') {
+          const {bounds:_bounds,centerOfMass,convex:_convex,asset:_asset,...spec}=original.shape;
+          const field=new AnalyticField(spec as AnalyticSpec);
+          field.centerOfMass=[...centerOfMass];
+          field.seeds=ground?[]:curvatureSeeds(field);
+          const half=original.shape.halfExtents;
+          // Smooth primitives mesh well at 48 cells; spikes and warps keep 72 (about 3x fewer samples).
+          const cells=['spike-plate','spiky-wheel','warp'].includes(original.shape.kind)?72:48;
+          const geometry=original.shape.kind==='box'?new THREE.BoxGeometry(2*half![0],2*half![1],2*half![2]).toNonIndexed():fieldSurface(field,cells);
+          shape={field,geometry};
         } else {
           const name=original.shape.asset!.toLowerCase();
           const metadata=await json(read,`oracle-sdf/${name}.json`);
@@ -98,10 +108,12 @@ export async function loadReleasedScene(id:number,read:ReadAsset):Promise<Releas
 export type ReleasedProfile = 'reference' | 'mesh-quality';
 /** Quality settings are explicit; immutable released inputs remain available for comparisons. */
 export function releasedSettings(scene:ReleasedScene,profile:ReleasedProfile='mesh-quality') {
+  // Quality settings apply to every non-convex scene (meshes, warps, spikes, tori); vertex contacts
+  // need source triangles, so only voxel meshes request them.
   const mesh=scene.bodies.some(body=>body.original.shape.kind==='voxel');
-  const quality=profile==='mesh-quality'&&mesh;
+  const quality=profile==='mesh-quality'&&scene.bodies.some(body=>!body.original.shape.convex);
   return {substeps:scene.capture.solver.substeps,collision:{...scene.capture.params,...(quality?{
-    signedSeparation:true,refreshDeeperContacts:true,meshVertexContacts:true,margin:.04,allowedPenetration:.04-(scene.capture.params.margin-scene.capture.params.allowedPenetration),
+    signedSeparation:true,refreshDeeperContacts:true,...(mesh?{meshVertexContacts:true}:{}),margin:.04,allowedPenetration:.04-(scene.capture.params.margin-scene.capture.params.allowedPenetration),
   }:{})}};
 }
 

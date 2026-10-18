@@ -2,6 +2,72 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — All eleven released SDF scenes reproduced; rolling contacts and non-convex quality
+
+`sdf-released.html` and `sdf-released-compare.ts` now load every sdf-dcd-demo scene. New: Falling
+Boxes, Bend, Twist, Displace, Spiky Wheel, Cows on Spikes and Primitives. They use the captured
+analytic specs, COM, mass and full inertia. Upstream finalizes every library shape except `Ground`,
+the only static box, so the static spike plate now gets curvature seeds. Non-box analytic shapes get
+render and probe surfaces from a marching-tetrahedra mesher: 72 cells for spikes and warps, 48 for
+smooth primitives. Its grid is offset by a fraction of a cell so axis-aligned faces never sit on grid
+planes, and zero-area slivers are dropped. A test covers all ten non-box analytic kinds: vertices
+within a cell of the field, ≥99% of surface area facing outward. Scene load (Node, nice 15) takes
+22 ms for Box Stack, about 0.4 s for Spiky Wheel and Cows on Spikes, and 0.55 s for Primitives
+(1.37 s before the lower resolution for smooth primitives).
+
+The first all-scene run exposed three GPU problems.
+- **Rolling anchors.** The bridge kept sticking anchors except on analytic spheres. A rolling
+  Primitives cylinder kept four sticking contacts and sank 123 mm. A Spiky Wheel capsule sank 130 mm.
+  Anchors are now refreshed for analytic kinds 1–5 (sphere, capsule, cylinder, cone, torus).
+- **Rolling linearization.** Even with fresh anchors, an isolated cylinder rolling at 1 m/s sank
+  from 300 to 238 mm in 4 s while speeding up (ω -3.3 → -4.65 rad/s). The built-in solver documents
+  the same effect for its spheres: lever arms rotated with a rolling body add a false separation.
+  These SDF contacts now carry `SDF_ROLLING_BIT` (0x20000000), and `evalContact` evaluates them at the
+  step-start rotation, like `SPHERE_FEATURE`. Ordinary SDF IDs now wrap below that bit, and readback
+  reports it as `rolling`, not as part of `feature`. The cylinder now rides at 0.319 m and slows to
+  ω -1.2 rad/s, a sphere similarly. That slow-down is rolling resistance the release does not have.
+- **Non-convex quality.** Mesh quality was gated on voxel meshes. In non-convex analytic scenes a
+  spike tip 127 mm inside the floor read +2.3 mm through the unsigned mixed-sign gap. Mesh quality now
+  applies to every scene with a non-convex body. Vertex contacts still need voxel triangles.
+
+New GPU tests: a rolling analytic cylinder must keep its axis within 5 mm of its radius above the
+floor (it failed at 238 mm before the linearization change). A cylinder standing on its cap must hold
+on a 10° incline with friction 0.6. It drifts under 1 cm, so the refresh does not remove static
+friction there.
+
+The reference probes only every 30 frames, so penetration is compared on that grid. Upstream's
+randomly oriented spawns overlap during frames 1–29, unmeasured by the reference. **Probe
+vertices differ:** ours are the render surfaces above, the reference uses upstream shape meshes.
+These are comparable lower bounds, not identical measurements. Final kinetic energies are at
+6 s, when several scenes are still moving.
+
+| Scene | Peak / final mm (GPU) | Peak / final mm (reference) | Final KE GPU J | Final KE reference J |
+|---|---|---|---|---|
+| Box Stack | 0 / 0 | 0 / 0 | 6.0e-6 | 2.0e-7 |
+| Gear Stack | 0 / 0 | 0 / 0 | 3.6e-7 | 6.6e-8 |
+| Falling Boxes (convex, release parameters) | 28.1 / 1.0 | 16.8 / 0 | 1.2e-3 | 6.9e-10 |
+| Bend | 21.1 / 0 | 18.1 / 0 | 5.8e-4 | 2.1e-6 |
+| Twist | 31.2 / 0 | 18.3 / 0 | 2.3e-4 | 4.3e-11 |
+| Displace | 26.2 / 0 | 42.3 / 0 | 4.2e-4 | 1.3e-14 |
+| Pile of Chairs | 3.0 / 0 | 9.1 / 0 | 4.6e-5 | 5.3e-19 |
+| Spiky Wheel | 0 / 0 | 0 / 0 | 0.044 | 0.65 |
+| Cows on Spikes | 95.0 / 36.0 | 121.9 / 121.2 | 0.023 | 8.3e-5 |
+| Bunny Pile | 1.7 / 0 | 0 / 0 | 6.6e-4 | 0.014 |
+| Primitives | 7.4 / 0 | 0 / 0 | 0.42 | 0.65 |
+
+Before these fixes, the same comparison read Spiky Wheel 119 / 97.5 mm, Primitives 155 / 21.6 mm,
+and Displace 70.4 / 17.7 mm at 0.51 J.
+- **Scenes the reference settles:** at 6 s ours keep far more residual energy (1e-6 to 1e-3 J
+  against 1e-19 to 1e-6 J), and Cows on Spikes (0.023 J) is still moving.
+- **Rolling scenes:** they lose energy faster than the reference (Spiky Wheel 0.044 against 0.65 J).
+- **Contact counts:** about 1.2–2.3× the reference's.
+- **Cows on Spikes:** deep in both runs, by design of the scene.
+
+This is outcome agreement with the released CPU sequential-impulse demo, not trajectory parity, and
+not the paper's GPU experiments. In comparison runs during this change (raw logs not committed), scenes
+without analytic kinds 1–5 kept bit-identical trajectories. Measurements:
+`measurements/sdf-released-all-2026-10-18.json`.
+
 ## 2026-10-18 — SDF interlocks: two rules tried, neither accepted
 
 Full `pnpm check` on `main` 686d4e3 (sequential, nice 15, nothing excluded): typecheck,

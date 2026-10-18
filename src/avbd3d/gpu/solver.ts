@@ -20,7 +20,7 @@ import { Manifold } from '../ref/manifold.ts';
 import { defaultParams, type Solver, type SolverParams } from '../ref/solver.ts';
 import {
   ARGS_ITEMS_3D, B_ANGVEL, B_INERTIAL_POS, B_INERTIAL_ROT, B_INITIAL_POS, B_INITIAL_ROT, B_MOMENT, B_POS, B_ROT, B_SIZE, B_VEL, BODY_FLOATS,
-  C_MANIFOLDS, C_TAIL_BODIES, CONTACT_WORDS, FLAG_FACE_BIAS, FLAG_SPARSE_COLORS, FLAG_MASS_PENALTY, FLAG_MATCH_NEAREST, FLAG_REUSE_CONTACTS, FLAG_REUSE_MANIFOLDS, FLAG_START_AT_REST, J_C0_ANG, J_C0_LIN, J_LAM_ANG, K_LAM, K_PEN, K_RA, K_RB, M_GEO, MANIFOLD_WORDS, SPARSE_COLOR_START, STICK_BIT,
+  C_MANIFOLDS, C_TAIL_BODIES, CONTACT_WORDS, FLAG_FACE_BIAS, FLAG_SPARSE_COLORS, FLAG_MASS_PENALTY, FLAG_MATCH_NEAREST, FLAG_REUSE_CONTACTS, FLAG_REUSE_MANIFOLDS, FLAG_START_AT_REST, J_C0_ANG, J_C0_LIN, J_LAM_ANG, K_LAM, K_PEN, K_RA, K_RB, M_GEO, MANIFOLD_WORDS, SDF_ROLLING_BIT, SPARSE_COLOR_START, STICK_BIT,
   J_BREAK_BEND, J_LAM_LIN, J_PEN_ANG, J_PEN_LIN, J_RA, J_RB, J_REST, J_REST_START, J_YIELD, JOINT_FLOATS, PARAM_WORDS, PRELUDE_3D, SHAPE_BOX, SHAPE_HULL, SHAPE_SAIL, SHAPE_SPHERE, T_JOINT, T_SPRING,
   TOPOLOGY_ACCESSORS_3D,
 } from './layout.ts';
@@ -57,6 +57,8 @@ export interface GpuContact {
   b: number;
   feature: number;
   stick: boolean;
+  /** SDF contact on a rolling analytic body (lever arms at the step-start rotation). */
+  rolling?: boolean;
   rA: number[];
   rB: number[];
   pen: number[];
@@ -1738,8 +1740,9 @@ export class GpuSolver3D {
         out.push({
           a: mu[o],
           b: mu[o + 1],
-          feature: (key & ~STICK_BIT) >>> 0,
+          feature: (key & ~(STICK_BIT | SDF_ROLLING_BIT)) >>> 0,
           stick: (key & STICK_BIT) !== 0,
+          rolling: (key & SDF_ROLLING_BIT) !== 0,
           rA: [...cf.subarray(k + K_RA, k + K_RA + 3)],
           rB: [...cf.subarray(k + K_RB, k + K_RB + 3)],
           pen: [...cf.subarray(k + K_PEN, k + K_PEN + 3)],

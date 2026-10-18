@@ -47,7 +47,7 @@ async function main(){
       prepared.bodies.forEach((b,i)=>{const list=batches.get(b.geometry)??[];list.push(i);batches.set(b.geometry,list);});
       for(const [geometry,ids] of batches){
         const fixed=prepared.bodies[ids[0]].original.static;
-        const color=fixed?0x243744:select.value==='1'?0xe3ad60:select.value==='6'?0x68c2bc:select.value==='9'?0xc2a1d9:0x8e9fe0;
+        const color=fixed?0x243744:({'1':0xe3ad60,'3':0xe07a5f,'4':0xe07a5f,'5':0xe07a5f,'6':0x68c2bc,'7':0xd9c27a,'8':0xf2e8cf,'9':0xc2a1d9,'10':0x8ecae6} as Record<string,number>)[select.value]??0x8e9fe0;
         const mesh=new BodyMesh(simulation.world,{geometry,bodies:ids.map(i=>simulation!.bodies[i]),material:new THREE.MeshStandardNodeMaterial({color,roughness:.4,metalness:.12})});
         mesh.castShadow=!fixed;mesh.receiveShadow=true;group.add(mesh);
       }

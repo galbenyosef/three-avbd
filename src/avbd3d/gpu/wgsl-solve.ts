@@ -184,7 +184,7 @@ fn evalContact(k: Contact, basis: mat3x3f, friction: f32, A: PairBody, B: PairBo
   // sphere sank through the ground while gaining energy.
   var rotA = A.rot;
   var rotB = B.rot;
-  if ((k.key & ~STICK_BIT) == SPHERE_FEATURE) {
+  if ((k.key & ~STICK_BIT) == SPHERE_FEATURE || (k.key & SDF_ROLLING_BIT) != 0u) {
     rotA = bodies[A.index].initialRot;
     rotB = bodies[B.index].initialRot;
   }

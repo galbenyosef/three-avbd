@@ -93,7 +93,8 @@ struct BridgeParams { counts: vec4u, distances: vec4f }
     if(c>=params.contactCapacity) {
       atomicOr(&counters[C_OVERFLOW],2u); manifolds[m]=Manifold(vec4u(a,b,0u,0u),vec4f(n,0)); continue;
     }
-    contacts[c]=Contact(rA,(point.flags.z&~STICK_BIT)|stick,rB,c0.x,pen,c0.y,lam,c0.z);
+    let rolling=select(0u,SDF_ROLLING_BIT,result.stats.w!=0u);
+    contacts[c]=Contact(rA,(point.flags.z&~STICK_BIT)|stick|rolling,rB,c0.x,pen,c0.y,lam,c0.z);
     manifolds[m]=Manifold(vec4u(a,b,c,1u|(params.step<<4u)),vec4f(n,sqrt(bodies[a].pos.w*bodies[b].pos.w)));
     results[slot].points[i].flags.w=c+1u;
   }
