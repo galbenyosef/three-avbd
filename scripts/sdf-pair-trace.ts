@@ -3,7 +3,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { create, globals } from 'webgpu';
-import { loadReleasedScene, instantiateReleased, type ReadAsset } from '../src/sdf-released/scenes.ts';
+import { loadReleasedScene, instantiateReleased, releasedScenes, type ReadAsset } from '../src/sdf-released/scenes.ts';
 import { SdfBody } from '../src/avbd3d/ref/sdf/body.ts';
 import type { Quat, Vec3 } from '../src/lib/world.ts';
 import { jitterReleased } from './sdf-jitter.ts';
@@ -11,9 +11,9 @@ const [sceneId,bodyA,bodyB,frames,every]=process.argv.slice(2,7).map(Number),out
 const meshVertexContacts=flags.includes('mesh-plane'),alphaFlag=flags.find(f=>f.startsWith('alpha='));
 const jitter=Number(flags.find(f=>f.startsWith('jitter='))?.slice(7)??0);
 const alpha=alphaFlag?Number(alphaFlag.slice(6)):undefined;
-if(![6,9].includes(sceneId)||![bodyA,bodyB].every(i=>Number.isInteger(i)&&i>=0&&i<=27)||bodyA===bodyB||!Number.isInteger(frames)||frames<1||frames>360||!Number.isInteger(every)||every<1||!output
+if(!releasedScenes.some(s=>s.id===sceneId)||![bodyA,bodyB].every(i=>Number.isInteger(i)&&i>=0&&i<=48)||bodyA===bodyB||!Number.isInteger(frames)||frames<1||frames>360||!Number.isInteger(every)||every<1||!output
   ||flags.some(f=>f!=='mesh-plane'&&!f.startsWith('alpha=')&&!f.startsWith('jitter='))||(alpha!==undefined&&!(alpha>0&&alpha<=1))||!Number.isInteger(jitter)||jitter<0)
-  throw new Error('Usage: sdf-pair-trace.ts scene(6|9) a b frames(1..360) every output.json [mesh-plane] [alpha=0..1] [jitter=seed]');
+  throw new Error('Usage: sdf-pair-trace.ts scene(0..10) a b frames(1..360) every output.json [mesh-plane] [alpha=0..1] [jitter=seed]');
 const read:ReadAsset=async path=>{const b=await readFile(new URL(`../tests/fixtures/${path}`,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength) as ArrayBuffer;};
 Object.assign(globalThis,globals);
 const gpu=create([]),adapter=await gpu.requestAdapter();if(!adapter)throw new Error('No GPU adapter');

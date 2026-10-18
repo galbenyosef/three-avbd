@@ -39,10 +39,12 @@ hidden tabs stop stepping. Contacts are an optional throttled readback, while
 body rendering uses the GPU buffer directly. Mass/inertia use box proxies: this
 is a visual collision showcase, not a reproduction of the paper's experiments.
 
-Run `/sdf-released.html` for the released box/gear stacks and chair/bunny piles,
-using original resolution-100 fields, poses, mass and full inertia tensors.
+Run `/sdf-released.html` for all eleven released scenes: stacked boxes and gears; falling
+plain, bent, twisted and displaced planks; chairs, cows on spikes, bunnies; a spiky wheel; and
+the analytic primitives. They use the original resolution-100 fields, analytic shape parameters,
+poses, mass and full inertia tensors.
 It starts paused and compares live metrics with the captured CPU reference.
-Mesh quality activates contacts earlier with the same resting gap; Released
+Mesh quality (used for every non-convex scene) activates contacts earlier with the same resting gap; Released
 settings keeps the captured collision parameters. Both use corrected sticking anchors.
 See [measured comparison and remaining gaps](docs/SDF_RELEASED_COMPARISON.md).
 

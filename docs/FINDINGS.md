@@ -2,6 +2,49 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — All eleven released SDF scenes reproduced; rolling anchors and non-convex quality
+
+`sdf-released.html` and `sdf-released-compare.ts` now load every sdf-dcd-demo scene. New: Falling
+Boxes, Bend, Twist, Displace, Spiky Wheel, Cows on Spikes and Primitives. Analytic shapes use their
+captured specs, COM, mass and full inertia. Upstream finalizes every library shape except `Ground`,
+the only static box, so the static spike plate now gets curvature seeds. Analytic shapes other than
+boxes get render and probe surfaces from a marching-tetrahedra mesher. Its grid is offset by a
+fraction of a cell so axis-aligned faces never sit on grid planes, and it drops zero-area slivers.
+A test checks that vertices lie within a cell of the field and that ≥99% of surface area faces outward.
+
+The first all-scene run exposed two GPU defects.
+- **Rolling bodies sank.** The bridge dropped sticking anchors only for analytic spheres. A slowly
+  rolling Primitives cylinder kept four sticking contacts and sank 123 mm into the ground. A
+  Spiky Wheel capsule sank 130 mm. Anchors are now refreshed for analytic kinds 1–5 (sphere,
+  capsule, cylinder, cone, torus).
+- **Non-convex analytic scenes ran without the quality settings.** Those settings were gated on voxel meshes.
+  A spike tip 127 mm inside the floor read +2.3 mm through the unsigned mixed-sign gap. Mesh quality
+  now applies to every scene with a non-convex body. Vertex contacts still need voxel triangles.
+
+The reference probes only every 30 frames, so penetration is compared on that grid. Upstream's
+randomly oriented spawns overlap during frames 1–29, unmeasured by the reference. Peak / final
+sampled penetration, ours vs reference, in mm:
+
+| Scene | GPU | Reference |
+|---|---|---|
+| Box Stack, Gear Stack | 0 / 0 | 0 / 0 |
+| Falling Boxes (convex, release parameters) | 28.1 / 1.0 | 16.8 / 0 |
+| Bend · Twist · Displace | 21.1 / 0 · 31.2 / 0 · 26.2 / 0 | 18.1 / 0 · 18.3 / 0 · 42.3 / 0 |
+| Pile of Chairs · Bunny Pile | 3.0 / 0 · 1.7 / 0 | 9.1 / 0 · 0 / 0 |
+| Spiky Wheel | 5.0 / 0 | 0 / 0 |
+| Cows on Spikes | 95.0 / 36.0 | 121.9 / 121.2 |
+| Primitives | 12.8 / 1.0 | 0 / 0 |
+
+Before these fixes the same comparison read Spiky Wheel 119 / 97.5 and Primitives 155 / 21.6. Displace
+ended at 17.7 mm and 0.51 J. Rolling scenes now track the reference's energy decay. Primitives ends
+at 0.57 J against 0.65 J, and Spiky Wheel at 0.096 J against 0.65 J. Settled scenes keep their usual
+small residuals and higher contact counts (about 1.2–2.3× the reference). Scenes untouched by the
+changes are bit-identical to before. This is outcome agreement with the released CPU sequential-impulse
+demo, not trajectory parity, and not the paper's GPU experiments.
+
+Full check, sequential with nothing excluded: typecheck, 150 CPU and 163 GPU tests, and both builds.
+Measurements: `measurements/sdf-released-all-2026-10-18.json`.
+
 ## 2026-10-18 — SDF interlocks: two rules tried, neither accepted
 
 Full `pnpm check` on `main` 686d4e3 (sequential, nice 15, nothing excluded): typecheck,

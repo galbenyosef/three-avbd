@@ -110,8 +110,10 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   let pair=pairs[slot]; work.identity=vec4u(pair.xyz,0u); work.stats=vec4u(0);
   if(pair.x==0xffffffffu) { results[slot]=work; return; }
   bodyA=bodies[pair.x]; bodyB=bodies[pair.y]; let margin=vec3f(0.5*params.distances.x);
-  // Spherical surfaces must refresh rolling anchors rather than pinning last frame's material point.
-  work.stats.w=u32(atlas[bodyHeader(bodyA)].x==1u || atlas[bodyHeader(bodyB)].x==1u);
+  // Rolling surfaces must refresh anchors rather than pinning last frame's material point: analytic
+  // sphere, capsule, cylinder, cone and torus (atlas kinds 1-5). A pinned anchor sank rolling cylinders.
+  let kindA=atlas[bodyHeader(bodyA)].x; let kindB=atlas[bodyHeader(bodyB)].x;
+  work.stats.w=u32((kindA>=1u && kindA<=5u) || (kindB>=1u && kindB<=5u));
   lo=max(bodyA.lo.xyz-margin,bodyB.lo.xyz-margin); hi=min(bodyA.hi.xyz+margin,bodyB.hi.xyz+margin);
   if(any(lo>hi) || (bodyA.velocity.w!=0.0 && bodyB.velocity.w!=0.0)) { results[slot]=work; return; }
   rng=hash(pair.z^hash(params.counts.y)^hash(pair.x)^hash(pair.y+0x9e3779b9u));

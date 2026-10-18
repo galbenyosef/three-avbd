@@ -1,7 +1,9 @@
-# Released SDF scene comparison — 2026-10-14
+# Released SDF scene comparison
 
-`/sdf-released.html` reproduces the released Box Stack, Gear Stack, Pile of Chairs
-and Bunny Pile configurations. It starts paused; Run advances at most 30 reference
+`/sdf-released.html` reproduces all eleven released sdf-dcd-demo scenes. Since 2026-10-18 that
+includes the analytic Falling Boxes, Bend, Twist, Displace, Spiky Wheel, Cows on Spikes and
+Primitives scenes; see FINDINGS 2026-10-18 for their comparison table. The sections below are a
+dated history, starting with the four scenes compared on 2026-10-14. It starts paused; Run advances at most 30 reference
 frames per wall-clock second and stops after 360 frames (six simulated seconds).
 Orbit/zoom and scene selection remain available. The interactive spawning/dragging
 showcase remains at `/sdf.html`.
