@@ -1,4 +1,5 @@
-/** Exact mesh vertices against a covering box top face. Other pairs use Algorithm 1. */
+/** Exact mesh vertex contacts: a support against a covering box top face (meshPlaneContacts) or a
+ * witness between two dynamic meshes (meshMeshContacts). Other pairs use Algorithm 1 only. */
 export const SDF_SUPPORTS_WGSL = /* wgsl */ `
 fn meshPlaneContacts(pair: vec4u) -> bool {
   if(params.distances.w==0.0) { return false; }
