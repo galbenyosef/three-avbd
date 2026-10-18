@@ -7,6 +7,7 @@
  */
 import { SDF_SUPPORTS_WGSL } from './wgsl-sdf-supports.ts';
 import { SDF_FIELDS_WGSL } from './wgsl-sdf-fields.ts';
+import { SPHERE_FEATURE } from './layout.ts';
 /** Standalone Algorithm 1 pass: one invocation per pair, four cached + one new
  * candidate, independent per-point normals.
  */
@@ -97,7 +98,10 @@ fn addPoint(old: Point, seed: vec3f, cached: bool) {
     }
     if(a.phi>0.0 && b.phi>0.0 && separation>1e-6 && !(cached && dot(gap,old.normal.xyz)<0.0)) { normal=gap/separation; }
   }
-  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==0u || work.stats.z>=0x20000000u) { work.stats.z=1u; } id=work.stats.z; }
+  // New ids stay below SDF_ROLLING_BIT and never equal SPHERE_FEATURE, which evalContact
+  // would otherwise treat as a built-in sphere contact.
+  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==${SPHERE_FEATURE}u) { work.stats.z++; }
+    if(work.stats.z==0u || work.stats.z>=0x20000000u) { work.stats.z=1u; } id=work.stats.z; }
   let point=Point(vec4f(p,min(a.phi,b.phi)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,p-offsetA-bodyA.position.xyz)),smoothMax(a.phi,b.phi)),
     vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0));

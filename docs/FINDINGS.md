@@ -2,6 +2,51 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Audit against the paper and upstream sdf-dcd-demo
+
+A read-only audit compared the CPU port, the GPU path and the docs with Giles & Andrews
+(CGF 45(7) 2026) and the pinned upstream 1dcdf1e7.
+
+**Faithful on the default path:**
+- Algorithm 1: caching, Eq. 6 advection, top-up, convex skip, curvature reservoir sampling,
+  deduplication, ranking, Eq. 5 normals and separation, and the gap outside both bodies.
+- Eqs. 2–3 and the defaults (ε 0.1, α 0.01, τ 0.01, 50 iterations, margin 0.02, allowed
+  penetration 0.01).
+- Nelder–Mead, every analytic field and warp, voxel sampling and its outside-grid extension.
+- Curvature seeds and mass integration. All 11 analytic seed sets match the captures to ≈1e-7.
+- Documented GPU difference: the per-pair 32-bit random stream.
+
+**Where upstream itself departs from the paper (inherited):**
+- Activity is decided by `separation < margin`, not φA<0 and φB<0 (paper p5).
+- The solver uses separation (φA+φB, or the Newton gap), not the paper's depth d.
+- Not in the paper: the convex-pair sample skip, replacement-threshold rank hysteresis, the
+  cached-point simplex cap, the coherent-normal rule, and the search box grown by margin/2.
+- Displace treats k as amplitude with a fixed frequency of 7; the paper writes k as frequency.
+- Collision runs on every substep, 4× per frame.
+
+**Our deviations from upstream:**
+- The AVBD contact skin. Now documented in SDF_PRODUCTION_BRIDGE.md.
+- Rolling handling covers the whole pair.
+- Warm-start forces are rotated as a whole vector.
+- Velocities come from AVBD position differences.
+- Pair orientation is reversed (a > b), which changes tie-breaks only.
+- The CPU adapter does not apply SDF mass, full inertia or scale.
+- Bake defaults differ. Now documented in SDF_BAKING.md.
+- Ellipsoid and SGD optimizers are missing; only Nelder–Mead exists.
+
+**Fixed here:**
+- SDF point ids could equal `SPHERE_FEATURE` (0x03000000), making `evalContact` treat the contact
+  as a built-in sphere. New ids now skip it; a GPU test seeds the counter just below it.
+- Stale docs: the body layout and anchor frame (SDF_GPU_DRAFT.md), the rolling-pair wording and
+  skin semantics (SDF_PRODUCTION_BRIDGE.md), and the key-bit comment in `layout.ts`.
+
+**Open:**
+- No quantitative paper experiment is reproduced: Tables 1–5 and Figs. 6–7. Table 5's k-sweep
+  captures exist but are unused.
+- The GPU limits (cache ≤4, total ≤5, ε>0) block the Table 2 and Fig. 6 sweeps on the GPU.
+- WGSL `sin`/`cos` outside [-π,π] in Displace and the spiky wheel is a CPU/GPU parity risk.
+
+
 ## 2026-10-18 — All eleven released SDF scenes reproduced; rolling contacts and non-convex quality
 
 `sdf-released.html` and `sdf-released-compare.ts` now load every sdf-dcd-demo scene. New: Falling
