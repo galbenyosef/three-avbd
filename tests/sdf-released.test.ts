@@ -63,7 +63,10 @@ test('analytic render surfaces lie on their field and face outward',async()=>{
   const {fieldSurface}=await import('../src/sdf-released/mesher.ts');
   const specs:Spec[]=[{kind:'torus',majorRadius:.5,minorRadius:.2},{kind:'cone',radius:.5,halfHeight:.5},
     {kind:'warp',type:0,halfExtents:[1.15,.28,.55],k:.95},{kind:'warp',type:2,halfExtents:[1.15,.28,.55],k:.1},
-    {kind:'spiky-wheel',hubRadius:.35,hubHalfWidth:.48,spikeRadius:.08,spikeHalfHeight:.7,spikes:16}] as Spec[];
+    {kind:'spiky-wheel',hubRadius:.35,hubHalfWidth:.48,spikeRadius:.08,spikeHalfHeight:.7,spikes:16},
+    {kind:'spike-plate',halfExtents:[.7,.08,.7],count:10,spikeRadius:.045,minHeight:.12,maxHeight:.26},
+    {kind:'warp',type:1,halfExtents:[1.15,.55,.28],k:1.25},{kind:'sphere',radius:.5},
+    {kind:'capsule',radius:.3,halfLength:.4},{kind:'cylinder',radius:.4,halfHeight:.4}] as Spec[];
   for(const spec of specs){
     const field=new AnalyticField(spec),cells=72,geometry=fieldSurface(field,cells);
     const {min,max}=field.bounds,h=Math.max(...max.map((v,k)=>v-min[k]))/cells;

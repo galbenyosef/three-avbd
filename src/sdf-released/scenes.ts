@@ -70,7 +70,9 @@ export async function loadReleasedScene(id:number,read:ReadAsset):Promise<Releas
           field.centerOfMass=[...centerOfMass];
           field.seeds=ground?[]:curvatureSeeds(field);
           const half=original.shape.halfExtents;
-          const geometry=original.shape.kind==='box'?new THREE.BoxGeometry(2*half![0],2*half![1],2*half![2]).toNonIndexed():fieldSurface(field);
+          // Smooth primitives mesh well at 48 cells; spikes and warps keep 72 (about 3x fewer samples).
+          const cells=['spike-plate','spiky-wheel','warp'].includes(original.shape.kind)?72:48;
+          const geometry=original.shape.kind==='box'?new THREE.BoxGeometry(2*half![0],2*half![1],2*half![2]).toNonIndexed():fieldSurface(field,cells);
           shape={field,geometry};
         } else {
           const name=original.shape.asset!.toLowerCase();

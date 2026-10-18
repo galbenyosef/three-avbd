@@ -3,10 +3,11 @@
 import * as THREE from 'three';
 import type { Field } from '../lib/sdf.ts';
 
-// Six tetrahedra around the cube diagonal 0-6 (corner bit 1: +x, 2: +y, 4: +z).
+// Six tetrahedra around the cube diagonal 0-7 (corner bit 1: +x, 2: +y, 4: +z).
 const TETS = [[0, 1, 3, 7], [0, 3, 2, 7], [0, 2, 6, 7], [0, 6, 4, 7], [0, 4, 5, 7], [0, 5, 1, 7]];
 
-/** Zero level set of `field` sampled with `cells` cells along its longest bound. */
+/** Zero level set of `field` sampled with `cells` cells along its longest bound; phi = 0 counts as
+ * outside. Surface beyond `field.bounds` (plus about a cell of padding) is not meshed. */
 export function fieldSurface(field: Field, cells = 72): THREE.BufferGeometry {
   const { min, max } = field.bounds;
   const h = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / cells;

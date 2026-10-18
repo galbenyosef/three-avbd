@@ -97,7 +97,7 @@ fn addPoint(old: Point, seed: vec3f, cached: bool) {
     }
     if(a.phi>0.0 && b.phi>0.0 && separation>1e-6 && !(cached && dot(gap,old.normal.xyz)<0.0)) { normal=gap/separation; }
   }
-  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==0u || work.stats.z>=0x40000000u) { work.stats.z=1u; } id=work.stats.z; }
+  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==0u || work.stats.z>=0x20000000u) { work.stats.z=1u; } id=work.stats.z; }
   let point=Point(vec4f(p,min(a.phi,b.phi)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,p-offsetA-bodyA.position.xyz)),smoothMax(a.phi,b.phi)),
     vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0));

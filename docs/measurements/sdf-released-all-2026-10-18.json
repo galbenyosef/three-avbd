@@ -4,7 +4,7 @@
  "reference": "sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e",
  "profile": "mesh-quality",
  "probeEvery": 5,
- "conventions": "penetration compared on the reference's own 30-frame probe grid (it does not probe frames 1-29, where upstream's randomly oriented spawns overlap); vertex probes use marching-tetrahedra surfaces for analytic shapes and the reference uses upstream shape meshes, so probe counts differ",
+ "conventions": "penetration compared on the reference's own 30-frame probe grid (it does not probe frames 1-29, where upstream's randomly oriented spawns overlap). GPU probes use our render surfaces (marching tetrahedra for non-box analytic shapes, boxes and voxel source triangles otherwise); the reference probes upstream shape meshes, so probe vertices and counts differ.",
  "scenes": [
   {
    "name": "Box Stack",
@@ -746,7 +746,7 @@
     0,
     0,
     0,
-    0.004994332790374756,
+    0,
     0,
     0,
     0,
@@ -768,26 +768,26 @@
     0
    ],
    "gpuFinal": {
-    "contacts": 71,
-    "kineticEnergy": 0.0955987833115411
+    "contacts": 68,
+    "kineticEnergy": 0.044225894669530176
    },
    "referenceFinal": {
     "contacts": 40,
     "kineticEnergy": 0.649089992
    },
    "gpuEnergyEvery30": [
-    70.44852533827753,
-    45.787555004040165,
-    25.946721046091373,
-    7.150858396133419,
-    5.8692276606959854,
-    16.112917279837937,
-    14.053192959028186,
-    4.653518569424974,
-    0.15235027045947083,
-    0.32509803391614145,
-    0.10290664790126516,
-    0.0955987833115411
+    70.44844710520054,
+    45.78977343217089,
+    26.09758558070641,
+    5.136351638432819,
+    5.666052546369617,
+    12.945112039002607,
+    19.672554191100247,
+    1.5742578724333152,
+    0.09140593255850209,
+    0.07240853975067638,
+    0.05603516748454423,
+    0.044225894669530176
    ],
    "referenceEnergyEvery30": [
     68.9430466,
@@ -1043,17 +1043,17 @@
    ],
    "gpuDepth": [
     0,
-    0.012763649225234985,
-    0.00789712369441986,
-    0,
-    0,
-    0,
-    0.0007009506225585938,
     0,
     0,
     0,
     0,
-    0.0009570717811584473
+    0,
+    0.007428884506225586,
+    0,
+    0,
+    0,
+    0,
+    0
    ],
    "referenceDepth": [
     0,
@@ -1070,26 +1070,26 @@
     0
    ],
    "gpuFinal": {
-    "contacts": 360,
-    "kineticEnergy": 0.5685378642273985
+    "contacts": 378,
+    "kineticEnergy": 0.4237068987953006
    },
    "referenceFinal": {
     "contacts": 212,
     "kineticEnergy": 0.652310848
    },
    "gpuEnergyEvery30": [
-    105.17906197082006,
-    16.88992270479848,
-    14.441433903092989,
-    17.94883045053644,
-    4.468415642981847,
-    3.428604732711957,
-    1.3361929579065779,
-    1.0709638451269718,
-    0.9199425477335224,
-    0.7787121019022083,
-    0.6627896765979351,
-    0.5685378642273985
+    102.93389692013521,
+    18.26856548091973,
+    16.30848571113775,
+    16.70987812470465,
+    7.263670290940103,
+    3.0721260312097685,
+    1.8441326447391975,
+    1.63877704251534,
+    0.8570524261320277,
+    0.6757558765825699,
+    0.5152824496248404,
+    0.4237068987953006
    ],
    "referenceEnergyEvery30": [
     117.289078,

@@ -208,3 +208,38 @@ gpuTest('World SDF ray slab clipping preserves small nonzero local directions', 
     assert.equal(await world.raycast([2,0,0],[0,0,1],{maxDistance:2e13}),null,'truly parallel ray misses');
   } finally {world.destroy();}
 });
+
+// Analytic rolling bodies refresh contact anchors; flat-resting ones must still hold by static friction.
+const cylinderWorld=async(device:GPUDevice,floorAngle:number,pose:{position:[number,number,number];rotation:[number,number,number,number];velocity?:[number,number,number];angularVelocity?:[number,number,number]})=>{
+  const world=await World.create({device,maxBodies:2});
+  const s=Math.sin(floorAngle/2),c=Math.cos(floorAngle/2);
+  world.addBox({size:[20,.4,20],position:[0,-.2,0],rotation:[0,0,s,c],fixed:true,friction:.6});
+  const r=.3,h=.25,mass=1,moments:[number,number,number]=[mass*(3*r*r+4*h*h)/12,mass*r*r/2,mass*(3*r*r+4*h*h)/12];
+  const body=world.addBox({size:[1,1,1],...pose,friction:.6,massProperties:{mass,moments}})!;
+  await world.enableSdfCollisions([{body,field:new AnalyticField({kind:'cylinder',radius:r,halfHeight:h})}]);
+  return {world,body,r,h};
+};
+
+gpuTest('World SDF analytic cylinder rolls along the floor without sinking', async device=>{
+  const q=Math.SQRT1_2,{world,body,r}=await cylinderWorld(device,0,{position:[0,.3005,0],rotation:[q,0,0,q],velocity:[1,0,0],angularVelocity:[0,0,-1/.3]});
+  try {
+    let lowest=Infinity;
+    for(let frame=0;frame<240;frame++){world.step();if(frame%10===9){await world.read();lowest=Math.min(lowest,body.position[1]);}}
+    await world.read();
+    assert.ok(body.position[0]>.5,`it rolled (${body.position[0]} m)`);
+    assert.ok(lowest>r-.005,`axis height stayed at the radius: lowest ${lowest}`);
+  } finally {world.destroy();}
+});
+
+gpuTest('World SDF analytic cylinder standing on its cap holds on a 10 degree incline', async device=>{
+  const angle=10*Math.PI/180,s=Math.sin(angle/2),c=Math.cos(angle/2);
+  // Cap centre on the incline surface (which passes through the origin), axis along its normal.
+  const normal:[number,number,number]=[-Math.sin(angle),Math.cos(angle),0],h=.25+.0005;
+  const {world,body}=await cylinderWorld(device,angle,{position:normal.map(v=>v*h) as [number,number,number],rotation:[0,0,s,c]});
+  try {
+    for(let frame=0;frame<120;frame++)world.step();
+    await world.read();
+    const drift=Math.hypot(body.position[0]-normal[0]*h,body.position[1]-normal[1]*h,body.position[2]);
+    assert.ok(drift<.01,`static friction holds the cylinder (drift ${drift} m)`);
+  } finally {world.destroy();}
+});
