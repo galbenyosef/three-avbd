@@ -8,7 +8,7 @@ const read:ReadAsset=async path=>{const b=await readFile(new URL(`../tests/fixtu
 for(const id of [6,9])gpuTest(`mesh plane supports: isolated tilted ${id===6?'chair':'bunny'} impact and settling`,async device=>{
   const source=await loadReleasedScene(id,read),body=source.bodies[1];
   const rotation=new Quaternion().setFromEuler(new Euler(.25,.2,.15)).multiply(new Quaternion(...body.rotation)).toArray() as [number,number,number,number];
-  const scene:ReleasedScene={...source,capture:{...source.capture,params:{...source.capture.params,meshPlaneContacts:true}},bodies:[source.bodies[0],{...body,rotation,original:{...body.original,position:[0,1,0],velocity:[0,0,0],angularVelocity:[0,0,0]}}]};
+  const scene:ReleasedScene={...source,capture:{...source.capture,params:{...source.capture.params,meshVertexContacts:true}},bodies:[source.bodies[0],{...body,rotation,original:{...body.original,position:[0,1,0],velocity:[0,0,0],angularVelocity:[0,0,0]}}]};
   const {world,bodies}=await instantiateReleased(scene,{device});
   try{
     let peak=0,last;
@@ -33,8 +33,8 @@ gpuTest('mesh plane contacts retain vertex IDs and fall back at box edges',async
   const geometry=new BoxGeometry(),field=bakeVoxelSdf(geometry,{resolution:8}).field;
   const floor=new AnalyticField({kind:'box',halfExtents:[3,.5,3]});
   const bodies=[new SdfBody(floor,[0,-.5,0],[0,0,0,1],1,true),new SdfBody(field,[0,.49,0])];
-  const pass=await SdfNarrowphasePass.create(device,[floor,field],{maxBodies:2,maxPairs:1,meshPlaneContacts:true});
-  const params={...collisionParams(),meshPlaneContacts:true};
+  const pass=await SdfNarrowphasePass.create(device,[floor,field],{maxBodies:2,maxPairs:1,meshVertexContacts:true});
+  const params={...collisionParams(),meshVertexContacts:true};
   try{
     pass.step(bodies,[{a:1,b:0,key:1}],0,params);let result=(await pass.readResults())[0];
     const supports=result.points.filter(p=>p.id>=0x40000000);
@@ -45,13 +45,13 @@ gpuTest('mesh plane contacts retain vertex IDs and fall back at box edges',async
     pass.step(bodies,[{a:1,b:0,key:1,previous:0}],0,params);result=(await pass.readResults())[0];
     const retained=result.points.filter(p=>p.id>=0x40000000);
     assert.deepEqual(retained.map(p=>p.id),ids);assert.ok(retained.every(p=>p.cached));
-    pass.step(bodies,[{a:1,b:0,key:1,previous:0}],0,{...params,meshPlaneContacts:false});result=(await pass.readResults())[0];
+    pass.step(bodies,[{a:1,b:0,key:1,previous:0}],0,{...params,meshVertexContacts:false});result=(await pass.readResults())[0];
     assert.ok(result.points.every(p=>p.id<0x40000000),'disabling the option drops supplemental history');
     bodies[1].position[0]=2.8;
     pass.step(bodies,[{a:1,b:0,key:2}],0,params);result=(await pass.readResults())[0];
     assert.ok(result.points.length>0);assert.ok(result.points.every(p=>p.id!<0x40000000),'partial face coverage uses general SDF contacts');
     bodies[1].position[0]=0;
-    pass.step(bodies,[{a:1,b:0,key:3}],0,{...params,meshPlaneContacts:false});result=(await pass.readResults())[0];
+    pass.step(bodies,[{a:1,b:0,key:3}],0,{...params,meshVertexContacts:false});result=(await pass.readResults())[0];
     assert.ok(result.points.every(p=>p.id<0x40000000),'default policy never adds plane supports');
   }finally{pass.destroy();geometry.dispose();}
 });
@@ -69,7 +69,7 @@ gpuTest('mesh plane supplemental vertex retains production normal warm force',as
   const ref=new Solver();ref.gravity=0;ref.iterations=0;
   new Rigid(ref,[8,.4,8],0,.6,[0,-.2,0]);new Rigid(ref,[1,1,1],1,.6,[0,.49,0]);
   const solver=new GpuSolver3D(device,ref,{spatialSort:false});
-  const bridge=await SdfCollisionBridge.create(solver,[{field:new AnalyticField({kind:'box',halfExtents:[4,.2,4]})},{field}],[{a:1,b:0,key:1}],{meshPlaneContacts:true});
+  const bridge=await SdfCollisionBridge.create(solver,[{field:new AnalyticField({kind:'box',halfExtents:[4,.2,4]})},{field}],[{a:1,b:0,key:1}],{meshVertexContacts:true});
   try{
     solver.setCollisionBackend(bridge);solver.step();
     const initial=await solver.readContactList(),support=initial.find(c=>c.feature>=0x40000000)!;
@@ -95,8 +95,8 @@ gpuTest('mesh-to-mesh vertex witness: exact depth, SDF normal, stable identity, 
   // B stands on one corner, 3 mm into A's top face; Algorithm 1 alone has no vertex guarantee.
   const corner=new Quaternion().setFromUnitVectors(new Vector3(-1,-1,-1).normalize(),new Vector3(0,-1,0)).toArray() as [number,number,number,number];
   const bodies=[new SdfBody(field,[0,0,0]),new SdfBody(field,[0,.5+Math.sqrt(3)/2-.003,0],corner)];
-  const pass=await SdfNarrowphasePass.create(device,[field],{maxBodies:2,maxPairs:1,meshPlaneContacts:true});
-  const params={...collisionParams(),meshPlaneContacts:true};
+  const pass=await SdfNarrowphasePass.create(device,[field],{maxBodies:2,maxPairs:1,meshVertexContacts:true});
+  const params={...collisionParams(),meshVertexContacts:true};
   try{
     pass.step(bodies,[{a:0,b:1,key:1}],0,params);let result=(await pass.readResults())[0];
     const witnesses=result.points.filter(p=>p.id>=0x40000000);
@@ -108,7 +108,7 @@ gpuTest('mesh-to-mesh vertex witness: exact depth, SDF normal, stable identity, 
     pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,params);result=(await pass.readResults())[0];
     const retained=result.points.filter(p=>p.id>=0x40000000);
     assert.deepEqual(retained.map(p=>p.id),[w.id]);assert.ok(retained[0].cached);
-    pass.step(bodies,[{a:0,b:1,key:2}],0,{...params,meshPlaneContacts:false});result=(await pass.readResults())[0];
+    pass.step(bodies,[{a:0,b:1,key:2}],0,{...params,meshVertexContacts:false});result=(await pass.readResults())[0];
     assert.ok(result.points.every(p=>p.id<0x40000000),'default policy never adds vertex witnesses');
   }finally{pass.destroy();geometry.dispose();}
 });

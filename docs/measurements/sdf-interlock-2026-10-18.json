@@ -1,0 +1,675 @@
+{
+ "date": "2026-10-18",
+ "command": "nice -n 15 node --experimental-transform-types scripts/sdf-released-compare.ts 360 OUT mesh-quality 6,9 5 jitter=SEED",
+ "baseline": "main 686d4e3 (mesh vertex contacts enabled)",
+ "variants": {
+  "alignedGradientInactive": "signedSeparation: a sample inside both moving bodies with dot(gradA,gradB)>0 is not a contact (rejected: chair seed 3 floor interlock, 0.0377 J)",
+  "alignedGradientInactive+allSignStaticBoxProjection": "also static-box signed projection for both-positive samples (rejected: 3 failures per scene)"
+ },
+ "diagnoses": {
+  "bunnySeed3": "pair 22/5 point 179 inside both (phiA ~-2 mm, phiB ~-9 mm) with aligned gradients pushes A down at -8..-12 mm while B's vertices sit 0.3-1 mm inside A's underside; vertex witness opposes it",
+  "chairSeed3Aligned": "chair 25 vs floor: point 719 at y=0.005, both-positive branch, unsigned gap normal points down (chair surface ~1 mm under the box face facing up), -257 N against neighbour 270 (+y, -233 N); chair pumped upward 0.39->0.65 m/s"
+ },
+ "runs": [
+  {
+   "variant": "main",
+   "jitter": 0,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.002965312683954835,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 4.587917117484243e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 0,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0017457568319514394,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0006618579104793604,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.00042157882126048207,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 2.6372693043246128e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.00020673501316536416,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.01000838540494442,
+   "finalDepth": 0,
+   "probesOver5mm": 2,
+   "finalEnergy": 0.00013168138897954394,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0008132436778396368,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 6.773050524928153e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012519956566393375,
+   "finalDepth": 0,
+   "probesOver5mm": 3,
+   "finalEnergy": 3.3918891161525477e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.009100879542529583,
+   "finalDepth": 0,
+   "probesOver5mm": 4,
+   "finalEnergy": 0.05799250109057309,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "main",
+   "jitter": 4,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012906288728117943,
+   "finalDepth": 0,
+   "probesOver5mm": 5,
+   "finalEnergy": 1.0489545682360415e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 4,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.015351565554738045,
+   "finalDepth": 0,
+   "probesOver5mm": 9,
+   "finalEnergy": 0.00031717589922009796,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 5,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.015901684761047363,
+   "finalDepth": 0,
+   "probesOver5mm": 12,
+   "finalEnergy": 0.001701490474372236,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 5,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.012490878812968731,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "finalEnergy": 0.0004053253997204425,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 6,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 6.7187402845747734e-06,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 6,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0006779432377395701,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 7,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012901357375085354,
+   "finalDepth": 0,
+   "probesOver5mm": 4,
+   "finalEnergy": 9.949679819846373e-06,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 7,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 7.363009164255335e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 8,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.011965278536081314,
+   "finalDepth": 0,
+   "probesOver5mm": 2,
+   "finalEnergy": 0.00012276644706363924,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 8,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 3.16299922483767e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 9,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.01290001068264246,
+   "finalDepth": 0.003924330696463585,
+   "probesOver5mm": 9,
+   "finalEnergy": 0.00047285046577762207,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 9,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0014817042094006784,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 10,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0007674098014831543,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 5.0764410556579195e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "main",
+   "jitter": 10,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0016078074695542455,
+   "finalDepth": 0.0010884706862270832,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.005704433147261461,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 0,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.002965312683954835,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 4.0120892916479446e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 0,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0017457568319514394,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0006618579104793604,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.00042157882126048207,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.000490519222315963,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.00020673501316536416,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.010176420211791992,
+   "finalDepth": 0,
+   "probesOver5mm": 2,
+   "finalEnergy": 9.380189826097728e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0008132436778396368,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 6.773050524928153e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012519956566393375,
+   "finalDepth": 0,
+   "probesOver5mm": 3,
+   "finalEnergy": 0.03765733636103795,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0006972455885261297,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0001273466555365002,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 4,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012906288728117943,
+   "finalDepth": 0,
+   "probesOver5mm": 5,
+   "finalEnergy": 7.230307276770721e-06,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 4,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.002334658056497574,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0006780336611488022,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 5,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012382074259221554,
+   "finalDepth": 0.003814483992755413,
+   "probesOver5mm": 22,
+   "finalEnergy": 4.3453479978945334e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 5,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.006916516926139593,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "finalEnergy": 0.00015670060720480552,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 6,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0063324361108243465,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "finalEnergy": 1.4463544056142077e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 6,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0006779432377395701,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 7,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.012901357375085354,
+   "finalDepth": 0,
+   "probesOver5mm": 4,
+   "finalEnergy": 1.0292607861741784e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 7,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 7.363009164255335e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 8,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 7.62159494262031e-06,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 8,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 3.16299922483767e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 9,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.01290001068264246,
+   "finalDepth": 0,
+   "probesOver5mm": 4,
+   "finalEnergy": 0.007734855676905694,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 9,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0014817042094006784,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 10,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 6.0229570515509356e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive",
+   "jitter": 10,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0016078074695542455,
+   "finalDepth": 0.0010884706862270832,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.005704433147261461,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 0,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.010650134645402431,
+   "finalDepth": 0,
+   "probesOver5mm": 52,
+   "finalEnergy": 0.00038663439419155614,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 0,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.003765054512768984,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 8.883940650847306e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 1,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.008271128870546818,
+   "finalDepth": 0.007356163579970598,
+   "probesOver5mm": 51,
+   "finalEnergy": 0.006277991777629218,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 1,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0006955646676942706,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.11838606584002576,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 2,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0023058056831359863,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0015400704209066307,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 2,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.002045063767582178,
+   "finalDepth": 0.001604303834028542,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0011643541389626069,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 3,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0018282997189089656,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.00017189733164081823,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 3,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.0003270501038059592,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 4.71939422249495e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 4,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.00835604127496481,
+   "finalDepth": 0.007110826205462217,
+   "probesOver5mm": 40,
+   "finalEnergy": 4.4142417521713944e-05,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 4,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.00731670530512929,
+   "finalDepth": 0,
+   "probesOver5mm": 1,
+   "finalEnergy": 0.0022855411226874317,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 5,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.001863090437836945,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0003294335352157357,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 5,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.001135091995820403,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.001074863296971845,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 6,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0057196225970983505,
+   "finalDepth": 0.001327355159446597,
+   "probesOver5mm": 2,
+   "finalEnergy": 0.00011277963871112591,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 6,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.004723752848803997,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0001418367041517926,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 7,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.00792843196541071,
+   "finalDepth": 0,
+   "probesOver5mm": 35,
+   "finalEnergy": 5.650620926530607e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 7,
+   "scene": "Bunny Pile",
+   "peakDepth": 0,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.00710844013499252,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 8,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0058946916833519936,
+   "finalDepth": 0.0058946916833519936,
+   "probesOver5mm": 1,
+   "finalEnergy": 0.01881371088147783,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 8,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.004148542881011963,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.07240495999023595,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 9,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.0053616962395608425,
+   "finalDepth": 0.0007229481707327068,
+   "probesOver5mm": 1,
+   "finalEnergy": 9.899948828796076e-05,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 9,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.004298669286072254,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.022608545958176875,
+   "testLimitFailure": true
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 10,
+   "scene": "Pile of Chairs",
+   "peakDepth": 0.006197752431035042,
+   "finalDepth": 0.0034196958877146244,
+   "probesOver5mm": 6,
+   "finalEnergy": 0.00011397119376643086,
+   "testLimitFailure": false
+  },
+  {
+   "variant": "alignedGradientInactive+allSignStaticBoxProjection",
+   "jitter": 10,
+   "scene": "Bunny Pile",
+   "peakDepth": 0.004871364217251539,
+   "finalDepth": 0,
+   "probesOver5mm": 0,
+   "finalEnergy": 0.0041964492293966845,
+   "testLimitFailure": false
+  }
+ ]
+}

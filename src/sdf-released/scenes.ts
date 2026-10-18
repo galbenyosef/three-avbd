@@ -101,7 +101,7 @@ export function releasedSettings(scene:ReleasedScene,profile:ReleasedProfile='me
   const mesh=scene.bodies.some(body=>body.original.shape.kind==='voxel');
   const quality=profile==='mesh-quality'&&mesh;
   return {substeps:scene.capture.solver.substeps,collision:{...scene.capture.params,...(quality?{
-    signedSeparation:true,refreshDeeperContacts:true,meshPlaneContacts:true,margin:.04,allowedPenetration:.04-(scene.capture.params.margin-scene.capture.params.allowedPenetration),
+    signedSeparation:true,refreshDeeperContacts:true,meshVertexContacts:true,margin:.04,allowedPenetration:.04-(scene.capture.params.margin-scene.capture.params.allowedPenetration),
   }:{})}};
 }
 

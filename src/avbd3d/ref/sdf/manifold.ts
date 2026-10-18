@@ -15,8 +15,8 @@ export interface CollisionParams {
   signedSeparation?: boolean;
   /** GPU-only exact mesh vertex contacts: a support on a fully covering static box top face,
    * and for two dynamic meshes the deepest overlapping source vertex within the trigger distance
-   * (at most MESH_WITNESS_MAX_VERTICES unique vertices per field). The name predates the mesh-mesh case. */
-  meshPlaneContacts?: boolean;
+   * (at most MESH_WITNESS_MAX_VERTICES unique vertices per field). */
+  meshVertexContacts?: boolean;
   /** Refresh sticking anchors when a relocated contact is deeper by more than tolerance. */
   refreshDeeperContacts?: boolean;
   optimizer: 0; cacheSize: number; randomSamples: number; warmStart: boolean; curvatureSampling: boolean;
@@ -50,7 +50,7 @@ export class SdfManifold {
   volume: Aabb = { min: [0, 0, 0], max: [0, 0, 0] };
   constructor(a: SdfBody, b: SdfBody) { this.bodyA = a; this.bodyB = b; }
   update(p: CollisionParams, dt: number, rng: Random, stats: Counters): void {
-    if (p.meshPlaneContacts) throw new Error('meshPlaneContacts is a GPU-only collision extension');
+    if (p.meshVertexContacts) throw new Error('meshVertexContacts is a GPU-only collision extension');
     if (p.optimizer !== 0) throw new Error('CPU SDF reference implements Nelder–Mead only');
     this.volume = intersection(expand(this.bodyA.bounds, mul(0.5, p.margin)), expand(this.bodyB.bounds, mul(0.5, p.margin)));
     // Upstream broadphase guarantees this. Direct callers may present a separated pair.

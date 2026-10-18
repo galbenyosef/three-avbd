@@ -20,8 +20,8 @@ for(const entry of releasedScenes)test(`released ${entry.name} preserves full in
   try{
     assert.deepEqual(releasedSettings(scene,'reference').collision,scene.capture.params);
     const quality=releasedSettings(scene).collision;
-    assert.equal(quality.meshPlaneContacts,entry.id===0?undefined:true,'mesh vertex contacts are enabled for mesh piles only');
-    assert.equal(releasedSettings(scene,'reference').collision.meshPlaneContacts,undefined);
+    assert.equal(quality.meshVertexContacts,entry.id===0?undefined:true,'mesh vertex contacts are enabled for mesh piles only');
+    assert.equal(releasedSettings(scene,'reference').collision.meshVertexContacts,undefined);
     near(quality.margin-quality.allowedPenetration,scene.capture.params.margin-scene.capture.params.allowedPenetration);
     assert.equal(quality.margin,entry.id===0?scene.capture.params.margin:.04);
     assert.equal(quality.signedSeparation,entry.id===0?undefined:true);

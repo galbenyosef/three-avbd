@@ -10,7 +10,7 @@ const profile=(process.argv[4]??'mesh-quality') as ReleasedProfile;
 if(!['reference','mesh-quality'].includes(profile))throw new Error('Unknown comparison profile');
 const probeEvery=Number(process.argv[6]??30);
 if(!Number.isInteger(probeEvery)||probeEvery<1||probeEvery>360)throw new Error('Probe interval must be 1..360 frames');
-const options=process.argv.slice(7),meshPlaneContacts=options.includes('mesh-plane');
+const options=process.argv.slice(7),meshVertexContacts=options.includes('mesh-plane');
 const jitter=Number(options.find(o=>o.startsWith('jitter='))?.slice(7)??0);
 if(options.some(o=>o!=='mesh-plane'&&!o.startsWith('jitter='))||!Number.isInteger(jitter)||jitter<0)throw new Error('Unknown option: '+options.join(' '));
 const sceneIds=process.argv[5]?.split(',').map(Number);
@@ -20,14 +20,14 @@ Object.assign(globalThis,globals);
 const gpu=create([]),adapter=await gpu.requestAdapter();if(!adapter)throw new Error('No WebGPU adapter');
 const device=await adapter.requestDevice({requiredLimits:{maxStorageBuffersPerShaderStage:adapter.limits.maxStorageBuffersPerShaderStage,maxStorageBufferBindingSize:adapter.limits.maxStorageBufferBindingSize,maxBufferSize:adapter.limits.maxBufferSize}});
 const errors:string[]=[]; device.onuncapturederror=e=>errors.push(e.error.message);
-const report={meshPlaneContacts,jitter,reference:'sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e',frames,profile,probeEvery,solver:'GPU AVBD; source CPU sequential impulses',
+const report={meshVertexContacts,jitter,reference:'sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e',frames,profile,probeEvery,solver:'GPU AVBD; source CPU sequential impulses',
   conventions:'original poses, COM, mass/full inertia, resolution-100 grids/seeds; explicit profile substeps and 20 AVBD iterations; last-substep contacts/pairs/depth, summed substep queries/iterations; post-integration energy; vertex-sampled penetration at probeEvery frames (expanded source triangle corners, duplicate probes differ from source mesh indexing)',
   scenes:[] as unknown[]};
 try {
   for(const entry of releasedScenes.filter(s=>!sceneIds||sceneIds.includes(s.id))){
     const source=await loadReleasedScene(entry.id,read);
     // Diagnostic opt-in only; released scenes do not enable mesh-plane contacts by default.
-    const configured=meshPlaneContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshPlaneContacts:true}}}:source;
+    const configured=meshVertexContacts?{...source,capture:{...source.capture,params:{...source.capture.params,meshVertexContacts:true}}}:source;
     const scene=jitterReleased(configured,jitter);
     const {world,bodies}=await instantiateReleased(scene,{device},profile);
     try{

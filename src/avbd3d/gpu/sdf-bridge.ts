@@ -61,7 +61,7 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
     packSdfParams(pairs.length,0,solver.params.dt,collision);
     const maxPairs=spatialSize?.maxPairs??Math.max(1,pairs.length);
     if(maxPairs*5>Math.min(solver.contactCapacity,solver.manifoldCapacity)) throw new Error('SDF bridge requires capacity for five contacts/manifolds per candidate pair');
-    const sdf=await SdfNarrowphasePass.create(solver.device,bodies.map(b=>b.field),{maxBodies:bodies.length,maxPairs,meshPlaneContacts:collision.meshPlaneContacts});
+    const sdf=await SdfNarrowphasePass.create(solver.device,bodies.map(b=>b.field),{maxBodies:bodies.length,maxPairs,meshVertexContacts:collision.meshVertexContacts});
     let spatial:SdfSpatialBroadphase|null=null;
     try {
       const compile=async(code:string,entryPoint:string)=>{
