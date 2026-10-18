@@ -9,7 +9,7 @@ import type { SdfCollisionBridge } from '../avbd3d/gpu/sdf-bridge.ts';
 import * as THREE from 'three/webgpu';
 import { B_ANGVEL, B_POS, B_ROT, B_VEL, BODY_FLOATS } from '../avbd3d/gpu/layout.ts';
 import { decodeJoint, type JointState } from '../avbd3d/gpu/joints.ts';
-import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation } from '../avbd3d/gpu/solver.ts';
+import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation, type GpuStepOptions } from '../avbd3d/gpu/solver.ts';
 import { Rigid } from '../avbd3d/ref/body.ts';
 import { Solver } from '../avbd3d/ref/solver.ts';
 import { convexHull, hull, type HullShape, sphere } from '../avbd3d/shapes.ts';
@@ -26,6 +26,7 @@ export type Quat = [number, number, number, number];
 
 /** Experimental SDF in the body's COM/principal-axis frame; inertia and rendering stay caller-owned. */
 export interface SdfBodyBinding { body: Body; field: Field; scale?: number; /** Field frame to body principal frame. */ rotation?: Quat }
+export type StepOptions = GpuStepOptions;
 
 export interface WorldOptions {
   /** Share the renderer's GPU device, so BodyMesh can draw the bodies with no copies. */
@@ -979,12 +980,13 @@ export class World {
     return n;
   }
 
-  /** One fixed step (dt). */
-  step(): void {
+  /** One fixed step (dt). Detect contacts by default; optionally reuse within a frame. */
+  step(options: StepOptions = {}): void {
     this.assertSdfReady();
+    const movingKinematics = this.moves.size > 0;
     this.flush();
     this.push();
-    this.solver.step();
+    this.solver.step(movingKinematics ? {} : options);
     this.steps++;
     if (this.contactWatch && (this.reporting.size || this.contactsLive)) {
       this.contactWatch.run(this.sdfBridge?.contactEventStorage() ?? this.solver.contactStorage, this.solver.manifoldCapacity, this.steps, this.dt);

@@ -10,7 +10,7 @@ export { Rigid } from '../avbd3d/ref/body.ts';
 export { sphere, hull } from '../avbd3d/shapes.ts';
 // Hull shapes for `hull` bodies (convexHull is also on the main entry)
 export { convexHull, hullFromTriangles, MAX_HULL_VERTICES, type HullShape } from '../avbd3d/hull.ts';
-export type { GpuParams3D, GpuSolverOptions, GpuCounters3D, GpuContact, JointSpec } from '../avbd3d/gpu/solver.ts';
+export type { GpuStepOptions, GpuParams3D, GpuSolverOptions, GpuCounters3D, GpuContact, JointSpec } from '../avbd3d/gpu/solver.ts';
 // A joint record read back (GpuSolver3D.readJoints) decoded: the forces it carries, whether it
 // broke, the rest it holds and how far it has bent
 export { decodeJoint, type JointState } from '../avbd3d/gpu/joints.ts';
@@ -39,5 +39,5 @@ export {
 // The contact and manifold records and the solver counters a GpuSolver3D reads back
 // (readContactList and readCounters decode them; these are for reading the raw buffers in your
 // own readback or compute pass): record strides and field offsets, in 32-bit words
-export { CONTACT_WORDS, K_RA, K_RB, K_PEN, K_LAM, STICK_BIT, MANIFOLD_WORDS, M_IDS, M_GEO, C_MANIFOLDS, C_PREV_MANIFOLDS } from '../avbd3d/gpu/layout.ts';
+export { CONTACT_WORDS, K_RA, K_RB, K_PEN, K_LAM, STICK_BIT, MANIFOLD_WORDS, M_IDS, M_GEO, C_MANIFOLDS, C_PREV_MANIFOLDS, C_TAIL_BODIES } from '../avbd3d/gpu/layout.ts';
 export { C_PAIRS, C_CONTACTS, C_PREV_CONTACTS, C_OVERFLOW, C_CLASHES, C_NUM_COLORS, COUNTER_WORDS, NO_COLOR } from '../avbd2d/gpu/layout.ts';
