@@ -2,6 +2,876 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-17 — Mesh-to-mesh vertex witnesses; mesh vertex contacts enabled for mesh piles
+
+**Fixture (chairs, jitter=1, supports on).** `sdf-pair-trace.ts` on the failing pair 10/20
+showed one active optimizer point at +9.9 mm (the rest gap, so apparently satisfied) while one vertex
+of each chair sat 5–6 mm inside the other. Fresh samples near the overlap did not survive.
+Cause: the oracle's epsilon = 0.1 makes the smooth max approximately (phiA+phiB)/2 + 0.158 at
+these feature sizes, which is nearly flat along a line through both surfaces. A point 30 mm inside A and
+20 mm outside B scores like a real overlap, so the search has no pull toward penetration.
+Chair meshes have 164 unique vertices (24 hull) and bunnies 502 (108). At the failure, one
+of the two overlapping vertices was a hull vertex and the other was not.
+
+**Change (GPU, opt-in `meshPlaneContacts`).** The atlas now packs every unique source vertex
+(stable order; the hull is a subset, so plane extrema are unchanged). For two dynamic
+meshes the narrowphase scans each body's vertices inside the pair volume against the other
+field, skipping |grad|² < 0.25. If the deepest vertex is below min(margin, ½ tolerance) it
+adds one supplemental contact in the fifth slot: separation = the field value, normal = that
+field's unit gradient, anchors = the vertex and its projection. The first four optimizer contacts
+are unchanged. IDs are `0x40000000 | side<<27 | vertex`, cached by identity like plane supports.
+Fixture: peak 12.5 mm → 0.42 mm, final 6.1 mm → 0.
+
+**Ensemble (seeds 0–10, five-frame probes, versus the guarded default).**
+- Chairs: failures 0 → 0, probes ≥5 mm 98 → 37 (supports better on 10/11 seeds), max peak 26.5 → 15.9 mm.
+- Bunnies: failures 3 → 1, probes ≥5 mm 264 → 14 (11/11 seeds), median peak 22.4 → 0.8 mm, max
+  final 8.5 → 1.1 mm. The one failure is bunny seed 3 ending at 0.058 J (no overlap). Its trace shows
+  optimizer point 179 deepening from -8.7 to -17.9 mm with a normal opposite to the vertex witness
+  (about 1000 N each, an interlock), driving body 5 upward over 25 frames.
+- A filter that skipped a witness opposing a deeper kept contact fixed that bunny case (0 failures)
+  but produced chair seed 5: final 11.1 mm and 0.136 J. It was added after the fact and **rejected**;
+  depth ordering does not identify which opposing contact is correct.
+This meets the decision rule fixed in advance (no added failures, better medians and counts),
+so `releasedSettings` mesh-quality now enables `meshPlaneContacts` for the mesh scenes (gears, chairs,
+bunnies). Canonical runs: chairs 2.97 / 0 mm / 4.6e-5 J, bunnies 1.75 / 0 mm / 6.6e-4 J, gears 0 / 0.
+Reference/library defaults are unchanged.
+
+**Cost.** Mean narrowphase field queries per frame: chairs 36.4k → 63.1k (+73%), bunnies
+59.0k → 161.1k (2.7×). GPU time was not measured; no M1/GTX 1080 claim.
+
+Browser playback (`sdf-released.html`, mesh quality, no headless GPU work running): chairs and
+bunnies replay all 360 frames and auto-pause. Final energies are 4.59e-5 J and 6.62e-4 J,
+matching the headless canonical runs. Final sampled surface depth is 0 and contact depth is 0 for both.
+The pane was hidden, so playback ran at about 1 frame/s; this is not a performance measurement.
+The only console errors were 0×0 render-target errors from the initial hidden-viewport load.
+
+After merging `main` (#14–#25 solver/broadphase work; manifold reuse is skipped while an SDF
+backend owns contacts), the 11-seed chair and bunny runs are bit-identical to the pre-merge runs
+(22/22), and the bounded gate passes (141 CPU and 148 GPU tests, both builds).
+
+Review follow-ups (PR #26): SDF worlds now adapt the colour cap, Jones-Plassmann rounds and the tail
+hint on every periodic readback, including with `autoGrow:false` and after an SDF error. Previously
+only pair capacity was adapted, so a dense SDF pile could keep a frozen cap. Mesh vertex contacts
+refuse fields above 4096 unique vertices, the per-pair serial scan budget. Detaching a backend
+invalidates built-in manifold reuse. The 11-seed chair and bunny runs are bit-identical before and
+after these changes (22/22). GPU time on the M1/GTX 1080 targets is still unmeasured.
+
+Still open: opposing-normal interlocks (bunny seed 3); `meshPlaneContacts` now also covers
+mesh-mesh pairs, so its name is inaccurate. Measurements: `measurements/sdf-mesh-witness-ensemble-2026-10-17.json`.
+
+## 2026-10-17 — Degenerate-gradient projection launches bodies; floor supports still not enabled
+
+**Launch bug (default path).** A 10-seed ensemble run of the handed-off code with floor
+supports had one bunny run end at 2.78 J. A bounded trace showed the cause: at frame
+264/substep 1, bunny 3 rests on the floor and is launched at 10.55 m/s by one
+ordinary floor contact (id 1035). Its narrowphase separation was **-4.58 m**, with a material anchor
+4.9 m away. The static-box signed projection uses `phi·grad/|grad|²`, which is
+unbounded where a voxel gradient nearly vanishes. That projection is in the default
+mesh-quality profile (`signedSeparation`). Floor supports only changed the
+trajectory that reached it.
+
+Retained fix (GPU `wgsl-sdf.ts` and CPU `manifold.ts`, identical rule): when the
+moving body's gradient has `|grad|² < 0.25` (a true SDF has |grad| ≈ 1), the projection
+falls back to the bounded `phiA+phiB`. New CPU and GPU tests use a constant-phi voxel
+field with a 0.02 gradient on a floor box. Both report -0.249 m without the guard and
+stay within the real 35 mm overlap with it.
+
+**Guard alone (default, seeds 1–10, ±10 µm initial jitter, five-frame probes).**
+Bunny test-limit failures dropped from 4 to 3, worst final overlap from 25.7 to 8.5 mm, and worst
+energy from 0.122 to 0.0077 J. Chairs had identical peaks and zero failures, though two seeds
+now end at 1.1 and 4.2 mm (limit 5). Canonical runs (seed 0): chairs 8.10 / 0 mm / 0.0011 J;
+bunnies 20.0 / 8.4 mm / 0.0014 J.
+
+**Floor supports with the guard (seeds 0–10, paired by seed).** Decision rule, fixed
+before the run: enable only if failures do not increase in either scene and median
+peak and the count of probes ≥5 mm are no worse.
+- Bunnies: probes ≥5 mm went from 264 to 57 (supports better on 11/11 seeds), median peak from
+  22.4 to 7.8 mm, finals >0.5 mm from 6 to 3, and failures stayed at 3 (the same seeds, with identical
+  early peaks of 30–34 mm in both configurations).
+- Chairs: probes ≥5 mm went from 98 to 82 (5 better, 2 worse), max peak from 26.5 to 13.5 mm, but failures
+  went from 0 to **1**: seed 1 ends with 6.1 mm of chair-to-chair overlap.
+Supports are **not enabled**. Every remaining >5 mm event with supports is mesh-to-mesh,
+so floor coverage is largely solved and the blocker is mesh-mesh contact (both-inside
+crossing features, slow alpha = 0.99 recovery). Measurements:
+`measurements/sdf-supports-ensemble-2026-10-17.json`.
+
+The shared bunny failures (seeds 2/4/5, 30–34 mm peaks) show the current GPU test limits
+pass on the canonical trajectory but not robustly across 10 µm perturbations.
+
+## 2026-10-17 — Single pile trajectories cannot decide SDF contact changes
+
+**Baseline drift.** The current working tree no longer reproduces
+`sdf-stable-order-2026-10-14.json`. Two fresh canonical runs are bit-identical to each
+other but differ from the record from bunny frame 16 / chair frame 77. Five-frame
+probes: chairs peak 8.10 mm / final 0 / 1.95e-5 J; bunnies **27.36 mm / 8.26 mm**
+(bunny 27 on the floor) / 4.46e-4 J. This is inside the GPU test envelope (30/10 mm),
+so the later plane-support/refresh edits changed default trajectories without failing
+a test. The exact responsible edit was not isolated.
+
+**Embedded bunny pair (mesh-plane run, 22/5).** New `scripts/sdf-pair-trace.ts`
+shows the pair at positive separation until frame 340. The overlap then appears within
+about 10 frames, which rules out slow accumulation. Mixed-sign samples report unsigned `length(gap)`:
+at frame 347, point 1626 is 19.7 mm inside A and 11.4 mm outside B with facing
+gradients, which is about 8 mm of overlap reported as +8.9 mm. Cached point 1447 at
+12.3 mm inside A reports +17.4 mm and releases. Separately, a chair 8/17 trace shows
+a both-inside point (phiA, phiB about -12/-14 mm, near-orthogonal gradients, likely crossing
+legs) staying near -25 mm for 10 frames. Its normal swings frame to frame, and AVBD's
+alpha = 0.99 only removes 1% of existing violation per substep.
+
+**Ensemble.** `sdf-released-compare.ts` now accepts `mesh-plane` and `jitter=N`
+(deterministic ±10 µm initial offsets). Three seeds per configuration
+(`measurements/sdf-ensemble-2026-10-17.json`) show that outcomes are dominated by
+trajectory sensitivity. On the unchanged code, bunny peaks range 20.1–34.4 mm, and one seed ends
+at 0.12 J, above the 0.01 J test limit. The canonical GPU test passes on one trajectory, not
+robustly. Floor supports were not worse across seeds: bunny peaks
+2.7/34.4/0 mm versus 25.8/34.4/20.1 mm without supports. The earlier single-run rejection
+is therefore not conclusive either way.
+
+A facing mixed-sign sign correction (negate when `dot(na,nb)>0` and
+`dot(offsetA-offsetB,na)<0`) was not an improvement. One bunny seed reached
+**10.45 J** and was rejected. A first attempt had the inequality inverted; its numbers
+were discarded. That experiment was reverted (the later degenerate-gradient guard is a
+separate, retained change; see the entry above).
+
+Next: decide contact changes on seed ensembles (more than three seeds) with mesh-to-mesh
+and floor counts separated. Investigate both-inside crossing features and the slow
+alpha recovery of deep detected contacts. Make GPU regression tests robust to
+trajectory sensitivity rather than relying on one canonical path.
+
+## 2026-10-14 — Deterministic floor supports work in isolation, not yet accepted for piles
+
+Implemented the opt-in GPU `meshPlaneContacts` extension. CPU QuickHull retains
+actual mesh vertices sufficient for arbitrary plane extrema; the GPU scans them
+in a deterministic order. Only a fully covering static box top face qualifies.
+At most one extra extremity contact replaces the fifth candidate when the surface
+is within half a collision tolerance of the face. The first four ranked search
+contacts remain unchanged. Stable vertex feature IDs occupy a reserved range;
+ordinary sampling IDs and the sticking bit remain distinct. The supplemental
+contact has its own normal and warms by identity, not rank. Edge/side/underside
+cases retain general SDF search. The CPU reference explicitly rejects this GPU-only
+option rather than silently ignoring it.
+
+Default World snapshots and GPU atlases do not retain/build support data. Opt-in
+snapshots copy the source triangles for safe rebuilds; source curvature seeds and
+voxel grids are unchanged. The option must be requested at standalone pass creation
+as well as dispatch, or at World SDF enable time. No demo quality profile enables it.
+
+Two isolated tilted meshes, 240 frames each with per-frame surface probes, have
+zero sampled peak/final overlap and final energy 3.35e-9 J (chair), 2.11e-6 J
+(bunny). Stable IDs/cache retention, default-off behavior, disabling cached support,
+box-edge fallback and immutable snapshots have targeted coverage. These are not
+substep-wide or volume-wide guarantees of no intersection.
+
+Full six-second piles still regress: replacing all floor contacts yielded 12.90 mm
+chair / 52.31 mm bunny peak depth (both final zero). The retained supplemental
+variant yielded 13.46/0 mm chair peak/final and 15.89/15.89 mm bunny peak/final.
+An intersection-only trigger left 9.11 mm final chair overlap. None is enabled in
+the demo. Existing chair settling and bunny repeatability policies are preserved.
+
+A tighter sticking-anchor refresh threshold did not resolve the embedded bunny.
+The new bounded `scripts/sdf-contact-audit.ts` shows its deep contact was already
+non-sticking: detected -21.106 mm, projected anchor gap -21.521 mm, no anchor
+relocation. Therefore that threshold experiment was reverted. This remaining
+mesh-to-mesh case needs coverage/constraint diagnosis, not another blind refresh
+threshold change. Measurements: `measurements/sdf-plane-supports-2026-10-14.json`.
+
+Verification: typecheck, 139 CPU tests, 126 sequential GPU tests, Vite build
+and library build passed; one additional production warm-force regression passed
+afterward (127 GPU tests total), with a fresh typecheck. Five heavy GPU workloads
+were excluded; this is the bounded gate, not unrestricted `pnpm check`. Default
+chair settling and independent-run bunny repeatability pass. No browser playback
+was run concurrently. The existing Vite chunk-size warning remains.
+
+## 2026-10-14 — Substep traces isolate missing mesh extremity coverage
+
+Added `scripts/sdf-impact-trace.ts`: a single target body/floor pair, at most
+30 frames of substep detail after a bounded warm-up (maximum 360 frames). It
+records actual mesh minimum height, curvature-seed minimum height, velocity,
+contact normals, forces, retained anchor gaps and detected separation. It does
+not change solver settings. Evidence: `measurements/sdf-impact-trace-2026-10-14.json`.
+
+Chair body 6 reaches -9.081 mm at frame 94/substep 1 while its lowest curvature
+seed is +21.285 mm. Bunny body 10 reaches -8.926 mm at frame 214/substep 2;
+its floor contacts still report positive separation. These substep minima are
+larger than the previous five-frame whole-scene samples. This identifies a
+contact-coverage problem; more solver iterations alone cannot constrain an
+unrepresented extremity.
+
+Rejected trials: selecting uncovered curvature supports, sharper objective,
+bypassing optimization for a support seed, adding actual mesh supports to all
+pairs, and adding them only against static boxes. The last active trial improved
+chair peak/final depth to 7.305/0.721 mm and final energy to 0.00001921 J, but
+bunny peak rose to 22.379 mm and final energy to 0.280877 J. All experimental
+physics changes were removed. Existing independent normals, warm starts and
+stable ordering are preserved. An initial static-only run was a no-op because
+runtime snapshots omit surface triangles; the reported active trial explicitly
+preserved them. No snapshot/API expansion is retained.
+
+Next: a deterministic support-contact candidate/retention policy that preserves
+spatial coverage, assessed first on a single tilted chair/bunny and then both
+piles. Do not expand random seed pools or raise sampling budgets blindly.
+Transient penetration remains unresolved. One diagnostic Dawn process exited
+natively; retaining its wrapper objects through asynchronous readbacks allowed
+the repeat to finish. This was not a shader validation error.
+
+Verification after removing the experiments: typecheck, 138 CPU tests, 123 GPU
+tests, Vite build and library build passed sequentially at low CPU priority.
+The five heavy GPU workloads were excluded to honor the bounded-work constraint;
+this was not the unrestricted `pnpm check`. Chair settling and two-run bunny
+repeatability passed. No new browser replay was needed for the retained diagnostics;
+the production physics settings are unchanged. Vite retains its chunk-size warning.
+
+## 2026-10-14 — Stable SDF adjacency resolves observed settling variation
+
+3D topology assumed one manifold per pair and returned zero for every secondary
+sort key. SDF's multiple independent manifolds per pair therefore tied; atomic
+allocation order leaked into floating-point accumulation. Topology now sorts by
+the first contact's persistent feature ID with STICK_BIT removed, after the other
+body ID. Adds one read-only binding (eight total storage buffers, baseline limit),
+not additional contacts or solver iterations. Standard one-manifold pairs retain
+their ordering. Independent normals and warm starts are unchanged.
+
+Two independent 180-frame bunny runs match full physical state bit-for-bit on the
+same GPU. Six-second headless comparisons with 30- and 5-frame probe intervals
+have identical final results despite different readback/probe timing. Two browser
+replays match each other's displayed metrics and the headless report: bunny final
+energy 0.0021 J, 189 contacts, 111 pairs and zero final sampled surface depth.
+The viewer now probes final surface depth separately from detector contact depth.
+This is evidence on this device, not cross-device/compiler determinism.
+
+Five-frame probes measure chair peak/final depth 8.10/1.12 mm and final energy
+0.0002561 J; bunny 6.78/0 mm and 0.0021134 J. Thirty-frame sampling missed those
+peaks (3.46/0 mm). Transient intersections remain; do not claim collision-free
+motion. Chair settling bounds remain unchanged. Raw measurements and reproduction
+command: SDF_RELEASED_COMPARISON, sdf-stable-order-2026-10-14.json.
+
+Verification: bounded sequential nice-15 gate passed typecheck, 138 CPU tests,
+123 GPU tests (including unchanged chair settling and new bitwise replay), Vite
+and library builds. Five heavy GPU workloads remain excluded, so this is not
+unrestricted `pnpm check`. Browser and headless simulations did not overlap.
+Existing chunk-size warning remains. No target-hardware performance or zero-
+contention claim. Nothing committed or pushed.
+
+## 2026-10-14 — Signed static projection and deeper-contact anchor refresh
+
+Worst-vertex witnesses exposed embedded bunny surfaces reported as positive gaps.
+Opt-in `signedSeparation` now projects mixed inside/outside samples against the
+static analytic box normal. A separate opt-in `refreshDeeperContacts` releases
+sticking anchors only when relocation exceeds three optimizer tolerances and the
+new separation is deeper by more than one tolerance. CPU/GPU bridges preserve
+point identity, independent normals, transported warm force and penalties.
+Released mesh quality enables both; library/reference defaults are unchanged.
+
+The accepted six-second comparison measured chair peak/final sampled penetration
+14.11/0 mm and energy 0.00005674 J; bunny 17.58/0 mm and 0.0001905 J. This is not
+zero-overlap proof: probes run every 30 frames, and transient penetration remains.
+Static projection alone failed the wider gate (chair final 5.13 mm, bunny 12.77 mm).
+Broad/opposed moving-surface sign variants increased residual motion and were
+rejected. No regression limit was weakened. See SDF_RELEASED_COMPARISON and the
+raw `sdf-anchor-refresh-2026-10-14.json` trace, including its configuration note.
+
+Final bounded gate: typecheck, 138 CPU tests, 122 selected GPU tests, Vite and
+library builds passed. Includes the unchanged chair regression, new bunny envelope,
+CPU/GPU mixed-sign tests, and stale-anchor refresh with normal warm-force retention.
+Five heavy GPU workloads remain excluded, so this is not unrestricted `pnpm check`.
+All GPU diagnostics were sequential, at most 360 frames per pile with queue
+readbacks/yields; CPU processes ran at nice 15. No zero-contention or target-device
+performance claim. Existing build chunk-size warning remains. No commits/pushes.
+Browser bunny playback completed six seconds and auto-paused: contact depth 0,
+energy 0.0102 J. This exceeds the headless regression's 0.01 J energy envelope and
+shows remaining run/backend variation; the viewer does not perform vertex probes.
+Do not claim universally settled or intersection-free piles.
+
+## 2026-10-14 — Sticking-anchor normal error and earlier mesh contacts
+
+Fixed a constraint mismatch in GPU and opt-in CPU SDF bridges: retained sticking
+anchors now supply the normal error as well as the friction lever arms. Previously
+the normal depth came from a different, relocated optimizer point. A regression
+perturbs the retained normal anchor and checks the actual exported GPU normal row.
+Independent normals, contact identity and transported warm forces are preserved.
+
+The released viewer's mesh-quality profile activates contacts at 4 cm, with the
+same resting gap as the original 2 cm activation. Five candidates/four substeps
+remain; no damping, sleeping or larger buffers. A released-settings mode retains
+captured parameters. Library defaults remain unchanged.
+
+Full four-scene six-second measurements: chair energy 0.03349 → 0.000470 J,
+final sampled penetration 3.27 mm → 0, sampled peak 54.98 → 33.29 mm. Bunny energy
+0.01413 → 0.000249 J and peak 43.79 → 22.02 mm, but final sampled overlap increased
+from 0 to 10.44 mm. Box/gear stacks settle without sampled penetration. This is not
+a complete penetration fix. Exploratory higher-budget/search/correction variants
+were rejected; only consistent-anchor evaluation and earlier activation remain.
+See `SDF_RELEASED_COMPARISON.md` and its raw measurement links.
+
+Verification: bounded sequential nice-15 gate passed typecheck, 137 CPU tests,
+118 selected GPU tests, Vite build and library build. A final sixth bridge test
+for earlier activation passed in a focused six-test rerun (119 distinct selected
+GPU tests total). The new six-second chair regression checks final energy below
+0.01 J, final sampled penetration below 5 mm and sampled peak below 40 mm; the
+old measured run exceeded the energy and peak bounds. Five heavy GPU workloads
+remain excluded. Existing chunk-size build warning remains. No target-device
+throughput or zero-contention claim; measurements drained the queue between
+substeps. Browser chair playback completed all six seconds, auto-paused, and both
+profile switches worked. Final browser energy was 0.0015 J, illustrating run-to-run
+variation; no independent vertex probe is run in the viewer. No commits or publication.
+
+## 2026-10-14 — Released SDF scenes and principal inertia
+
+Added `/sdf-released.html`: original box/gear stacks and chair/bunny piles,
+resolution-100 grids, exact captured mass/full inertia and reference metrics.
+Principal-frame field rotation preserves off-diagonal inertia without rebaking;
+contact anchors and warm starts remain in the production body's principal frame.
+The six-second sequential comparison found settled boxes/gears, chair residual
+energy 0.03349 J and 3.27 mm final sampled penetration, and bunny final energy
+0.014130 J versus reference 0.014126 J. Transient penetration remains a gap;
+see [the detailed comparison](SDF_RELEASED_COMPARISON.md) and raw traces there.
+
+Verification: typecheck, 136 CPU tests and 116 of 117 selected GPU tests passed
+initially. The failure was an obsolete test-only WGSL Body stride; updated it to
+match the extended production layout and all five tests in that file passed.
+Added a sixth released-scene CPU test for HTTP-decoded gzip/checksum rejection;
+all six passed (137 CPU tests total across the suite and focused follow-up).
+Production and library builds pass; existing chunk-size warning remains.
+Five heavy GPU workloads were excluded; this is not unrestricted `pnpm check`.
+GPU tests and comparisons ran sequentially, nice 15 with drained queues. No claim
+of zero contention or target-device throughput. Browser verified box rendering,
+all voxel loads, gear/chair/bunny playback, live metrics, pause and reset. Browser
+validation caught transparent HTTP gzip decoding; loader handles both paths and
+retains decompressed content hash checks. Nothing committed or published.
+
+## 2026-10-14 — Bounded interactive SDF showcase
+
+Added `/sdf.html` with 12-body ring, twisted-box and baked-gear presets, mixed
+spawning up to 36 bodies, SDF raycast picking, kinematic-handle ball-joint dragging,
+orbit/zoom, pause/reset and optional sampled contact points/normals. The gear is a
+procedural watertight triangle mesh baked at resolution 32; its hole remains empty.
+Warp geometry inverts the analytic field mapping, including its handedness change.
+BodyMesh renders directly from GPU poses; contacts/readback are optional and
+throttled. Debug snapshots hold stepping while readbacks complete.
+
+The page caps display at 30 Hz, pixel ratio at 1.5, and catch-up at two physics
+steps per frame. Hidden tabs stop stepping; paused static views stop rendering.
+Candidate capacity covers every pair within the fixed 38-slot allocation (floor,
+drag handle and 36 dynamic bodies). This is not a stress benchmark or paper
+reproduction: mass/inertia are deliberately approximate box proxies.
+
+Verification: all three presets rendered in the browser without reported errors;
+checked mixed spawning, ring dragging/release, and contacts toggled while paused.
+CPU regression checks analytic render-surface alignment, outward triangle winding
+and the baked through-hole. A five/six-body GPU check covers settling, contacts,
+spawning, joint dragging and removal. The bounded sequential nice-15 gate passed
+131 CPU and 112 selected GPU tests, typecheck and both builds. Five heavy GPU
+workloads remain excluded; existing Vite chunk-size warning remains. Final
+paused-render/toggle changes were browser-checked and typecheck/build rerun.
+No target-device performance claim, commit or push.
+
+## 2026-10-14 — SDF lifecycle review: pending slot reuse
+
+Found and fixed a P2 bug in World.add: adding, removing and replacing a body
+before the pending append queue was flushed queued the same slot twice. A bounded
+GPU regression reproduced three solver bodies where two were expected. Replacing
+the pending record at its slot offset preserves append order and GPU body IDs.
+The regression also verifies contact generation and the replacement raycast handle.
+
+Three additional regressions verify submitted ray results across field refresh and
+destruction, rejection of growth beyond device limits without losing the installed
+backend, and temporary-buffer cleanup/retry after an injected host allocation
+exception. This is not a real GPU out-of-memory or device-loss test.
+Independent read-only static re-review found no remaining actionable issues.
+
+Verification: typecheck, 130 CPU tests, 111 selected GPU tests on local Dawn,
+Vite build, library build and git diff --check passed. Commands ran sequentially
+at nice 15. This was the bounded gate, not unrestricted pnpm check: five heavy GPU
+workloads remain excluded. The existing Vite chunk-size warning remains. No
+target-device benchmark or claim of GPU isolation; no commit or push performed.
+
+## 2026-10-14 — SDF runtime refresh and capacity growth
+
+World can now stage additions/removals, including sparse or recycled slots, then
+commit them with awaited updateSdfCollisions. Stepping/raycasting rejects while
+dirty or preparing; omitted live fields retain their snapshots, explicit field
+bindings replace them. CPU field snapshots prevent caller mutations from leaking
+into later atlas rebuilds. Failed updates retain the previous backend, while
+already staged topology edits remain dirty until repaired or SDF is disabled.
+Updates rebuild the atlas/bridge; this is not an incremental voxel allocator.
+
+A GPU history-transfer pass preserves only pairs whose two Body handles and
+bindings are unchanged. Changed fields and same-step recycled slots invalidate
+history. Surviving records retain independent normals, point IDs, anchors and
+indices into the solved production contact buffers. Growth copies both production
+contact parities when those buffers also need enlargement.
+
+The existing ten-step World counter check now grows SDF capacity after overflow,
+unless autoGrow is false. adaptSdfCollisions explicitly awaits a check/growth;
+sdfCollisionCapacity and sdfCollisionError expose status. Stale async callbacks
+check backend identity, dirty/preparing state and destruction before acting.
+Only counters are read back, never poses or contacts. Overflowing frames remain
+incomplete; no rewind/replay is attempted. Device-limit failures reject explicitly
+or populate the automatic error status; they do not silently claim recovery.
+
+Seven bounded lifecycle regressions cover:
+- Manual and periodic growth, opt-out, and preserved warm forces.
+- 65 overlapping bodies / 2080 pairs forcing production contact reallocation.
+  Deep overlap changes normals, so this test verifies the full transported
+  world-space force rather than incorrectly assuming a fixed normal component.
+- Append/default capacity sizing, sparse removal, all slots removed, and reuse.
+- Same-step remove/reuse and overlapping field replacement clear stale forces.
+- Submitted field snapshots and omitted-binding immutability.
+- Invalid updates preserve the old backend; stale adaptation and teardown are safe.
+
+Verification: 130 CPU tests and 107 selected GPU tests passed on local Dawn,
+plus typecheck, Vite and library builds. Existing Vite chunk-size warning remains.
+A final targeted lifecycle rerun covers the capacity-sizing refinement.
+Runs were sequential at nice 15; five heavy GPU cases remain deferred. No browser
+visual or target-device benchmark. CPU priority does not guarantee GPU isolation.
+
+Limits: World maxBodies remains fixed; atlas rebuilds should be batched.
+Contact events retain the standard slot-pair identity semantics, so same-step
+remove/reuse can appear continuous even though force history is invalidated.
+Incremental voxel allocation, generation-aware events, broader scene/hardware
+validation and the regularization/friction tradeoff remain follow-on work.
+
+## 2026-10-14 — GPU spatial SDF broadphase
+
+Replaced the automatic 64-body quadratic candidate list with a hashed centre-cell
+grid and separate oversized-body list. GPU passes clear/build the grid, index
+previous exact body-pair identities, and emit compact candidates with previous-slot
+references. No per-step CPU pose or pair readback. Independent normal export and
+force-basis transport are unchanged. Fixed fields/body slots remain a limitation.
+
+The third World setup argument accepts cellSize/maxPairs. Defaults use the median
+scaled field bounding diagonal and up to eight candidates per body, bounded by
+possible pairs/device limits. Pair overflow sets counter bit 1 and counts omitted
+candidates; these frames are incomplete. Re-enable with more capacity. World
+automatic buffer adaptation is suspended in SDF mode because it cannot resize
+SDF history buffers. Dense/oversized populations can still require quadratic work.
+
+Five new bounded GPU regressions passed:
+- 96 rotated/scaled fields (including oversized fields larger than proxy geometry):
+  exact candidate-set agreement with CPU transformed-AABB brute force, no duplicates.
+- 256 sparse bodies: 128 accepted pairs, 2048 candidate capacity, candidate tests
+  below one tenth of all pairs. This is coverage/work-count evidence, not timing.
+- 67 oversized bodies: all 66 dynamic/static pairs found; no old 64-body truncation.
+- Four overlapping bodies: capacity one reports overflow and all six attempted
+  pairs; recreating at capacity six restores complete coverage.
+- Pair disappearance/re-entry retains surviving warm forces by exact body identity,
+  while re-entering pairs have zero stale force.
+
+Final verification: 130 CPU tests passed; 100 selected GPU tests passed on local
+Dawn, with zero skips in the selected suite. Typecheck, Vite and library builds
+passed; existing Vite chunk-size warning remains. The initial GPU gate caught a
+WGSL hash-expression parenthesis error; corrected and reran the selected GPU suite
+and builds successfully. Runs were sequential at nice 15. Five stress/showcase
+cases remain excluded; no target-device benchmark or browser visual test performed.
+CPU priority is lowered, but GPU scheduling/contention is not guaranteed.
+
+Next: runtime field/body allocation, automatic SDF capacity growth, broader
+mixed-size scene validation and target-device measurements.
+
+## 2026-10-14 — Bounded non-convex collision and friction validation
+
+Added five regressions in `tests-gpu/sdf-nonconvex.gpu.test.ts`, using two or three
+bodies per scene and sequential CPU/GPU execution:
+
+- Analytic and baked (24-cell resolution) tori: empty cavity, clearance, inner wall,
+  outer wall, separation and re-entry. Active contacts, minimizer locations and
+  separation agree with the CPU manifold using the GPU pair RNG policy. Normals
+  point into the cavity at the inner wall and outward at the outer wall.
+- Two crossed moving tori over 16 updates: multiple active contact regions,
+  CPU/GPU location/deepest-separation envelopes, cached points and distinct normals.
+  Non-smooth medial-axis normals are not claimed to agree bit-for-bit.
+- World free fall through analytic/baked holes, with a separate positive rim
+  impact. False contacts/events inside the cavity are rejected.
+- Three-second flat sliding and 15-degree incline scenes compare CPU/GPU height,
+  travel and speed. Every sampled GPU contact must be finite, compressive and
+  inside its Coulomb cone. Sticking must engage after frictional stopping.
+
+The initial flat frictionless speed-conservation check exposed a reference-method
+bias: default collision `alpha=0.01` distributes contact samples using a repulsion
+term, tilting curved-surface contact normals and introducing drag even at mu=0.
+At defaults, final CPU/GPU speeds from 1 m/s were 0.8873/0.9531 m/s after 3 s.
+Tightening tolerance alone did not remove it (0.9122/0.9021 m/s). Disabling collision
+repulsion with `alpha:0`, `tolerance:0.001`, `maxIterations:100` produced
+0.99993/0.99986 m/s and 2.99991/2.99961 m travel. This is collision alpha, not the
+AVBD solver stabilization alpha. Defaults and pinned reference behavior remain
+unchanged; no general claim of frictionless energy conservation at defaults.
+
+The flat Coulomb-isolation regression explicitly uses those accuracy parameters,
+retaining the physical speed-conservation assertions and checking stopping distance
+against v²/(2 mu g). At mu=0.8, CPU/GPU stop after 0.05463/0.05492 m. Incline tests
+retain default collision parameters: zero-friction travel is 11.4463/11.4263 m;
+mu=0.8 drift is 0.000976/0.000612 m after 3 s. These are matched-proxy-mass small
+scenes, not a target-device benchmark, exact trajectory parity, or a broad guarantee
+for arbitrary meshes/interpenetration. The regularization tradeoff remains open.
+
+Verification: 130 CPU tests, 95 selected GPU tests, typecheck and both builds pass;
+zero skips within the selected suite. The five new GPU regressions take about 2 s
+locally. The gate ran sequentially at nice 15; five stress/showcase tests remain
+excluded, and the existing Vite chunk-size warning remains. No production-code
+change, browser visual run, target-device benchmark, commit or publication.
+
+## 2026-10-14 — SDF event/raycast review fixes
+
+Reviewed the uncommitted SDF event/query changes against base 9b9c27b6 with an
+independent read-only reviewer. Final re-review found zero actionable issues.
+No event aggregation changes were needed; independent solver normals and warm
+starts remain untouched.
+
+Fixed pending-ray result reconstruction: the returned batch and hit points now
+use the uploaded float32 ray snapshot rather than caller-owned arrays after
+readback. World also captures Body handles at submission, so disabling SDF and
+removing/reusing a slot cannot attach an old hit to the replacement body.
+
+Replaced the field-space slab parallel epsilon with an exact-zero check. Scaling
+a sphere by 1e13 made a head-on local direction smaller than 1e-12 and previously
+produced a false miss. Regression coverage includes that case, a shallow ray
+entering a long box, and a genuinely parallel miss. Both new regressions failed
+before their fixes and pass afterward.
+
+Verification: 37 targeted GPU tests, then the bounded gate's 130 CPU tests and
+90 GPU tests, typecheck and both builds pass; no selected tests skipped. All runs
+were sequential at nice 15. Five heavy stress/showcase tests remain deferred, so
+this is not the unrestricted pnpm check. The existing Vite chunk-size warning
+remains. Browser/target-device performance and extreme-float accuracy were not
+validated. The documented bounded sphere-tracing nonconvergence limit remains.
+No open PR exists for this branch, so no review was posted; nothing committed.
+
+## 2026-10-14 — SDF pair events and surface raycasts
+
+Added a reporting-only GPU aggregation pass: one synthetic manifold/contact per
+physical pair, averaging solved local anchors and summing absolute normal forces.
+The force-weighted representative normal does not replace any solver normal.
+Independent contacts, their penalties and identity-based warm starts stay intact.
+Existing ContactWatch handles begin/end transitions without duplicate point events.
+
+World raycasts now query the packed SDF atlas with current GPU poses. They share
+the standard nearest-hit reduction and masks/ignore semantics. Field-space bounds
+clipping keeps samples inside the domain used for conservative warp slope bounds;
+voxel slope bounds come from phi edge differences, including the outside-grid
+extension. Tracing is limited to 512 samples per body/ray and 256 rays per call.
+Non-convergence is a miss; this is approximate field picking, not exact triangle
+intersection. See SDF_WORLD.md for tolerances and grazing-ray limitations.
+
+Validation: typecheck, 130 CPU tests, 88 selected GPU tests and both builds pass.
+The final eight World SDF tests also pass after expanded backend-switch coverage.
+Existing standard World raycasts/events and bridge normal/warm-start regressions
+pass. Five stress/showcase cases were excluded, so the unrestricted gate remains
+deferred. Vite retains its existing chunk-size warning. No browser visual check.
+
+All test jobs ran sequentially with nice 15. The full selected GPU suite took
+57 seconds. System-wide GPU utilization sampled 94% during that run and 63% after
+completion; swap remained zero. These snapshots cannot isolate this task's GPU
+cost or prove no interference. CPU priority does not throttle GPU work. No stress
+benchmark or target-device performance claim was made.
+
+## 2026-10-14 — Bounded automatic candidates and World SDF API
+
+Added createAutomatic for at most 64 fixed slots. It enumerates potential pairs
+once on CPU, then filters SDF world AABBs, static/static pairs, reciprocal collision
+masks and live joint exclusions on GPU. The exclusion helper is shared verbatim
+with the standard broadphase. This is a bounded quadratic scan, not spatial-grid
+scaling. Solver capacity is reserved for five contacts/manifolds per potential pair.
+Filtered pairs overwrite their sampling history with empty results; accepted-pair
+counters do not count rejected slots. Explicit candidates now use the same filter.
+
+World.enableSdfCollisions accepts field bindings for existing bodies, defaults
+unassigned boxes/spheres to analytic fields and installs the automatic bridge.
+Disable restores standard collisions. Fields/mass/render-frame responsibilities
+and supported operations are documented in SDF_WORLD.md. Adds/removes fail before
+handle mutation while enabled or preparing; contact reporting is rejected pending
+per-pair event aggregation. Raycasts retain original shapes. The API is unpublished.
+
+Four World tests cover masks, stale force invalidation, moving out/in, joint release
+and GPU-disabled joints, voxel settling, setup failures/cancellation, and 64-body
+capacity/65-body rejection. The stale-cache test uses definite penetrating contacts:
+a single-candidate configuration at shallow overlap did not discover an active
+contact on one sampled step, so candidate count alone cannot assert active contact.
+A final audit added a destroyed-owner guard before binding production buffers after
+async shader compilation, with a direct teardown-during-compilation regression.
+
+The bounded suite passes 129 CPU tests (23.85 s) and 83 GPU tests (44.91 s).
+After the final teardown guard, all nine bridge/World tests pass (1.12 s), including
+one new test; typecheck and both builds pass again. The only build warning is the
+existing Vite chunk-size warning. Five heavy GPU tests remain excluded, so the
+unrestricted pnpm check was not run. All checks were sequential at niceness 15,
+with limited build workers; no benchmarks. System GPU snapshots were 58% before
+and 63% after the broad run, zero swap at the initial check. No claim of zero
+contention or performance on other hardware. Uncommitted/unpublished.
+
+## 2026-10-14 — Internal production SDF collision bridge
+
+Added an opt-in collision backend hook to GpuSolver3D and an explicit-pair SDF
+bridge. GPU preparation reads production body poses, velocities and static flags,
+then evaluates SDF contacts and exports one production manifold per active point.
+The existing adjacency/colouring/primal/dual pipeline consumes those records. The
+standard broadphase/narrowphase remains the default and resumes after detaching.
+
+Warm starts use ordered pair identity and persistent SDF point ID, not rank or
+atomic allocation order. Each SDF result records its exported production contact
+slot. Previous solved forces rotate through world space into the new point basis;
+penalties decay/clamp with the production mass-floor option. Sticking anchors are
+retained for nonspheres. The first settling test exposed spherical anchor pinning;
+refreshing spherical anchors (as the standard backend does) fixed the falling case.
+The first penalty assertion also needed to isolate decay from the enabled mass floor;
+reorder expectations explicitly include the changing contact-basis projection.
+
+Four new small GPU tests cover differing normals, normal/tangent force transport,
+penalty retention, pair reorder/key reset, empty candidates, sticking anchors,
+mutable parameter validation, detach/fallback, and a falling sphere supported for
+120 production steps. All 79 selected GPU tests pass (57.77 s), plus 129 CPU tests
+(23.40 s), typecheck and both builds. Existing Vite chunk warning remains.
+Commands ran sequentially at niceness 15; the five previously excluded scale and
+showcase tests remain excluded, so this is not an unrestricted pnpm check. No
+benchmarks. System-wide snapshots were 64% GPU before the broader checks, 71%
+during, with zero swap; these do not prove zero contention with other work.
+
+Current limits are explicit: all candidates/exclusions are caller-owned, body/field
+slot assignments are fixed, capacity reserves five contacts/manifolds per pair,
+and public World bindings/automatic candidate generation remain pending. No
+per-frame pose/contact readback. Eight storage bindings, no optional GPU features.
+See SDF_PRODUCTION_BRIDGE.md. Uncommitted and unpublished.
+
+## 2026-10-14 — Small temporal and multi-workgroup SDF tests
+
+Added two GPU regressions without changing production code. The temporal test
+compares 72 pair updates against CPU across sphere/voxel, either body static or
+both moving, rotation, COM offset, scale, separation/re-entry and warm-start reset.
+It verifies cached IDs and reconstructs projected anchors. A separate 65-pair
+case checks the default candidate path, curvature seeds, cache slot reversal,
+rank order, duplicate rejection, finite unit normals and static-static suppression.
+
+All five SDF GPU tests pass on Dawn (441 ms complete targeted run). Typecheck,
+129 CPU tests and both builds pass; existing Vite size warning remains. Commands
+were sequential at niceness 15; no stress tests or benchmarks. The broader GPU
+regressions were not repeated because production code was unchanged. Unrestricted
+`pnpm check` remains excluded under the bounded-load constraint. No new utilization
+sample was taken; the short runtime is not proof of zero contention.
+
+The production manifold's shared normal cannot directly represent these independent
+SDF contact normals. The next bridge must address pair-cache identity separately
+from solver manifold records and read production body poses on GPU. See
+`SDF_GPU_DRAFT.md`. Changes remain uncommitted and unpublished.
+
+## 2026-10-14 — First bounded GPU validation
+
+Small real-Dawn SDF tests exposed reserved WGSL names `meta` and `active`;
+renamed them `flags` and `activeCount`, preserving the ABI. All three SDF tests
+pass: transformed analytic/voxel fields, contact/cache remapping and stale keys,
+and optimizer positions against CPU with the same per-pair random policy.
+
+The sequential GPU regression run passed 73 tests in 53.37 s, zero failures.
+Five tests were excluded via `--test-skip-pattern` (not changed): the 2D 100k-body
+scale case, 3D 820-brick scale case, showcase scenes, painting and tower repeats.
+Node omits filtered tests from its count; zero reported skips does not mean the
+unrestricted suite ran. No benchmarks. All 129 CPU tests, typecheck, Vite and
+library builds pass afterward; existing chunk-size warning remains. Full
+`pnpm check` was not run because it includes the deliberately excluded workloads.
+
+Commands used niceness 15 and test concurrency one, with build worker limits.
+System GPU snapshots were 53% before, 62% and 88% during, 69% after. Initial CPU
+idle was 68.96%, swap zero. These snapshots cannot attribute utilization or prove
+no slowdown of other work; niceness does not cap GPU priority. Production AVBD
+integration, broader temporal parity and target-device performance remain pending.
+Nothing committed or published.
+
+## 2026-10-14 — GPU narrowphase static review and CPU regressions
+
+Independent review found two P2 issues: mutable scales could pass JS validation
+but become zero in float32, and failed pass construction leaked acquired buffers.
+Upload validation now checks the float32 scale; construction cleans up acquired
+buffers on failure. Two CPU tests cover scale underflow/overflow and nine injected
+construction failures (six allocations, upload, two bind groups). Independent
+re-review found no additional actionable regression by static inspection.
+
+129 CPU tests pass; typecheck, Vite build and library build pass. The existing
+Vite chunk-size warning remains. Commands ran sequentially at verified niceness 15,
+with test concurrency one and build worker limits. CPU tests took 23.67 s and
+304 MiB max child RSS; typecheck peaked at 582.1 MiB. No actual GPU device,
+shader compilation or GPU tests were invoked. Full `pnpm check` remains deferred
+because it includes GPU tests. These results do not establish runtime GPU parity
+or zero contention with another task. Changes remain uncommitted/unpublished.
+
+## 2026-10-14 — GPU SDF narrowphase draft; execution intentionally deferred
+
+Wrote an internal standalone pass (`sdf-layout.ts`, `sdf-pass.ts`,
+`wgsl-sdf-fields.ts`, `wgsl-sdf.ts`) without changing production GPU solver shape
+encoding or contact behavior. CPU packers describe a float32 atlas, body COM/scale
+transforms, explicit pairs/cache remapping, bounded parameters and contact output.
+The WGSL draft covers all analytic CPU shape kinds and voxel interpolation,
+Nelder–Mead, four cached/one fresh candidates, curvature sampling, cache advection,
+deduplication, ranking, normals, projected anchors and pair-scoped persistent IDs.
+Per-pair/step hashed RNG deliberately differs from the CPU global PCG stream.
+
+The host pass uses a caller-supplied device, five storage bindings, explicit
+submission/readback/destruction and double-buffered caches. It is not connected to
+AVBD constraints or public World/BodyMesh and is not exported by the package.
+`tests-gpu/sdf.gpu.test.ts` contains field, cache and CPU-optimizer parity tests,
+including replay of the GPU seed policy, but none were executed. No actual GPU
+device or shader compiler was invoked. WGSL validity, numeric GPU correctness,
+performance and production integration remain unverified. See `SDF_GPU_DRAFT.md`.
+
+127 CPU tests pass, including six new ABI/host-limit/decoder tests and a plain JS
+mock of buffer swapping and disposal. Typecheck (including GPU test source), Vite
+build and library build pass. Shader strings are not validated by these commands;
+the Vite chunk-size warning remains. All local validation ran at niceness 15 with
+serialized CPU tests and limited build parallelism. The CPU suite took 24.36 s,
+max child RSS 302.3 MiB; typecheck peaked at 579.6 MiB. At 16:15:00 PDT a spot-check
+showed 53.81% CPU idle, zero swap and 74% GPU utilization system-wide. No claim of
+zero effect on concurrent work. Full gate/GPU tests remain deferred by request.
+
+## 2026-10-14 — Direct baker comparison and CPU robustness audit
+
+Added independent resolution-16 C++ grids and direct TS bake comparisons for
+bunny, gear, cow and chair: 26,082 nodes total, maximum measured distance error
+1.41e-6 normalized units, no sign mismatches outside the surface tolerance. The
+gear has 157 gradient differences above 0.01 due to nonunique nearest surfaces;
+the test independently projects both directions onto source triangles with Three's
+closest-point routine. It checks validity rather than forcing a BVH tie winner.
+Original high-resolution grids and finalized seed goldens remain unchanged.
+
+Nested cavity, disconnected solids and non-manifold duplicate-face checks pass.
+Three separated box bodies of side lengths 0.25/1/2 settle on a shared ground for
+30 simulated seconds with finite poses/velocities, bounded force count and cleanup.
+This is mixed-size ground-contact coverage, not arbitrary mixed-size stack proof.
+Public field/body validation now rejects invalid dimensions and float32
+underflow/overflow/nonfinite grids. Worker callback failures also propagate when
+the thrown value is undefined, with cancellation and subsequent reuse tested.
+Updated stale CPU API/unit-scaling documentation.
+
+121 serialized CPU tests, typecheck, both builds, independent coarse-grid
+regeneration verification, built-package smoke and diff whitespace check pass.
+Vite retains its chunk-size warning. GPU tests/full gate remain explicitly deferred;
+no GPU or browser context was created. CPU checks ran sequentially at verified
+niceness 15, one test process and limited build parallelism. CPU suite took 25.91 s
+with 281.3 MiB max child RSS; typecheck peaked at 581.3 MiB. A 15:57:20 PDT snapshot
+showed 27.19% CPU idle, zero swap and 75% GPU utilization system-wide. These are
+headroom observations, not proof of zero interference with another task.
+
+## 2026-10-14 — Voxel seed parity and CPU unit scaling
+
+Voxel finalization now samples retained normalized triangle surfaces by area,
+using the upstream PCG sequence and float32 cumulative/barycentric operations.
+Source triangle/corner order is retained before distance-query canonicalization
+and BVH sorting. Worker results transfer this surface alongside the grid. The
+separate `curvatureSeeds` API returns seeds without mass integration or mutation;
+`scaleCollisionParams` explicitly scales length parameters and length-squared
+epsilon while leaving alpha/counts unchanged. Default collision behavior stays
+unchanged. GPU World integration and GPU tests are still deferred.
+
+All four voxel assets (bunny, gear, cow, chair) match existing C++ seed counts,
+ordered coordinates, COM, volume and inertia within 2e-6 relative/absolute hybrid
+tolerance. Original seed/grid goldens were not changed. A separate pinned C++
+exporter provides normalized surface inputs with provenance and raw-byte hashes;
+independent regeneration/verification passed. This is seed-stage parity with
+oracle grids, not a claim of bit-identical TS mesh baking.
+
+114 serialized CPU tests pass, including worker mesh/seed preservation, seed-only
+purity/cancellation, weighted sampling, and 1/8× / 8× seed/contact/objective scaling.
+Typecheck, Vite and library builds, built public-API smoke, and diff whitespace
+check pass. Vite retains the existing chunk-size warning. Full `pnpm check` was
+not run because it would invoke GPU tests.
+
+All validation used verified niceness 15, sequential commands, test concurrency
+one and limited Vite parallelism. Oracle verification: 3.42 s / 132 MiB max child
+RSS; CPU tests: 24.88 s / 280.4 MiB; typecheck peak: 576.7 MiB. A 15:48:46 PDT
+spot-check showed 49.69% CPU idle, 5.7 GiB unused physical memory, and zero swap
+usage/ins/outs. No GPU work or other-task changes; these observations cannot prove
+zero slowdown to concurrent work. Changes remain uncommitted/unpublished.
+
+## 2026-10-14 — CPU SDF baking and public preparation subpath
+
+Added the unpublished `three-avbd/sdf` entry point: local-space mesh baking with
+BVH distance queries, three-axis winding votes, topology diagnostics, allocation
+limits, synchronous/cooperative async APIs and a caller-owned worker helper.
+Inputs are copied before worker transfer. Unit-density mass/COM/full inertia and
+projected curvature seeds are available separately. No GPU World binding or
+package version change. See `SDF_BAKING.md` for units, limitations and examples.
+
+107 serialized CPU tests pass, including six new baking/API tests. Every sampled
+node of a translated cube matches the analytic box distance; a torus retains its
+hole, and reversing its winding produces the same grid after canonical triangle
+ordering. Real Node worker transfer, abort and reuse pass. Analytic box/torus
+mass, inertia and ordered seeds match unchanged C++ fixtures. Mesh baking is not
+claimed bit-identical to the upstream baker, and voxel seeds currently use
+projection rather than the upstream area-weighted mesh candidates.
+
+Typecheck, Vite and library builds pass, as do a built-package import/bake smoke
+check and compilation of the documented installer against WebWorker types.
+Vite retains its existing >500 kB chunk warning. No browser or GPU context was
+created; GPU tests and full `pnpm check` remain explicitly deferred.
+
+Validation ran sequentially under a verified niceness-15 parent; CPU tests used
+one test process at a time, and Vite parallelism was limited. CPU suite: 22.70 s,
+290.4 MiB maximum child RSS; typecheck: 575.2 MiB; Vite: 236.6 MiB; library build:
+365.7 MiB. At 15:40:53 PDT, an aggregate spot-check showed 58.69% CPU idle and
+zero swap usage/ins/outs. This suggests available CPU headroom, not a measured
+zero-impact guarantee for the other task. No other task or checkout was changed.
+
+## 2026-10-14 — SDF CPU reference (phase 1), opt-in AVBD bridge
+
+Added float32 SDF fields, warped fields, voxel interpolation, PCG, objective,
+Nelder–Mead and cached manifolds under `src/avbd3d/ref/sdf/`. All 4,200 field samples,
+16 optimizer fixtures and 21 contact updates pass their explicit numeric envelopes;
+contact counts/flags/order, optimizer counters and final RNG states match. Voxel
+inputs are exported independently from the pinned C++ source; no phase-0 golden
+was changed to fit the port.
+
+An opt-in collision hook connects the fields to the existing CPU AVBD reference,
+using independent contact bases and cache identities. The default box oracle
+remains unchanged; existing reference regressions pass. Box stacks, a torus,
+voxel gears and a bunny settle; a sphere passes through the torus hole. Mass and
+diagonal inertia remain caller-owned, and mesh baking/curvature generation are
+not part of this change. No public API, npm version or GPU implementation changed.
+
+Typecheck, 101 serialized CPU tests and both builds passed. Independent voxel-grid
+verification passed. All validation used verified niceness 15. GPU tests/full
+`pnpm check` are still deferred by Steven, not passed. See `SDF_CPU_REFERENCE.md`
+for reproduction, tolerances, limitations and resource observations.
+
+## 2026-10-14 — SDF phase-0 coverage completed; GPU validation deferred
+
+Extended the pinned, unmodified C++ oracle with 21 replayable manifold updates,
+24 finalized curvature-seed sets, and 20 six-second scene traces (all 11 released
+scenes plus nine Table 5 warp-strength variants). PCG draws are recovered from
+before/after state without changing the RNG. A headless SDL adapter handles only
+asset lookup and throws on missing assets; no graphics library or GPU is used.
+
+Independent rebuild/verification reproduced all 71 JSON fixtures exactly on Apple
+Clang 17. Typecheck, 89 serialized CPU tests, Vite build and library build passed.
+The full `pnpm check` was intentionally **not run**: Steven requested that GPU tests
+be deferred to avoid competing with another task. The Vite chunk-size warning
+remains. No runtime engine code or public API changed.
+
+At frame 360, released Box Stack: 196 contacts / 5,577 paired queries per frame;
+Gear Stack: 47 / 3,128. Contacts refer to the last substep; query/iteration totals
+sum four substeps. These do not match the paper table counts, and are not claimed
+as paper-scene reproduction or GPU performance. Energy/penetration traces and
+independent mesh-vertex penetration probes are reference baselines; the probes
+are sampled lower bounds, not exact intersection depth. See the oracle README.
+
+Shared-machine measurements: 19 one-second CPU samples over 15:06–15:12 PDT showed
+49.66–77.67% idle (median 62.31%), with zero swap-in/out counters. Verified oracle
+reproduction took 23.47 seconds, max child RSS 143.1 MiB; serialized CPU tests took
+21.28 seconds, max child RSS 290.5 MiB. Typecheck peaked at 574.3 MiB. These are local
+resource observations, not target-hardware benchmarks. Initial `nice` requests
+were rejected by the sandbox; final verification/tests/builds ran with niceness
+15 confirmed outside the sandbox. No saturation or swapping was observed, but
+other-task latency was not measured, so zero slowdown cannot be established.
+
+## 2026-10-12 — SDF oracle foundation (phase 0, levels 1–2)
+
+Added `tools/cpp-oracle-sdf/`: a headless driver linking unmodified sdf-dcd-demo
+at `1dcdf1e7fa07d16fda15826ad8c2e6697075a76e`. It captures 24 SDF fields (including
+four resolution-100 voxel assets and Table 5 warp strengths), 175 points each,
+and 16 domain-clamped Nelder–Mead cases. Source/asset/compiler/driver provenance
+is recorded; explicit generation is separate from non-overwriting verification.
+Apple Clang 17, f32, no FMA contraction or fast math: separate builds reproduced
+all JSON exactly. Query counts are objective evaluations, not individual SDF calls.
+
+This is fixture infrastructure only, not an SDF port or a benchmark reproduction.
+Manifold/cache/random-draw fixtures, curvature seeds and scene metrics remain.
+See `tools/cpp-oracle-sdf/README.md` for the inputs, commands and limits.
+
 ## 2026-10-12 — Raw readback integration for #16
 
 three-destruction assembles counters from its own batched GPU readback. Without forwarding

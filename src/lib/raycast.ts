@@ -11,6 +11,39 @@ export const MAX_IGNORED = 16;
 /** Rays a call (one dispatch row per ray). */
 export const MAX_RAYS = 65535;
 
+/** Shared nearest-hit reduction; trace returns backend-specific normals. */
+export const RAYCAST_DISPATCH_WGSL = /* wgsl */ `
+@compute @workgroup_size(64)
+fn nearest(@builtin(global_invocation_id) id: vec3u) {
+  let b = id.x;
+  if (b >= params.bodies || ignored(b)) { return; }
+  let h = trace(b, rays[id.y]);
+  if (h.t >= 0.0) { atomicMin(&best[2u * id.y], bitcast<u32>(h.t)); }
+}
+
+@compute @workgroup_size(64)
+fn owner(@builtin(global_invocation_id) id: vec3u) {
+  let b = id.x;
+  if (b >= params.bodies || ignored(b)) { return; }
+  let h = trace(b, rays[id.y]);
+  if (h.t >= 0.0 && bitcast<u32>(h.t) == atomicLoad(&best[2u * id.y])) { atomicMin(&best[2u * id.y + 1u], b); }
+}
+
+@compute @workgroup_size(64)
+fn finish(@builtin(global_invocation_id) id: vec3u) {
+  let r = id.x;
+  if (r >= params.rays) { return; }
+  let b = atomicLoad(&best[2u * r + 1u]);
+  if (b == NONE) {
+    hits[2u * r] = vec4f(0.0, 0.0, 0.0, -1.0);
+    return;
+  }
+  let h = trace(b, rays[r]);
+  hits[2u * r] = vec4f(worldNormal(b, h.n), h.t);
+  hits[2u * r + 1u] = vec4f(bitcast<f32>(b), 0.0, 0.0, 0.0);
+}
+`;
+
 const WGSL = /* wgsl */ `
 struct Ray { o: vec4f, d: vec4f }   // o.w: the most distance, d: unit direction
 struct Params { bodies: u32, rays: u32, ignored: u32, mask: u32, ignore: array<vec4u, ${MAX_IGNORED / 4}> }
@@ -106,36 +139,10 @@ fn trace(b: u32, r: Ray) -> Hit {
   return Hit(select(t, 0.0, t <= 0.0), n);
 }
 
-@compute @workgroup_size(64)
-fn nearest(@builtin(global_invocation_id) id: vec3u) {
-  let b = id.x;
-  if (b >= params.bodies || ignored(b)) { return; }
-  let h = trace(b, rays[id.y]);
-  if (h.t >= 0.0) { atomicMin(&best[2u * id.y], bitcast<u32>(h.t)); }
+fn worldNormal(b: u32, n: vec3f) -> vec3f {
+  return normalize(turn(bodies[b * STRIDE + ${B_ROT / 4}u], n));
 }
-
-@compute @workgroup_size(64)
-fn owner(@builtin(global_invocation_id) id: vec3u) {
-  let b = id.x;
-  if (b >= params.bodies || ignored(b)) { return; }
-  let h = trace(b, rays[id.y]);
-  if (h.t >= 0.0 && bitcast<u32>(h.t) == atomicLoad(&best[2u * id.y])) { atomicMin(&best[2u * id.y + 1u], b); }
-}
-
-@compute @workgroup_size(64)
-fn finish(@builtin(global_invocation_id) id: vec3u) {
-  let r = id.x;
-  if (r >= params.rays) { return; }
-  let b = atomicLoad(&best[2u * r + 1u]);
-  if (b == NONE) {
-    hits[2u * r] = vec4f(0.0, 0.0, 0.0, -1.0);
-    return;
-  }
-  let h = trace(b, rays[r]);
-  let q = bodies[b * STRIDE + ${B_ROT / 4}u];
-  hits[2u * r] = vec4f(normalize(turn(q, h.n)), h.t);
-  hits[2u * r + 1u] = vec4f(bitcast<f32>(b), 0.0, 0.0, 0.0);
-}
+${RAYCAST_DISPATCH_WGSL}
 `;
 
 export interface Ray {
@@ -159,9 +166,9 @@ export class Raycaster {
   private readonly pipelines: Record<'nearest' | 'owner' | 'finish', GPUComputePipeline>;
   private readonly layout: GPUBindGroupLayout;
 
-  constructor(device: GPUDevice) {
+  constructor(device: GPUDevice, code = WGSL) {
     this.device = device;
-    const module = device.createShaderModule({ label: 'raycast', code: WGSL });
+    const module = device.createShaderModule({ label: 'raycast', code });
     const storage = (type: GPUBufferBindingType) => ({ visibility: GPUShaderStage.COMPUTE, buffer: { type } });
     this.layout = device.createBindGroupLayout({
       label: 'raycast',
@@ -182,18 +189,16 @@ export class Raycaster {
     if (n > MAX_RAYS) throw new Error(`raycast: at most ${MAX_RAYS} rays a call`);
     const d = this.device;
     const rayData = new Float32Array(n * 8);
-    const dirs: number[][] = [];
     rays.forEach((r, k) => {
       const l = Math.hypot(r.direction[0], r.direction[1], r.direction[2]) || 1;
       const dir = [r.direction[0] / l, r.direction[1] / l, r.direction[2] / l];
-      dirs.push(dir);
       rayData.set([r.origin[0], r.origin[1], r.origin[2], r.maxDistance ?? 3.0e38, dir[0], dir[1], dir[2], 0], k * 8);
     });
     const params = new Uint32Array(4 + MAX_IGNORED);
     params.set([count, n, ignore.length, mask >>> 0]);
     params.set(ignore, 4);
     const best = new Uint32Array(2 * n);
-    for (let k = 0; k < n; k++) best.set([0x7f800000, 0xffffffff], 2 * k);
+    for (let k = 0; k < n; k++) best.set([0x7f7fffff, 0xffffffff], 2 * k);
     const buffer = (data: ArrayBufferView<ArrayBuffer>, usage: number) => {
       const b = d.createBuffer({ size: Math.max(16, data.byteLength), usage: usage | GPUBufferUsage.COPY_DST });
       d.queue.writeBuffer(b, 0, data);
@@ -221,19 +226,22 @@ export class Raycaster {
     pass.end();
     encoder.copyBufferToBuffer(hitBuffer, 0, read, 0, n * 32);
     d.queue.submit([encoder.finish()]);
-    await read.mapAsync(GPUMapMode.READ);
-    const out = new Float32Array(read.getMappedRange().slice(0));
-    read.unmap();
-    for (const b of [rayBuffer, bestBuffer, hitBuffer, paramBuffer, read]) b.destroy();
+    let out: Float32Array;
+    try {
+      await read.mapAsync(GPUMapMode.READ);
+      out = new Float32Array(read.getMappedRange().slice(0));
+      read.unmap();
+    } finally {
+      for (const b of [rayBuffer, bestBuffer, hitBuffer, paramBuffer, read]) b.destroy();
+    }
     const bits = new Uint32Array(out.buffer);
-    return rays.map((r, k) => {
+    return Array.from({ length: n }, (_, k) => {
       const t = out[k * 8 + 3];
       if (t < 0) return null;
-      const dir = dirs[k];
       return {
         index: bits[k * 8 + 4],
         distance: t,
-        point: [r.origin[0] + dir[0] * t, r.origin[1] + dir[1] * t, r.origin[2] + dir[2] * t],
+        point: [rayData[k * 8] + rayData[k * 8 + 4] * t, rayData[k * 8 + 1] + rayData[k * 8 + 5] * t, rayData[k * 8 + 2] + rayData[k * 8 + 6] * t],
         normal: [out[k * 8], out[k * 8 + 1], out[k * 8 + 2]],
       };
     });

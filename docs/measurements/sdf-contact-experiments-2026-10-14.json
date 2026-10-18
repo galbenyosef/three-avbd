@@ -1,0 +1,311 @@
+{
+  "note": "Exploratory sequential chair-only runs; different experimental variants, not repeated identical trials. Only the sticking-anchor correction and earlier contact activation were retained. Independent vertex probes every 30 frames. No timing claims.",
+  "experiments": [
+    {
+      "experiment": "No repulsion, tighter convergence",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 88,
+          "contacts": 210,
+          "queries": 50444,
+          "iterations": 24308
+        },
+        "kineticEnergy": 1.8589695766368325e-05,
+        "minCenterY": 0.20114533603191376,
+        "maxContactPenetration": 0.0038373912684619427,
+        "maxVertexPenetration": 0.022185206413269043,
+        "vertexQueries": 100908
+      },
+      "peak": 0.26329338550567627
+    },
+    {
+      "experiment": "Tighter convergence only",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 60,
+          "contacts": 171,
+          "queries": 36006,
+          "iterations": 17336
+        },
+        "kineticEnergy": 0.03071132535477924,
+        "minCenterY": 0.20749476552009583,
+        "maxContactPenetration": 0.0264460239559412,
+        "maxVertexPenetration": 0.012596987187862396,
+        "vertexQueries": 67176
+      },
+      "peak": 0.07596629858016968
+    },
+    {
+      "experiment": "Stronger solver correction",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 62,
+          "contacts": 141,
+          "queries": 30013,
+          "iterations": 13889
+        },
+        "kineticEnergy": 1.320120370857399,
+        "minCenterY": 0.2169131189584732,
+        "maxContactPenetration": 0,
+        "maxVertexPenetration": 0.005759298801422119,
+        "vertexQueries": 71352
+      },
+      "peak": 0.07209104299545288
+    },
+    {
+      "experiment": "Expanded budget and smaller repulsion",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 101,
+          "contacts": 417,
+          "queries": 161457,
+          "iterations": 79399
+        },
+        "kineticEnergy": 0.0011750156034594625,
+        "minCenterY": 0.21153590083122253,
+        "maxContactPenetration": 0.009297053329646587,
+        "maxVertexPenetration": 0.0078046321868896484,
+        "vertexQueries": 120168
+      },
+      "peak": 0.011631913483142853
+    },
+    {
+      "experiment": "Expanded budget, tighter skin, stronger correction",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 65,
+          "contacts": 304,
+          "queries": 101114,
+          "iterations": 49221
+        },
+        "kineticEnergy": 0.3059505632321903,
+        "minCenterY": 0.22610695660114288,
+        "maxContactPenetration": 0,
+        "maxVertexPenetration": 0,
+        "vertexQueries": 71280
+      },
+      "peak": 0.002476036548614502
+    },
+    {
+      "experiment": "Expanded budget and tighter skin",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 83,
+          "contacts": 290,
+          "queries": 127764,
+          "iterations": 62319
+        },
+        "kineticEnergy": 0.013965650848732285,
+        "minCenterY": 0.21705880761146545,
+        "maxContactPenetration": 0.016040777787566185,
+        "maxVertexPenetration": 0.014902770519256592,
+        "vertexQueries": 98712
+      },
+      "peak": 0.014902770519256592
+    },
+    {
+      "experiment": "Expanded budget and narrower smoothing",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 90,
+          "contacts": 293,
+          "queries": 162363,
+          "iterations": 81248
+        },
+        "kineticEnergy": 0.0005519300512779777,
+        "minCenterY": 0.22008559107780457,
+        "maxContactPenetration": 0,
+        "maxVertexPenetration": 0,
+        "vertexQueries": 108720
+      },
+      "peak": 0.013565659523010254
+    },
+    {
+      "experiment": "Common force application point",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 87,
+          "contacts": 276,
+          "queries": 157508,
+          "iterations": 78861
+        },
+        "kineticEnergy": 0.03598971261068517,
+        "minCenterY": 0.2211700975894928,
+        "maxContactPenetration": 0.01077786274254322,
+        "maxVertexPenetration": 0.011851700954139233,
+        "vertexQueries": 101520
+      },
+      "peak": 0.011851700954139233
+    },
+    {
+      "experiment": "Eight substeps",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 69,
+          "contacts": 264,
+          "queries": 237459,
+          "iterations": 118092
+        },
+        "kineticEnergy": 0.001993886414944564,
+        "minCenterY": 0.22378182411193848,
+        "maxContactPenetration": 0,
+        "maxVertexPenetration": 0.007708580233156681,
+        "vertexQueries": 72108
+      },
+      "peak": 0.015122711658477783
+    },
+    {
+      "experiment": "Still narrower smoothing",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 80,
+          "contacts": 275,
+          "queries": 150484,
+          "iterations": 75515
+        },
+        "kineticEnergy": 0.09914120881215668,
+        "minCenterY": 0.22330576181411743,
+        "maxContactPenetration": 0.004203078802675009,
+        "maxVertexPenetration": 0.003924906253814697,
+        "vertexQueries": 96588
+      },
+      "peak": 0.012425647117197514
+    },
+    {
+      "experiment": "Deepest-seed sampling",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 84,
+          "contacts": 314,
+          "queries": 179329,
+          "iterations": 73032
+        },
+        "kineticEnergy": 0.010603497602315727,
+        "minCenterY": 0.22299674153327942,
+        "maxContactPenetration": 0.0029322674963623285,
+        "maxVertexPenetration": 0.011051925830543041,
+        "vertexQueries": 91440
+      },
+      "peak": 0.016747653484344482
+    },
+    {
+      "experiment": "Signed mixed-field projection",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 76,
+          "contacts": 253,
+          "queries": 166058,
+          "iterations": 68274
+        },
+        "kineticEnergy": 0.03800593788616462,
+        "minCenterY": 0.2211722731590271,
+        "maxContactPenetration": 0.03160971403121948,
+        "maxVertexPenetration": 0,
+        "vertexQueries": 88704
+      },
+      "peak": 0.012901365756988525
+    },
+    {
+      "experiment": "Sticking-anchor correction with experimental search",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 78,
+          "contacts": 271,
+          "queries": 165112,
+          "iterations": 67588
+        },
+        "kineticEnergy": 0.0021170067130917803,
+        "minCenterY": 0.21850813925266266,
+        "maxContactPenetration": 0.006458211224526167,
+        "maxVertexPenetration": 0.006219744682312012,
+        "vertexQueries": 89316
+      },
+      "peak": 0.013749126344919205
+    },
+    {
+      "experiment": "Sticking-anchor correction, original settings",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 71,
+          "contacts": 166,
+          "queries": 34788,
+          "iterations": 15974
+        },
+        "kineticEnergy": 0.00032960484151205014,
+        "minCenterY": 0.2178265005350113,
+        "maxContactPenetration": 0,
+        "maxVertexPenetration": 0.001883864402770996,
+        "vertexQueries": 77796
+      },
+      "peak": 0.029751598834991455
+    },
+    {
+      "experiment": "Anchor correction with seed mode",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 78,
+          "contacts": 155,
+          "queries": 47936,
+          "iterations": 16928
+        },
+        "kineticEnergy": 0.07846586431568066,
+        "minCenterY": 0.20758983492851257,
+        "maxContactPenetration": 0.01326028909534216,
+        "maxVertexPenetration": 0.012382090091705322,
+        "vertexQueries": 89460
+      },
+      "peak": 0.020603418350219727
+    },
+    {
+      "experiment": "Anchor correction with tighter allowed penetration",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 88,
+          "contacts": 123,
+          "queries": 46058,
+          "iterations": 21811
+        },
+        "kineticEnergy": 0.010227640809948025,
+        "minCenterY": 0.17601455748081207,
+        "maxContactPenetration": 0.05008319020271301,
+        "maxVertexPenetration": 0.05108940601348877,
+        "vertexQueries": 105084
+      },
+      "peak": 0.08474767208099365
+    },
+    {
+      "experiment": "Anchor correction with earlier activation, unchanged resting gap",
+      "last": {
+        "frame": 360,
+        "stats": {
+          "pairs": 85,
+          "contacts": 190,
+          "queries": 41797,
+          "iterations": 19369
+        },
+        "kineticEnergy": 5.020467189426216e-05,
+        "minCenterY": 0.21603582799434662,
+        "maxContactPenetration": 0.004292783793061972,
+        "maxVertexPenetration": 0.0001491712173447013,
+        "vertexQueries": 96516
+      },
+      "peak": 0.0073149800300598145
+    }
+  ]
+}

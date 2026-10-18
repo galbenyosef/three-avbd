@@ -1,3 +1,5 @@
+import type { SdfBroadphaseOptions } from '../avbd3d/gpu/sdf-broadphase.ts';
+import type { SdfCollisionBridge } from '../avbd3d/gpu/sdf-bridge.ts';
 // three-avbd's world: rigid boxes and spheres, and joints between them, simulated on the GPU by
 // the AVBD solver (../avbd3d/gpu). Bodies and joints are handles; the world batches what they
 // add, change and remove into the solver before its next step, and reads poses back on request
@@ -7,18 +9,23 @@
 import * as THREE from 'three/webgpu';
 import { B_ANGVEL, B_POS, B_ROT, B_VEL, BODY_FLOATS } from '../avbd3d/gpu/layout.ts';
 import { decodeJoint, type JointState } from '../avbd3d/gpu/joints.ts';
-import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation, type GpuStepOptions } from '../avbd3d/gpu/solver.ts';
+import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation, type GpuCounters3D, type GpuStepOptions } from '../avbd3d/gpu/solver.ts';
 import { Rigid } from '../avbd3d/ref/body.ts';
 import { Solver } from '../avbd3d/ref/solver.ts';
 import { convexHull, hull, type HullShape, sphere } from '../avbd3d/shapes.ts';
 import { BEGIN, ContactWatch } from './contacts.ts';
 import { addImpulse, noPush, Pusher, type Pushes } from './push.ts';
 import { type Ray, Raycaster } from './raycast.ts';
+import { AnalyticField, type Field } from '../avbd3d/ref/sdf/shapes.ts';
+import { snapshotSdfField } from '../avbd3d/gpu/sdf-snapshot.ts';
+import type { CollisionParams } from '../avbd3d/ref/sdf/manifold.ts';
 
 export type Vec3 = [number, number, number];
 /** A unit quaternion, x y z w (as THREE.Quaternion's toArray). */
 export type Quat = [number, number, number, number];
 
+/** Experimental SDF in the body's COM/principal-axis frame; inertia and rendering stay caller-owned. */
+export interface SdfBodyBinding { body: Body; field: Field; scale?: number; /** Field frame to body principal frame. */ rotation?: Quat }
 export type StepOptions = GpuStepOptions;
 
 export interface WorldOptions {
@@ -49,6 +56,9 @@ export interface BodyState {
 }
 
 export interface BodyOptions extends BodyState {
+  /** Override geometric density integration: mass in kg and principal moments in kg m².
+   * Body rotation and rendering must use this principal frame. Fixed bodies stay static. */
+  massProperties?: { mass: number; moments: Vec3 };
   /** kg/m³ (a 1 m cube of density 1 weighs 1 kg). */
   density?: number;
   friction?: number;
@@ -237,6 +247,7 @@ export class Body {
   /** Full widths (a sphere's: its diameter on every axis; a hull's: its bounds on its principal axes). */
   readonly size: Vec3;
   readonly density: number;
+  readonly massProperties?: Readonly<{ mass: number; moments: Readonly<Vec3> }>;
   readonly friction: number;
   /** @internal */
   state: Required<BodyState>;
@@ -252,6 +263,11 @@ export class Body {
 
   /** @internal Made by World.addBox / addSphere. */
   constructor(world: World, index: number, shape: 'box' | 'sphere' | 'hull', size: Vec3, options: BodyOptions, hullShape: HullShape | null = null) {
+    if (options.massProperties) {
+      const { mass, moments } = options.massProperties;
+      if (!Array.isArray(moments) || moments.length !== 3 || ![mass, ...moments].every(v => Math.fround(v) > 0 && Number.isFinite(Math.fround(v)))) throw new Error('Mass and principal moments must be finite and positive');
+      this.massProperties = Object.freeze({ mass, moments: Object.freeze([...moments] as Vec3) });
+    }
     this.world = world;
     this.index = index;
     this.shape = shape;
@@ -379,6 +395,7 @@ export class Body {
   /** Take it out of the world, with its joints. Its slot is reused by later adds. */
   remove(): void {
     if (!this.isAlive) return;
+    this.world.assertMutableTopology();
     this.isAlive = false;
     this.world.removeBody(this);
   }
@@ -573,6 +590,13 @@ export class World {
   private jointsWanted = false;
   private adapting = false;
   private liveVersion = 0;
+  private sdfBridge: SdfCollisionBridge | null = null;
+  private sdfBindings=new Map<Body,{field:Field;scale?:number;rotation?:Quat}>();
+  private sdfBroadphase:SdfBroadphaseOptions={};
+  private sdfDirty=false;
+  private sdfError:Error|null=null;
+  private sdfState: 'off' | 'preparing' | 'on' = 'off';
+  private destroyed = false;
 
   /** Make a world: `World.create` (async, it may need the renderer's device). */
   private constructor(device: GPUDevice, options: WorldOptions, attribute: THREE.StorageInstancedBufferAttribute | null, buffer: GPUBuffer | undefined) {
@@ -637,6 +661,104 @@ export class World {
     this.solver.params.iterations = n;
   }
 
+  /** Experimental spatial SDF collisions. Unassigned boxes/spheres
+   * use analytic fields. Fields replace collision geometry only, not mass, inertia or meshes.
+   * Automatic GPU bounds/mask/joint filtering; no per-frame pose readback.
+   * Contact events aggregate per pair; raycasts query the SDF surface (bounded batches).
+   */
+  async enableSdfCollisions(bindings: readonly SdfBodyBinding[] = [], params: Partial<CollisionParams> = {}, broadphase: SdfBroadphaseOptions = {}): Promise<void> {
+    if(this.destroyed || this.sdfState!=='off') throw new Error('SDF collisions already enabled/preparing, or World destroyed');
+    await this.installSdfCollisions(bindings,params,broadphase);
+  }
+  /** Apply new/replacement fields and commit body additions/removals. Omitted live bindings persist. */
+  async updateSdfCollisions(bindings:readonly SdfBodyBinding[]=[],broadphase:SdfBroadphaseOptions={}):Promise<void> {
+    if(this.destroyed||this.sdfState!=='on'||!this.sdfBridge)throw new Error('SDF collisions must be enabled and not preparing');
+    await this.installSdfCollisions(bindings,{...this.sdfBridge.params},{...this.sdfBroadphase,...broadphase});
+  }
+  private async installSdfCollisions(bindings:readonly SdfBodyBinding[],params:Partial<CollisionParams>,broadphase:SdfBroadphaseOptions):Promise<void> {
+    const previous=this.sdfBridge, options={...broadphase}, collision={...params};
+    this.sdfState='preparing';
+    try {
+      if(options.maxPairs!==undefined&&(!Number.isSafeInteger(options.maxPairs)||options.maxPairs<1))throw new Error('Invalid SDF broadphase pair capacity');
+      const assigned=new Map([...this.sdfBindings].filter(([body])=>body.alive));
+      const seen=new Set<Body>(), snapshots=new Map<Field,Field>();
+      for(const binding of bindings) {
+        if(binding.body.world!==this || !binding.body.alive || seen.has(binding.body)) throw new Error('Invalid or duplicate SDF body binding');
+        seen.add(binding.body);
+        let field=snapshots.get(binding.field);
+        if(!field){field=snapshotSdfField(binding.field,collision.meshPlaneContacts);snapshots.set(binding.field,field);}
+        assigned.set(binding.body,{field,scale:binding.scale,rotation:binding.rotation ? normalised(binding.rotation) : undefined});
+      }
+      this.flush();
+      if(!this.solver.bodyCount)throw new Error('SDF collisions require at least one allocated body slot');
+      const vacant=new AnalyticField({kind:'sphere',radius:.05});
+      const retained:boolean[]=[],dead:number[]=[];
+      const fields=Array.from({length:this.solver.bodyCount},(_,i)=>{
+        const body=this.slots[i];
+        retained.push(!!body&&assigned.has(body)&&assigned.get(body)===this.sdfBindings.get(body));
+        if(!body){dead.push(i);return {field:vacant};}
+        let binding=assigned.get(body);
+        if(!binding) {
+          if(body.shape==='sphere')binding={field:new AnalyticField({kind:'sphere',radius:body.size[0]/2})};
+          else if(body.shape==='box')binding={field:new AnalyticField({kind:'box',halfExtents:body.size.map(v=>v/2) as Vec3})};
+          else throw new Error('SDF mode requires an explicit field for each hull in its principal-axis frame');
+          assigned.set(body,binding);
+        }
+        return binding;
+      });
+      const {SdfCollisionBridge}=await import('../avbd3d/gpu/sdf-bridge.ts');
+      if(this.destroyed)throw new Error('World destroyed during SDF setup');
+      const {sdfBroadphaseOptions}=await import('../avbd3d/gpu/sdf-broadphase.ts');
+      // Size new topology normally, but never truncate the old compact history.
+      const capacity=sdfBroadphaseOptions(this.device,fields,options).maxPairs;
+      const setupOptions=previous?{...options,maxPairs:Math.max(capacity,previous.capacity)}:options;
+      if(this.destroyed)throw new Error('World destroyed during SDF setup');
+      const bridge=await SdfCollisionBridge.createAutomatic(this.solver,fields,collision,setupOptions);
+      try {
+        if(this.destroyed)throw new Error('World destroyed during SDF setup');
+        if(previous)bridge.inheritHistory(previous,retained);
+        if(dead.length)this.solver.setFilters(dead,dead.map(()=>0),dead.map(()=>0));
+        this.solver.setCollisionBackend(bridge);this.sdfBridge=bridge;
+        this.sdfBindings=assigned;this.sdfBroadphase=options;this.sdfDirty=false;this.sdfError=null;
+      } catch(error){bridge.destroy();throw error;}
+    } finally {this.sdfState=this.sdfBridge?'on':'off';}
+  }
+  /** Diagnostic readback; caller must avoid stepping/refresh while it is pending. */
+  async readSdfResults() {
+    this.assertSdfReady();
+    if (!this.sdfBridge) throw new Error('SDF collisions are not enabled');
+    return this.sdfBridge.readResults();
+  }
+  get sdfCollisionsEnabled(): boolean {return this.sdfBridge!==null&&!this.destroyed;}
+  get sdfCollisionsNeedUpdate():boolean {return this.sdfDirty;}
+  get sdfCollisionCapacity():number {return this.sdfBridge?.capacity??0;}
+  /** Last automatic growth failure; explicit adaptation/update rejects instead. */
+  get sdfCollisionError():Error|null {return this.sdfError;}
+  /** Read counters and grow candidate/history buffers without a pose/contact readback. */
+  async adaptSdfCollisions(read?:GpuCounters3D):Promise<boolean> {
+    const bridge=this.sdfBridge;
+    if(this.destroyed||!bridge||this.sdfState!=='on'||this.sdfDirty)return false;
+    const counters=read??await this.solver.readCounters();
+    if(this.destroyed||this.sdfBridge!==bridge||this.sdfState!=='on'||this.sdfDirty)return false;
+    if(counters.pairs<=bridge.capacity)return false;
+    const next=bridge.grown(counters.pairs);
+    try {this.solver.setCollisionBackend(next);this.sdfBridge=next;this.sdfError=null;}
+    catch(error){next.destroy();throw error;}
+    return true;
+  }
+  disableSdfCollisions(): void {
+    if(this.sdfState==='preparing')throw new Error('Await SDF setup before disabling it');
+    if(this.sdfBridge)this.solver.setCollisionBackend(null);
+    this.sdfBridge=null;this.sdfState='off';this.sdfBindings.clear();this.sdfDirty=false;this.sdfError=null;
+  }
+  /** @internal Mutations are staged while enabled; updateSdfCollisions commits their fields. */
+  assertMutableTopology(): void {
+    if(this.sdfState==='preparing')throw new Error('Await SDF setup before adding or removing bodies');
+  }
+  private assertSdfReady():void {
+    if(this.sdfState==='preparing'||this.sdfDirty)throw new Error('Await updateSdfCollisions before stepping or querying changed SDF bodies');
+  }
+
   // --- Bodies ----------------------------------------------------------------------------------
 
   /** Add a box; null when the world is full (maxBodies). */
@@ -672,19 +794,23 @@ export class World {
   }
 
   private add(shape: 'box' | 'sphere' | 'hull', size: Vec3, options: BodyOptions, hullShape: HullShape | null = null): Body | null {
+    this.assertMutableTopology();
     // A removed body's slot first, else the next one past the end
-    const index = this.free.length ? this.free.pop()! : this.solver.bodyCount + this.appends.length;
+    const index = this.free.length ? this.free[this.free.length - 1] : this.solver.bodyCount + this.appends.length;
     if (index >= this.maxBodies) return null;
     const body = new Body(this, index, shape, [size[0], size[1], size[2]], options, hullShape);
+    if (this.free.length) this.free.pop();
     // A slot freed since the last step: the old body's parking write is superseded
     for (const old of this.rewrites) if (old.index === index) this.rewrites.delete(old);
     this.slots[index] = body;
     body.written = ++this.writes;
     body.addedAt = this.steps + 1;
     if (body.reportContacts) this.rewatches.add(body);
-    if (index >= this.solver.bodyCount) this.appends.push(body);
+    // Reuse an unflushed slot in place; appending twice would shift GPU body IDs.
+    if (index >= this.solver.bodyCount) this.appends[index-this.solver.bodyCount]=body;
     else this.rewrites.add(body);
     this.refilters.add(body);
+    if(this.sdfBridge)this.sdfDirty=true;
     this.liveVersion++;
     return body;
   }
@@ -708,6 +834,7 @@ export class World {
 
   /** @internal Body.remove: its joints go, and it's parked out of the way. */
   removeBody(body: Body): void {
+    this.assertMutableTopology();
     for (const j of [...this.joints, ...this.pendingJoints]) if (j.a === body || j.b === body) j.remove();
     this.impulses.delete(body);
     this.forces.delete(body);
@@ -719,6 +846,7 @@ export class World {
     body.state = { position: [PARK + 2 * body.index, PARK, PARK], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0] };
     body.written = ++this.writes;
     this.rewrites.add(body);
+    if(this.sdfBridge)this.sdfDirty=true;
     this.liveVersion++;
   }
 
@@ -854,21 +982,33 @@ export class World {
 
   /** One fixed step (dt). Detect contacts by default; optionally reuse within a frame. */
   step(options: StepOptions = {}): void {
+    this.assertSdfReady();
     const movingKinematics = this.moves.size > 0;
     this.flush();
     this.push();
     this.solver.step(movingKinematics ? {} : options);
     this.steps++;
     if (this.contactWatch && (this.reporting.size || this.contactsLive)) {
-      this.contactWatch.run(this.solver.contactStorage, this.solver.manifoldCapacity, this.steps, this.dt);
+      this.contactWatch.run(this.sdfBridge?.contactEventStorage() ?? this.solver.contactStorage, this.solver.manifoldCapacity, this.steps, this.dt);
       this.contactsLive = this.reporting.size > 0;
     }
     if (this.steps % ADAPT_EVERY === 0 && !this.adapting) {
       this.adapting = true;
-      this.solver
-        .readCounters()
-        .then((counters) => this.solver.adapt(counters))
-        .finally(() => (this.adapting = false));
+      const bridge=this.sdfBridge;
+      const adaptation=bridge
+        ? this.solver.readCounters().then(counters=>{
+          if(this.destroyed||this.sdfBridge!==bridge)return false;
+          // Colours adapt whatever the pair policy: a frozen cap shares colours Jacobi-style in dense piles.
+          this.solver.adaptColors(counters);
+          return this.sdfBroadphase.autoGrow!==false&&!this.sdfError ? this.adaptSdfCollisions(counters) : false;
+        })
+        : this.solver.readCounters().then(counters=>{
+          if(!this.destroyed&&!this.sdfBridge&&this.sdfState==='off')this.solver.adapt(counters);
+        });
+      const settled=bridge?adaptation.catch(error=>{
+        if(this.sdfBridge===bridge)this.sdfError=error instanceof Error?error:new Error(String(error));
+      }):adaptation;
+      void settled.finally(()=>{this.adapting=false;});
     }
     if (this.readbackEvery > 0 && this.steps % this.readbackEvery === 0 && !this.reading) void this.read(this.tracked ?? undefined);
   }
@@ -1052,6 +1192,9 @@ export class World {
       : body.shape === 'sphere' ? sphere(this.scratch, body.size[0] / 2, density, body.friction, position, velocity)
       : body.hull ? hull(this.scratch, body.hull, density, body.friction, position, rotation, velocity)
       : new Rigid(this.scratch, body.size, density, body.friction, position, velocity);
+    if (!parked && !body.fixed && body.massProperties) {
+      r.mass = body.massProperties.mass; r.moment.set(body.massProperties.moments);
+    }
     r.positionAng.set(normalised(rotation));
     if (!parked) r.velocityAng.set(angularVelocity);
     this.scratch.bodies.length = 0;
@@ -1068,11 +1211,14 @@ export class World {
     return (await this.raycasts([{ origin, direction, maxDistance: options.maxDistance }], options))[0];
   }
 
-  /** Many rays at once (one GPU pass for all: up to 65,535). */
+  /** Many rays at once: up to 65,535 for standard shapes, 256 in SDF mode. */
   async raycasts(rays: Ray[], options: { ignore?: Body[]; collidesWith?: number } = {}): Promise<(RayHit | null)[]> {
+    this.assertSdfReady();
     this.flush();
-    this.raycaster ??= new Raycaster(this.device);
-    const raw = await this.raycaster.cast(
+    // A slot can be removed/reused while the query readback is pending.
+    const queriedBodies=this.slots.slice(0,this.solver.bodyCount);
+    if(!this.sdfBridge) this.raycaster ??= new Raycaster(this.device);
+    const raw = await (this.sdfBridge ? this.sdfBridge.raycasts(rays, (options.ignore ?? []).map(b=>b.index), options.collidesWith ?? 0xffffffff) : this.raycaster!.cast(
       this.solver.bodyBuffer,
       this.solver.hullStorage,
       this.solver.filterStorage,
@@ -1080,8 +1226,8 @@ export class World {
       rays,
       (options.ignore ?? []).map((b) => b.index),
       options.collidesWith ?? 0xffffffff,
-    );
-    return raw.map((h) => (h ? { body: this.slots[h.index] ?? null, distance: h.distance, point: h.point, normal: h.normal } : null));
+    ));
+    return raw.map((h) => (h ? { body: queriedBodies[h.index] ?? null, distance: h.distance, point: h.point, normal: h.normal } : null));
   }
 
   // --- Reading back ------------------------------------------------------------------------------
@@ -1210,6 +1356,7 @@ export class World {
 
   /** Free the GPU buffers (the world can't be used after). */
   destroy(): void {
+    this.destroyed=true;
     this.pusher.destroy();
     this.contactWatch?.destroy();
     this.solver.destroy();

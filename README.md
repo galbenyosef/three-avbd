@@ -19,6 +19,33 @@ destructible city of 94,000 voxel bodies ([code](https://github.com/sbobyn/three
 Needs a browser with WebGPU: Chrome or Edge on any platform, Safari 26 on macOS and iOS,
 Firefox where it ships WebGPU. Nothing is baked: every scene is simulated live on your GPU.
 
+## Experimental SDF collisions (unreleased)
+
+The experimental `three-avbd/sdf` entry point (exported for the next release, not yet in a
+published version; its API may change) provides mesh-to-voxel baking,
+analytic/voxel sampling, mass properties and curvature seeds, plus a cancellable
+worker helper. [CPU baking/API usage](docs/SDF_BAKING.md) feeds the experimental
+[`World.enableSdfCollisions()` API](docs/SDF_WORLD.md): automatic GPU candidate
+spatial filtering, runtime body/field refresh, automatic capacity growth,
+independent normals and warm starts.
+Pair-level contact events and bounded SDF surface raycasts are supported.
+
+Run `pnpm dev` and open `/sdf.html` for the interactive SDF showcase: rings,
+warped boxes and a mesh-baked gear pile. Left-drag a body, right-drag to orbit,
+spawn any of the three shapes, and toggle sampled contact points/normals.
+It starts with 12 bodies and caps spawning at 36, with a 30 Hz display cap and
+at most two physics steps per frame. Pause stops rendering once the view settles;
+hidden tabs stop stepping. Contacts are an optional throttled readback, while
+body rendering uses the GPU buffer directly. Mass/inertia use box proxies: this
+is a visual collision showcase, not a reproduction of the paper's experiments.
+
+Run `/sdf-released.html` for the released box/gear stacks and chair/bunny piles,
+using original resolution-100 fields, poses, mass and full inertia tensors.
+It starts paused and compares live metrics with the captured CPU reference.
+Mesh quality activates contacts earlier with the same resting gap; Released
+settings keeps the captured collision parameters. Both use corrected sticking anchors.
+See [measured comparison and remaining gaps](docs/SDF_RELEASED_COMPARISON.md).
+
 ## Use it in your project
 
 [three-avbd on npm](https://www.npmjs.com/package/three-avbd):

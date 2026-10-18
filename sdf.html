@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SDF · three-avbd</title></head>
+<body>
+<header><a href="/">three-avbd</a><span>EXPERIMENTAL / GPU COLLISIONS</span></header>
+<aside>
+  <h1>Beyond convex.</h1><p>Rings, twisted solids, and mesh-baked collision fields.</p>
+  <label>Scene<select id="preset"><option value="rings">Rings</option><option value="warps">Warped boxes</option><option value="gears">Baked mesh pile</option></select></label>
+  <div class="row"><button id="reset">Reset</button><button id="pause">Pause</button></div>
+  <label>Spawn<select id="shape"><option value="rings">Ring</option><option value="warps">Warped box</option><option value="gears">Baked gear</option></select></label>
+  <button id="spawn">Drop one</button>
+  <label class="check"><input id="contacts" type="checkbox"> Contact points & normals</label>
+  <output id="status" role="status">Preparing fields…</output>
+  <p class="hint">Drag a body to grab it. Right-drag to orbit; scroll to zoom. Yellow marks show sampled solver contacts.</p>
+  <p class="hint"><a style="color:#e4b966" href="/sdf-released.html">Released scenes & reference comparison →</a></p>
+  <small>36-body limit · 30 Hz display cap · approximate mass/inertia · not a paper benchmark</small>
+</aside>
+<script type="module" src="/src/sdf-showcase/main.ts"></script>
+</body></html>

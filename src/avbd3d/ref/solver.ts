@@ -73,6 +73,9 @@ export class Solver implements SolverParams {
   bodies: Rigid[] = [];
   forces: Force[] = [];
 
+  /** Optional CPU collision backend; null retains the original box oracle. */
+  collisionDetection: ((solver: Solver) => void) | null = null;
+
   constructor() {
     this.defaultParams();
   }
@@ -134,8 +137,9 @@ export class Solver implements SolverParams {
   step(): void {
     const { dt, gravity, bodies, sys, dp } = this;
 
+    if (this.collisionDetection) this.collisionDetection(this);
     // Broadphase: naive O(n^2) bounding-sphere test, sufficient for the demo scenes
-    for (let i = bodies.length - 1; i >= 0; i--) {
+    else for (let i = bodies.length - 1; i >= 0; i--) {
       const bodyA = bodies[i];
       for (let j = i - 1; j >= 0; j--) {
         const bodyB = bodies[j];

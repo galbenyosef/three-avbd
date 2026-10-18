@@ -577,6 +577,18 @@ gpuTest('the colour cap stays within the indirect arguments when colouring near 
   solver.destroy();
 });
 
+// A fixed colouring pins capacity too: adapt() grows neither colours nor contact buffers.
+gpuTest('adapt leaves contact capacity alone under a fixed colouring', async (device) => {
+  const ref = new Solver();
+  scenePyramid(ref);
+  const solver = new GpuSolver3D(device, ref);
+  solver.fixedColors = new Uint32Array(solver.bodyCapacity);
+  const before = [solver.contactCapacity, solver.pairCapacity, solver.manifoldCapacity];
+  solver.adapt({ pairs: 1e5, contacts: 4e5, manifolds: 1e5, overflow: 7, clashes: 0, colors: 1 });
+  assert.deepEqual([solver.contactCapacity, solver.pairCapacity, solver.manifoldCapacity], before);
+  solver.destroy();
+});
+
 // Up is a parameter: y by default (Three.js), z when seeded from the reference (its scenes are
 // z-up). A free box in a y-up solver falls along -y only.
 gpuTest('gravity pulls against the up axis (y-up by default, z when seeded from the reference)', async (device) => {

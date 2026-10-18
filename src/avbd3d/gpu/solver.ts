@@ -435,8 +435,23 @@ function mortonOrder(bodies: Rigid[]): number[] {
 /** Evaluated lazily: under Node the WebGPU globals appear only once a device module loads. */
 const storageUsage = () => GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST;
 
+/** Internal collision replacement. Encoding runs after beginFrame and before adjacency.
+ * The solver owns the installed backend and destroys it on replacement/destruction.
+ */
+export interface GpuCollisionBackend3D {
+  prepare(solver: GpuSolver3D): void;
+  encode(pass: GPUComputePassEncoder, context: GpuCollisionContext3D): void;
+  destroy(): void;
+}
+export interface GpuCollisionContext3D {
+  bodies: GPUBuffer; params: GPUBuffer; counters: GPUBuffer;
+  statics: GPUBuffer; joints: GPUBuffer; filters: GPUBuffer;
+  contacts: GPUBuffer; previousContacts: GPUBuffer; manifolds: GPUBuffer;
+}
+
 export class GpuSolver3D {
   readonly device: GPUDevice;
+  private collisionBackend: GpuCollisionBackend3D | null = null;
   readonly params: GpuParams3D = gpuParams3D();
 
   bodyCount = 0;
@@ -599,6 +614,8 @@ export class GpuSolver3D {
   private timingCallback: ((profile: StepProfile) => void) | null = null;
   private timingBusy = false;
   private destroyed = false;
+  /** Internal async backend setup must not bind buffers after teardown. */
+  get isDestroyed(): boolean {return this.destroyed;}
 
   constructor(device: GPUDevice, ref: Solver, options: GpuSolverOptions = {}) {
     this.device = device;
@@ -711,7 +728,7 @@ export class GpuSolver3D {
     return {
       broad: layout('broadphase 3d', [U, R, W, W, W, R, R, R]),
       contacts: layout('contacts 3d', [U, R, R, W, R, W, R, W, W, ...(this.hulls ? [R] : [])]),
-      topo: layout('topology 3d', [U, R, R, R, R, W, W, W]),
+      topo: layout('topology 3d', [U, R, R, R, R, W, W, W, R]),
       solve: layout('solve 3d', [U, W, W, R, W, R, R, R, R]),
       pass: d.createBindGroupLayout({
         label: 'pass',
@@ -837,8 +854,8 @@ export class GpuSolver3D {
         group(this.layouts.contacts, [P, this.bodyBuffer, this.pairBuffer, c0, c1, m0, m1, T, C, ...(this.hulls ? [this.hullBuffer] : [])]),
         group(this.layouts.contacts, [P, this.bodyBuffer, this.pairBuffer, c1, c0, m1, m0, T, C, ...(this.hulls ? [this.hullBuffer] : [])]),
       ],
-      topo: [m0, m1].map((m) =>
-        group(this.layouts.topo, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, m, C, adj, this.colorBuffer]),
+      topo: [m0, m1].map((m, i) =>
+        group(this.layouts.topo, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, m, C, adj, this.colorBuffer, [c0, c1][i]]),
       ) as [GPUBindGroup, GPUBindGroup],
       solve: [0, 1].map((i) =>
         group(this.layouts.solve, [P, this.bodyBuffer, this.jointBuffer, this.infoBuffer, [c0, c1][i], adj, this.colorBuffer, C, [m0, m1][i]]),
@@ -1475,6 +1492,30 @@ export class GpuSolver3D {
     this.passAlpha = alpha;
   }
 
+  /** Internal backend capacity reservation; existing warm-start buffers are preserved. */
+  reserveCollisionCapacity(points: number): void {
+    const limit=Math.min(this.device.limits.maxBufferSize,this.device.limits.maxStorageBufferBindingSize);
+    if(!Number.isSafeInteger(points)||points<1||points*CONTACT_WORDS*4>limit) throw new Error('Invalid collision capacity');
+    if(points>this.contactCapacity||points>this.manifoldCapacity) {
+      this.allocateContacts(Math.max(points,this.contactCapacity),Math.max(points,this.pairCapacity),Math.max(points,this.manifoldCapacity));
+    }
+  }
+
+  /** Internal opt-in backend. Joints are kept; contact warm starts survive only if the new
+   * backend carries them over itself (SdfCollisionBridge.grown does). */
+  setCollisionBackend(backend: GpuCollisionBackend3D | null): void {
+    if (this.destroyed) throw new Error('Solver is destroyed');
+    if (backend === this.collisionBackend) return;
+    backend?.prepare(this);
+    this.collisionBackend?.destroy();
+    this.collisionBackend = backend;
+    // A backend's contacts are not built-in manifolds: the next built-in step must detect afresh.
+    this.manifoldsValid = false;
+    const encoder = this.device.createCommandEncoder();
+    encoder.clearBuffer(this.counterBuffer);
+    this.device.queue.submit([encoder.finish()]);
+  }
+
   /** Bind pass-constant entry `entry` (group 1 at a dynamic offset). */
   private setPass(pass: GPUComputePassEncoder, entry: number): void {
     this.passOffset[0] = entry * PASS_STRIDE;
@@ -1495,7 +1536,9 @@ export class GpuSolver3D {
   }
 
   step(options: GpuStepOptions = {}): void {
-    const reuseManifolds = !!options.reuseManifolds && this.manifoldsValid && !!this.pipes.reuseManifolds;
+    this.collisionBackend?.prepare(this);
+    // An SDF backend writes its own contacts each step; manifold reuse applies to the built-in narrowphase.
+    const reuseManifolds = !this.collisionBackend && !!options.reuseManifolds && this.manifoldsValid && !!this.pipes.reuseManifolds;
     if (this.radiiDirty || this.noCollideDirty) this.uploadStatics();
     const p = this.params;
     if (this.fixedColors) {
@@ -1550,19 +1593,28 @@ export class GpuSolver3D {
     // Collision
     beginPhase();
     this.run(pass, 'beginFrame', G.broad, 1);
-    if (p.reuseContacts) this.run(pass, 'updateRefs', G.refs, groups(N));
-    this.run(pass, 'argsPrev', G.args, 1);
-    if (reuseManifolds) {
-      this.runIndirect(pass, 'reuseManifolds', G.contacts[cur], IA_PREV);
+    if (this.collisionBackend) {
+      this.collisionBackend.encode(pass, {
+        bodies: this.bodyBuffer, params: this.paramsBuffer, counters: this.counterBuffer,
+        statics: this.staticBuffer!, joints: this.jointBuffer, filters: this.filterBuffer,
+        contacts: this.contactBuffers[cur], previousContacts: this.contactBuffers[1-cur],
+        manifolds: this.manifoldBuffers[cur],
+      });
     } else {
-      this.runIndirect(pass, 'hashInsert', G.contacts[cur], IA_PREV);
-      this.run(pass, 'gridCount', G.broad, groups(N));
-      this.gridScan.encode(pass);
-      this.run(pass, 'gridScatter', G.broad, groups(N));
-      this.run(pass, 'findPairs', G.broad, groups(N));
-      if (this.coarseDynamic || this.large.some(i => this.bodies[i]?.dynamic)) this.run(pass, 'findFixedLarge', G.broad, groups(N));
-      this.run(pass, 'argsPairs', G.args, 1);
-      this.runIndirect(pass, 'narrowphase', G.contacts[cur], IA_PAIRS);
+      if (p.reuseContacts) this.run(pass, 'updateRefs', G.refs, groups(N));
+      this.run(pass, 'argsPrev', G.args, 1);
+      if (reuseManifolds) {
+        this.runIndirect(pass, 'reuseManifolds', G.contacts[cur], IA_PREV);
+      } else {
+        this.runIndirect(pass, 'hashInsert', G.contacts[cur], IA_PREV);
+        this.run(pass, 'gridCount', G.broad, groups(N));
+        this.gridScan.encode(pass);
+        this.run(pass, 'gridScatter', G.broad, groups(N));
+        this.run(pass, 'findPairs', G.broad, groups(N));
+        if (this.coarseDynamic || this.large.some(i => this.bodies[i]?.dynamic)) this.run(pass, 'findFixedLarge', G.broad, groups(N));
+        this.run(pass, 'argsPairs', G.args, 1);
+        this.runIndirect(pass, 'narrowphase', G.contacts[cur], IA_PAIRS);
+      }
     }
     this.run(pass, 'argsContacts', G.args, 1);
 
@@ -1713,6 +1765,22 @@ export class GpuSolver3D {
   /** Bodies per colour below which two threads per body pay off (measured, docs/FINDINGS.md). */
   /** Adapt the colour cap and pair/contact capacity to a recent counters readback. */
   adapt(counters: GpuCounters3D): void {
+    this.adaptColors(counters);
+    // Fixed colourings (tests, diagnostics) also keep their capacity, as before the split
+    if (this.fixedColors) return;
+    // Grow before overflowing (a falling pile's contacts can jump between readbacks), to the
+    // demand with headroom. Overflow bits: 1 pairs, 2 contacts, 4 manifolds.
+    const want = (demand: number, capacity: number, bit: number) =>
+      (counters.overflow & bit) !== 0 || demand > GROW_AT * capacity ? Math.max(GROW_TO * demand, 1.25 * capacity) : capacity;
+    const contacts = want(counters.contacts, this.contactCapacity, 2);
+    const pairs = want(counters.pairs, this.pairCapacity, 1);
+    const manifolds = want(counters.manifolds, this.manifoldCapacity, 4);
+    if (this.capacityCanGrow(contacts, pairs, manifolds)) this.allocateContacts(contacts, pairs, manifolds);
+  }
+
+  /** The colouring half of adapt: colour cap, Jones-Plassmann rounds and the serial-tail hint.
+   * An installed collision backend reserves its own contact capacity, so it adapts colours only. */
+  adaptColors(counters: GpuCounters3D): void {
     // Only a scheduling hint. A stale readback can cost time, never omit a colour or body.
     this.tailBodies = counters.tailBodies ?? Infinity;
     if (this.fixedColors) return;
@@ -1741,14 +1809,6 @@ export class GpuSolver3D {
     } else {
       this.shrinkVotes = 0;
     }
-    // Grow before overflowing (a falling pile's contacts can jump between readbacks), to the
-    // demand with headroom. Overflow bits: 1 pairs, 2 contacts, 4 manifolds.
-    const want = (demand: number, capacity: number, bit: number) =>
-      (counters.overflow & bit) !== 0 || demand > GROW_AT * capacity ? Math.max(GROW_TO * demand, 1.25 * capacity) : capacity;
-    const contacts = want(counters.contacts, this.contactCapacity, 2);
-    const pairs = want(counters.pairs, this.pairCapacity, 1);
-    const manifolds = want(counters.manifolds, this.manifoldCapacity, 4);
-    if (this.capacityCanGrow(contacts, pairs, manifolds)) this.allocateContacts(contacts, pairs, manifolds);
   }
 
   private capacityCanGrow(contacts: number, pairs: number, manifolds: number): boolean {
@@ -1781,6 +1841,8 @@ export class GpuSolver3D {
   }
 
   destroy(): void {
+    this.collisionBackend?.destroy();
+    this.collisionBackend = null;
     if (this.ownsBodyBuffer) this.bodyBuffer.destroy();
     const buffers = [
       this.jointBuffer, this.infoBuffer, ...this.contactBuffers, ...this.manifoldBuffers, this.pairBuffer, this.tableBuffer, this.gridBuffer, this.staticBuffer,

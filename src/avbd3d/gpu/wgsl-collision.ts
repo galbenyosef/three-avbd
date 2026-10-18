@@ -47,6 +47,35 @@ fn updateRefs(@builtin(global_invocation_id) gid: vec3u) {
 }
 `;
 
+export const IGNORE_PAIRS_WGSL = /* wgsl */ `
+/** Binary search of the (hi, lo) no-collide list; false if every connecting joint has broken. */
+fn ignored(hi: u32, lo: u32) -> bool {
+  let base = params.largeCount;
+  var first = 0u;
+  var count = params.noCollideCount;
+  while (count > 0u) {
+    let step = count / 2u;
+    let mid = first + step;
+    let mh = statics[base + 3u * mid];
+    let ml = statics[base + 3u * mid + 1u];
+    if (mh < hi || (mh == hi && ml < lo)) {
+      first = mid + 1u;
+      count -= step + 1u;
+    } else {
+      count = step;
+    }
+  }
+  for (var k = first; k < params.noCollideCount; k++) {
+    if (statics[base + 3u * k] != hi || statics[base + 3u * k + 1u] != lo) { break; }
+    let j = statics[base + 3u * k + 2u];
+    if (j == 0xffffffffu) { return true; }
+    if (joints[j].penLin.w != 0.0 || joints[j].penAng.w != 0.0) { return true; }
+  }
+  return false;
+}
+
+`;
+
 export const broadphaseWGSL = /* wgsl */ `
 ${PRELUDE_3D}
 
@@ -114,31 +143,7 @@ fn gridScatter(@builtin(global_invocation_id) gid: vec3u) {
   atomicStore(&grid[params.gridSortedOffset + slot], i);
 }
 
-/** Binary search of the (hi, lo) no-collide list; false if every connecting joint has broken. */
-fn ignored(hi: u32, lo: u32) -> bool {
-  let base = params.largeCount;
-  var first = 0u;
-  var count = params.noCollideCount;
-  while (count > 0u) {
-    let step = count / 2u;
-    let mid = first + step;
-    let mh = statics[base + 3u * mid];
-    let ml = statics[base + 3u * mid + 1u];
-    if (mh < hi || (mh == hi && ml < lo)) {
-      first = mid + 1u;
-      count -= step + 1u;
-    } else {
-      count = step;
-    }
-  }
-  for (var k = first; k < params.noCollideCount; k++) {
-    if (statics[base + 3u * k] != hi || statics[base + 3u * k + 1u] != lo) { break; }
-    let j = statics[base + 3u * k + 2u];
-    if (j == 0xffffffffu) { return true; }
-    if (joints[j].penLin.w != 0.0 || joints[j].penAng.w != 0.0) { return true; }
-  }
-  return false;
-}
+${IGNORE_PAIRS_WGSL}
 
 /** Body i as the broadphase sees it: world axes and half extents (a sphere: its radius). */
 struct Shape {
