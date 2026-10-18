@@ -97,6 +97,44 @@ of the per-frame maximum across rollouts. All values are in mm.
 
 Measurements: `measurements/sdf-fig6-2026-10-18.json`, which holds per-frame curves for every run.
 
+## 2026-10-18 — Paper Table 5 (Nelder–Mead rows): counts reproduced per pair
+
+`scripts/sdf-table5.ts` runs the operator-distorted Falling Boxes scenes on the GPU with the
+released parameters, which are the paper's defaults. It covers the undistorted baseline and
+Bend, Displace and Twist at the paper's three strengths each, using the oracle's `--warp-k`
+captures (`loadReleasedScene(id, read, k)`). For each it reports contacts, Nelder–Mead
+iterations and SDF queries per collision call. Each frame's sums are divided by its 4
+substeps, then averaged over 360 frames. Upstream's per-call numbers come from its captures
+the same way. The paper's numbers are from Table 5, p. 10. Collision time is not measured.
+
+| Config | Ours (GPU): contacts / iterations / queries | Upstream capture | Paper (NM) | Iterations per pair, ours / upstream |
+|---|---|---|---|---|
+| Undistorted | 48.0 / 834 / 1965 | 39.8 / 701 / 1650 | 45.7 / 1066 / 2302 | 35.4 / 37.6 |
+| Bend 0.15 | 55.7 / 2076 / 4375 | 44.4 / 2281 / 4897 | 46.0 / 2389 / 5010 | 61.7 / 55.4 |
+| Bend 0.55 | 51.9 / 2288 / 4967 | 40.3 / 2399 / 5117 | 39.8 / 2346 / 4896 | 54.0 / 58.1 |
+| Bend 0.95 | 63.5 / 2950 / 6278 | 50.2 / 3073 / 6491 | 36.4 / 2842 / 5870 | 60.7 / 61.4 |
+| Displace 0.05 | 58.8 / 1693 / 3675 | 38.9 / 1225 / 2714 | 42.0 / 1707 / 3600 | 53.5 / 48.4 |
+| Displace 0.10 | 49.3 / 1492 / 3222 | 40.4 / 1429 / 3078 | 36.1 / 1861 / 3939 | 54.6 / 53.4 |
+| Displace 0.20 | 36.1 / 1392 / 2939 | 41.8 / 2566 / 5386 | 36.1 / 2330 / 4982 | 61.6 / 63.7 |
+| Twist 0.50 | 57.1 / 2081 / 4544 | 50.4 / 2536 / 5416 | 45.8 / 3161 / 6561 | 51.4 / 57.0 |
+| Twist 2.50 | 52.8 / 2610 / 5518 | 40.0 / 2751 / 5811 | 42.1 / 3354 / 7081 | 66.0 / 66.0 |
+| Twist 5.00 | 43.6 / 2399 / 5022 | 36.5 / 2663 / 5583 | 43.5 / 2743 / 5871 | 74.7 / 72.2 |
+
+- **Per pair:** our Nelder–Mead cost matches upstream's within about 12% in every configuration.
+- **Totals:** both implementations land within roughly ±40% of the paper. The ordering matches:
+  distortion costs 1.7–3.5× the undistorted baseline here, against the paper's 1.6–3.1×, and
+  queries run about 2.1× iterations in all three.
+- **Displace 0.20 outlier (−40%):** this is pair count. Our planks spend fewer frames in contact
+  (22.6 against 40.3 pairs), a trajectory difference from AVBD versus sequential impulses.
+- **Contacts:** 36–64 per call, against the paper's 36–46. This matches our generally higher
+  contact counts.
+- **Upstream undistorted (701 against the paper's 1066):** the released code's convex skip,
+  which the paper does not describe, likely explains this.
+- **Run:** a single deterministic rollout, repeated bit-identically.
+- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead is ported) and t_coll.
+
+Measurements: `measurements/sdf-table5-2026-10-18.json`.
+
 
 ## 2026-10-18 — All eleven released SDF scenes reproduced; rolling contacts and non-convex quality
 

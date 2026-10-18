@@ -1,0 +1,259 @@
+{
+  "paper": "Giles & Andrews 2026, Table 5 (NM rows)",
+  "reference": "sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e",
+  "frames": 360,
+  "profile": "reference (released parameters)",
+  "conventions": "per collision call: iterations and queries are frame sums divided by substeps; contacts are the last substep of each frame; averaged over frames",
+  "rows": [
+    {
+      "name": "Undistorted",
+      "scene": 2,
+      "warpK": null,
+      "substeps": 4,
+      "gpu": {
+        "contacts": 48.01111111111111,
+        "pairs": 23.594444444444445,
+        "iterations": 834.4381944444444,
+        "queries": 1964.79375,
+        "iterationsPerPair": 35.36587591240876
+      },
+      "upstream": {
+        "contacts": 39.77777777777778,
+        "pairs": 18.625,
+        "iterations": 701.0729166666666,
+        "queries": 1649.9319444444445,
+        "iterationsPerPair": 37.641498881431765
+      },
+      "paper": {
+        "contacts": 45.7,
+        "iterations": 1066,
+        "queries": 2302
+      }
+    },
+    {
+      "name": "BEND 0.15",
+      "scene": 3,
+      "warpK": "0.15",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 55.727777777777774,
+        "pairs": 33.65277777777778,
+        "iterations": 2075.6854166666667,
+        "queries": 4375.2243055555555,
+        "iterationsPerPair": 61.6794676021461
+      },
+      "upstream": {
+        "contacts": 44.38333333333333,
+        "pairs": 41.15,
+        "iterations": 2281.213888888889,
+        "queries": 4897.2375,
+        "iterationsPerPair": 55.43654651005806
+      },
+      "paper": {
+        "contacts": 46,
+        "iterations": 2389,
+        "queries": 5010
+      }
+    },
+    {
+      "name": "BEND 0.55",
+      "scene": 3,
+      "warpK": "0.55",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 51.852777777777774,
+        "pairs": 42.40555555555556,
+        "iterations": 2287.8930555555557,
+        "queries": 4966.645833333333,
+        "iterationsPerPair": 53.952672605790646
+      },
+      "upstream": {
+        "contacts": 40.263888888888886,
+        "pairs": 41.31944444444444,
+        "iterations": 2398.95,
+        "queries": 5117.3694444444445,
+        "iterationsPerPair": 58.05862184873949
+      },
+      "paper": {
+        "contacts": 39.8,
+        "iterations": 2346,
+        "queries": 4896
+      }
+    },
+    {
+      "name": "BEND 0.95",
+      "scene": 3,
+      "warpK": "0.95",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 63.50555555555555,
+        "pairs": 48.57222222222222,
+        "iterations": 2949.7673611111113,
+        "queries": 6277.948611111111,
+        "iterationsPerPair": 60.72951218117351
+      },
+      "upstream": {
+        "contacts": 50.21111111111111,
+        "pairs": 50.075,
+        "iterations": 3072.540972222222,
+        "queries": 6491.270833333333,
+        "iterationsPerPair": 61.35878127253564
+      },
+      "paper": {
+        "contacts": 36.4,
+        "iterations": 2842,
+        "queries": 5870
+      }
+    },
+    {
+      "name": "DISPLACE 0.05",
+      "scene": 5,
+      "warpK": "0.05",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 58.80833333333333,
+        "pairs": 31.658333333333335,
+        "iterations": 1693.3916666666667,
+        "queries": 3675.1423611111113,
+        "iterationsPerPair": 53.48960252698078
+      },
+      "upstream": {
+        "contacts": 38.93055555555556,
+        "pairs": 25.31111111111111,
+        "iterations": 1224.9333333333334,
+        "queries": 2714.220138888889,
+        "iterationsPerPair": 48.39508340649693
+      },
+      "paper": {
+        "contacts": 42,
+        "iterations": 1707,
+        "queries": 3600
+      }
+    },
+    {
+      "name": "DISPLACE 0.10",
+      "scene": 5,
+      "warpK": "0.10",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 49.34722222222222,
+        "pairs": 27.316666666666666,
+        "iterations": 1491.9486111111112,
+        "queries": 3222.460416666667,
+        "iterationsPerPair": 54.61678869229205
+      },
+      "upstream": {
+        "contacts": 40.35,
+        "pairs": 26.747222222222224,
+        "iterations": 1428.8236111111112,
+        "queries": 3078.004861111111,
+        "iterationsPerPair": 53.419513968221
+      },
+      "paper": {
+        "contacts": 36.1,
+        "iterations": 1861,
+        "queries": 3939
+      }
+    },
+    {
+      "name": "DISPLACE 0.20",
+      "scene": 5,
+      "warpK": "0.20",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 36.09444444444444,
+        "pairs": 22.605555555555554,
+        "iterations": 1391.5375,
+        "queries": 2939.2291666666665,
+        "iterationsPerPair": 61.55732366674859
+      },
+      "upstream": {
+        "contacts": 41.775,
+        "pairs": 40.28888888888889,
+        "iterations": 2565.748611111111,
+        "queries": 5385.975694444444,
+        "iterationsPerPair": 63.68377688913403
+      },
+      "paper": {
+        "contacts": 36.1,
+        "iterations": 2330,
+        "queries": 4982
+      }
+    },
+    {
+      "name": "TWIST 0.50",
+      "scene": 4,
+      "warpK": "0.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 57.125,
+        "pairs": 40.46944444444444,
+        "iterations": 2080.5430555555554,
+        "queries": 4543.919444444445,
+        "iterationsPerPair": 51.41022033083945
+      },
+      "upstream": {
+        "contacts": 50.355555555555554,
+        "pairs": 44.46666666666667,
+        "iterations": 2536.43125,
+        "queries": 5416.221527777778,
+        "iterationsPerPair": 57.041182533733135
+      },
+      "paper": {
+        "contacts": 45.8,
+        "iterations": 3161,
+        "queries": 6561
+      }
+    },
+    {
+      "name": "TWIST 2.50",
+      "scene": 4,
+      "warpK": "2.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 52.80555555555556,
+        "pairs": 39.547222222222224,
+        "iterations": 2609.7625,
+        "queries": 5517.521527777778,
+        "iterationsPerPair": 65.9910444616141
+      },
+      "upstream": {
+        "contacts": 40.00555555555555,
+        "pairs": 41.66388888888889,
+        "iterations": 2751.465277777778,
+        "queries": 5811.490972222222,
+        "iterationsPerPair": 66.0395693046203
+      },
+      "paper": {
+        "contacts": 42.1,
+        "iterations": 3354,
+        "queries": 7081
+      }
+    },
+    {
+      "name": "TWIST 5.00",
+      "scene": 4,
+      "warpK": "5.00",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 43.602777777777774,
+        "pairs": 32.125,
+        "iterations": 2398.8006944444446,
+        "queries": 5021.763194444445,
+        "iterationsPerPair": 74.67083873757026
+      },
+      "upstream": {
+        "contacts": 36.516666666666666,
+        "pairs": 36.88333333333333,
+        "iterations": 2663.417361111111,
+        "queries": 5583.352777777778,
+        "iterationsPerPair": 72.21194833559271
+      },
+      "paper": {
+        "contacts": 43.5,
+        "iterations": 2743,
+        "queries": 5871
+      }
+    }
+  ]
+}
