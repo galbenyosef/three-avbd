@@ -1766,6 +1766,8 @@ export class GpuSolver3D {
   /** Adapt the colour cap and pair/contact capacity to a recent counters readback. */
   adapt(counters: GpuCounters3D): void {
     this.adaptColors(counters);
+    // Fixed colourings (tests, diagnostics) also keep their capacity, as before the split
+    if (this.fixedColors) return;
     // Grow before overflowing (a falling pile's contacts can jump between readbacks), to the
     // demand with headroom. Overflow bits: 1 pairs, 2 contacts, 4 manifolds.
     const want = (demand: number, capacity: number, bit: number) =>
