@@ -49,6 +49,13 @@ After merging `main` (#14–#25 solver/broadphase work; manifold reuse is skippe
 backend owns contacts), the 11-seed chair and bunny runs are bit-identical to the pre-merge runs
 (22/22), and the bounded gate passes (141 CPU and 148 GPU tests, both builds).
 
+Review follow-ups (PR #26): SDF worlds now adapt the colour cap, Jones-Plassmann rounds and the tail
+hint on every periodic readback, including with `autoGrow:false` and after an SDF error. Previously
+only pair capacity was adapted, so a dense SDF pile could keep a frozen cap. Mesh vertex contacts
+refuse fields above 4096 unique vertices, the per-pair serial scan budget. Detaching a backend
+invalidates built-in manifold reuse. The 11-seed chair and bunny runs are bit-identical before and
+after these changes (22/22). GPU time on the M1/GTX 1080 targets is still unmeasured.
+
 Still open: opposing-normal interlocks (bunny seed 3); `meshPlaneContacts` now also covers
 mesh-mesh pairs, so its name is inaccurate. Measurements: `measurements/sdf-mesh-witness-ensemble-2026-10-17.json`.
 

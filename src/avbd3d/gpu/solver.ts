@@ -1501,13 +1501,16 @@ export class GpuSolver3D {
     }
   }
 
-  /** Internal opt-in backend; replacing it drops collision warm starts, not joints. */
+  /** Internal opt-in backend. Joints are kept; contact warm starts survive only if the new
+   * backend carries them over itself (SdfCollisionBridge.grown does). */
   setCollisionBackend(backend: GpuCollisionBackend3D | null): void {
     if (this.destroyed) throw new Error('Solver is destroyed');
     if (backend === this.collisionBackend) return;
     backend?.prepare(this);
     this.collisionBackend?.destroy();
     this.collisionBackend = backend;
+    // A backend's contacts are not built-in manifolds: the next built-in step must detect afresh.
+    this.manifoldsValid = false;
     const encoder = this.device.createCommandEncoder();
     encoder.clearBuffer(this.counterBuffer);
     this.device.queue.submit([encoder.finish()]);
@@ -1762,6 +1765,20 @@ export class GpuSolver3D {
   /** Bodies per colour below which two threads per body pay off (measured, docs/FINDINGS.md). */
   /** Adapt the colour cap and pair/contact capacity to a recent counters readback. */
   adapt(counters: GpuCounters3D): void {
+    this.adaptColors(counters);
+    // Grow before overflowing (a falling pile's contacts can jump between readbacks), to the
+    // demand with headroom. Overflow bits: 1 pairs, 2 contacts, 4 manifolds.
+    const want = (demand: number, capacity: number, bit: number) =>
+      (counters.overflow & bit) !== 0 || demand > GROW_AT * capacity ? Math.max(GROW_TO * demand, 1.25 * capacity) : capacity;
+    const contacts = want(counters.contacts, this.contactCapacity, 2);
+    const pairs = want(counters.pairs, this.pairCapacity, 1);
+    const manifolds = want(counters.manifolds, this.manifoldCapacity, 4);
+    if (this.capacityCanGrow(contacts, pairs, manifolds)) this.allocateContacts(contacts, pairs, manifolds);
+  }
+
+  /** The colouring half of adapt: colour cap, Jones-Plassmann rounds and the serial-tail hint.
+   * An installed collision backend reserves its own contact capacity, so it adapts colours only. */
+  adaptColors(counters: GpuCounters3D): void {
     // Only a scheduling hint. A stale readback can cost time, never omit a colour or body.
     this.tailBodies = counters.tailBodies ?? Infinity;
     if (this.fixedColors) return;
@@ -1790,14 +1807,6 @@ export class GpuSolver3D {
     } else {
       this.shrinkVotes = 0;
     }
-    // Grow before overflowing (a falling pile's contacts can jump between readbacks), to the
-    // demand with headroom. Overflow bits: 1 pairs, 2 contacts, 4 manifolds.
-    const want = (demand: number, capacity: number, bit: number) =>
-      (counters.overflow & bit) !== 0 || demand > GROW_AT * capacity ? Math.max(GROW_TO * demand, 1.25 * capacity) : capacity;
-    const contacts = want(counters.contacts, this.contactCapacity, 2);
-    const pairs = want(counters.pairs, this.pairCapacity, 1);
-    const manifolds = want(counters.manifolds, this.manifoldCapacity, 4);
-    if (this.capacityCanGrow(contacts, pairs, manifolds)) this.allocateContacts(contacts, pairs, manifolds);
   }
 
   private capacityCanGrow(contacts: number, pairs: number, manifolds: number): boolean {

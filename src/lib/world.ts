@@ -9,7 +9,7 @@ import type { SdfCollisionBridge } from '../avbd3d/gpu/sdf-bridge.ts';
 import * as THREE from 'three/webgpu';
 import { B_ANGVEL, B_POS, B_ROT, B_VEL, BODY_FLOATS } from '../avbd3d/gpu/layout.ts';
 import { decodeJoint, type JointState } from '../avbd3d/gpu/joints.ts';
-import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation, type GpuStepOptions } from '../avbd3d/gpu/solver.ts';
+import { checkBreakBend, GpuSolver3D, gpuParams3D, unitRotation, type GpuCounters3D, type GpuStepOptions } from '../avbd3d/gpu/solver.ts';
 import { Rigid } from '../avbd3d/ref/body.ts';
 import { Solver } from '../avbd3d/ref/solver.ts';
 import { convexHull, hull, type HullShape, sphere } from '../avbd3d/shapes.ts';
@@ -735,10 +735,10 @@ export class World {
   /** Last automatic growth failure; explicit adaptation/update rejects instead. */
   get sdfCollisionError():Error|null {return this.sdfError;}
   /** Read counters and grow candidate/history buffers without a pose/contact readback. */
-  async adaptSdfCollisions():Promise<boolean> {
+  async adaptSdfCollisions(read?:GpuCounters3D):Promise<boolean> {
     const bridge=this.sdfBridge;
     if(this.destroyed||!bridge||this.sdfState!=='on'||this.sdfDirty)return false;
-    const counters=await this.solver.readCounters();
+    const counters=read??await this.solver.readCounters();
     if(this.destroyed||this.sdfBridge!==bridge||this.sdfState!=='on'||this.sdfDirty)return false;
     if(counters.pairs<=bridge.capacity)return false;
     const next=bridge.grown(counters.pairs);
@@ -996,7 +996,12 @@ export class World {
       this.adapting = true;
       const bridge=this.sdfBridge;
       const adaptation=bridge
-        ? (this.sdfBroadphase.autoGrow!==false&&!this.sdfError ? this.adaptSdfCollisions() : Promise.resolve(false))
+        ? this.solver.readCounters().then(counters=>{
+          if(this.destroyed||this.sdfBridge!==bridge)return false;
+          // Colours adapt whatever the pair policy: a frozen cap shares colours Jacobi-style in dense piles.
+          this.solver.adaptColors(counters);
+          return this.sdfBroadphase.autoGrow!==false&&!this.sdfError ? this.adaptSdfCollisions(counters) : false;
+        })
         : this.solver.readCounters().then(counters=>{
           if(!this.destroyed&&!this.sdfBridge&&this.sdfState==='off')this.solver.adapt(counters);
         });

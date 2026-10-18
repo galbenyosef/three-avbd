@@ -23,11 +23,16 @@ export function meshPlaneSupports(field:Field):Vec[] {
   return [...(vertices.size?vertices:points)].sort((a,b)=>a.x-b.x||a.y-b.y||a.z-b.z).map(p=>p.toArray() as Vec);
 }
 
+/** Unique vertices per field a pair scans serially each substep (shipped chair 164, bunny 502). */
+export const MESH_WITNESS_MAX_VERTICES=4096;
+
 /** Every unique source vertex in stable order: exact witnesses for mesh-to-mesh
  * overlap, which (unlike a plane's support) need not lie on the convex hull. */
 export function meshSurfaceVertices(field:Field):Vec[] {
   if(!field.surfaceTriangles?.length)return [];
   const unique=new Map<string,Vec>(),surface=field.surfaceTriangles;
   for(let i=0;i<surface.length;i+=3)unique.set(`${surface[i]},${surface[i+1]},${surface[i+2]}`,[surface[i],surface[i+1],surface[i+2]]);
+  // One GPU thread scans these per pair and substep: refuse rather than risk a stalled dispatch.
+  if(unique.size>MESH_WITNESS_MAX_VERTICES)throw new Error(`meshPlaneContacts supports at most ${MESH_WITNESS_MAX_VERTICES} unique surface vertices per field (got ${unique.size}); decimate the source mesh`);
   return [...unique.values()].sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]);
 }

@@ -71,7 +71,7 @@ renderer.setAnimationLoop(() => {
   terms (`alpha`, `betaLin`, `betaAng`, `gamma`), with the paper's defaults.
 - `destroy()` releases the GPU buffers.
 
-### Experimental SDF mode (unpublished source build)
+### Experimental SDF mode (unreleased; API may change)
 
 `await world.enableSdfCollisions([{ body, field, scale?, rotation? }], params?, broadphase?)` installs SDF
 collisions for allocated body slots. Unassigned boxes/spheres use

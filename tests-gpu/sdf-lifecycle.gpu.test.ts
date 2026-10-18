@@ -247,3 +247,33 @@ gpuTest('SDF growth cleans temporary buffers when a host allocation throws',asyn
     world.step();assert.equal((await world.solver.readCounters()).overflow,0);
   } finally {device.createBuffer=create;world.destroy();}
 });
+
+gpuTest('SDF worlds keep adapting the colouring, with or without capacity growth',async device=>{
+  for(const autoGrow of [true,false]) {
+    const world=await World.create({device,maxBodies:4,gravity:[0,0,0],iterations:0});
+    for(const x of [0,.2,.4,.6])world.addSphere({radius:.4,position:[x,0,0]});
+    try {
+      await world.enableSdfCollisions([],params,{maxPairs:6,autoGrow});
+      const seen:number[]=[];const adaptColors=world.solver.adaptColors.bind(world.solver);
+      world.solver.adaptColors=counters=>{seen.push(counters.colors);adaptColors(counters);};
+      for(let i=0;i<10;i++)world.step();
+      await device.queue.onSubmittedWorkDone();
+      for(let i=0;i<20&&!seen.length;i++)await new Promise(resolve=>setTimeout(resolve,5));
+      assert.equal(seen.length,1,`autoGrow ${autoGrow}: one periodic colour adaptation`);
+      assert.ok(seen[0]>0,'contacting spheres need colours');
+    } finally {world.destroy();}
+  }
+});
+
+gpuTest('detaching SDF collisions makes the next reusing step detect contacts afresh',async device=>{
+  const world=await World.create({device,maxBodies:2,gravity:[0,0,0],iterations:0});
+  world.addSphere({radius:.4,position:[0,0,0]});world.addSphere({radius:.4,position:[.6,0,0]});
+  try {
+    await world.enableSdfCollisions([],params,{maxPairs:1});
+    world.step();assert.equal((await world.solver.readContactList()).length,1);
+    world.disableSdfCollisions();
+    // SDF contacts are not built-in manifolds; reuse must not replay them (or nothing).
+    world.step({reuseManifolds:true});
+    assert.ok((await world.solver.readContactList()).length>0,'built-in narrowphase found the overlap');
+  } finally {world.destroy();}
+});

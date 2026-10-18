@@ -19,9 +19,10 @@ destructible city of 94,000 voxel bodies ([code](https://github.com/sbobyn/three
 Needs a browser with WebGPU: Chrome or Edge on any platform, Safari 26 on macOS and iOS,
 Firefox where it ships WebGPU. Nothing is baked: every scene is simulated live on your GPU.
 
-## Experimental SDF collisions (source build)
+## Experimental SDF collisions (unreleased)
 
-The unpublished `three-avbd/sdf` entry point provides mesh-to-voxel baking,
+The experimental `three-avbd/sdf` entry point (exported for the next release, not yet in a
+published version; its API may change) provides mesh-to-voxel baking,
 analytic/voxel sampling, mass properties and curvature seeds, plus a cancellable
 worker helper. [CPU baking/API usage](docs/SDF_BAKING.md) feeds the experimental
 [`World.enableSdfCollisions()` API](docs/SDF_WORLD.md): automatic GPU candidate

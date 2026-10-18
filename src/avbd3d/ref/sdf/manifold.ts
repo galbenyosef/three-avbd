@@ -14,7 +14,8 @@ export interface CollisionParams {
   /** Opt-in signed projection against static boxes for mixed inside/outside samples. */
   signedSeparation?: boolean;
   /** GPU-only exact mesh vertex contacts: a support on a fully covering static box top face,
-   * and for two dynamic meshes the deepest overlapping source vertex within the trigger distance. */
+   * and for two dynamic meshes the deepest overlapping source vertex within the trigger distance
+   * (at most MESH_WITNESS_MAX_VERTICES unique vertices per field). The name predates the mesh-mesh case. */
   meshPlaneContacts?: boolean;
   /** Refresh sticking anchors when a relocated contact is deeper by more than tolerance. */
   refreshDeeperContacts?: boolean;
