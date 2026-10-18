@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { BoxGeometry } from 'three';
+import { BoxGeometry, Quaternion, Vector3 } from 'three';
 import { gpuTest } from './device.ts';
 import { World, type ContactEvent } from '../src/lib/world.ts';
 import { AnalyticField, VoxelField, bakeVoxelSdf } from '../src/lib/sdf.ts';
@@ -242,4 +242,34 @@ gpuTest('World SDF analytic cylinder standing on its cap holds on a 10 degree in
     const drift=Math.hypot(body.position[0]-normal[0]*h,body.position[1]-normal[1]*h,body.position[2]);
     assert.ok(drift<.01,`static friction holds the cylinder (drift ${drift} m)`);
   } finally {world.destroy();}
+});
+
+gpuTest('World SDF tilted cylinder and capsule tumble onto an edge and stay at rest above the floor', async device=>{
+  for(const spec of [{kind:'cylinder',radius:.3,halfHeight:.25},{kind:'capsule',radius:.3,halfLength:.25}] as const){
+    const world=await World.create({device,maxBodies:2});
+    world.addBox({size:[20,.4,20],position:[0,-.2,0],fixed:true,friction:.6});
+    const t=Math.sin(Math.PI/12),c=Math.cos(Math.PI/12),mass=1,moments:[number,number,number]=[.04,.045,.04];
+    // 30 degrees off vertical, so it lands on an edge and tips over.
+    const body=world.addBox({size:[1,1,1],position:[0,.9,0],rotation:[0,0,t,c],friction:.6,massProperties:{mass,moments}})!;
+    await world.enableSdfCollisions([{body,field:new AnalyticField(spec)}]);
+    try {
+      const energy=()=>{
+        // Body-frame angular velocity: moments are principal, ω is world-space.
+        const w=new Vector3(...body.angularVelocity).applyQuaternion(new Quaternion(...body.rotation).invert());
+        return .5*mass*body.velocity.reduce((s,v)=>s+v*v,0)+.5*(moments[0]*w.x*w.x+moments[1]*w.y*w.y+moments[2]*w.z*w.z);
+      };
+      let lowest=Infinity,after=0;
+      for(let frame=0;frame<300;frame++){
+        world.step();
+        if(frame%10===9){await world.read();lowest=Math.min(lowest,body.position[1]);
+          if(frame>=60)after=Math.max(after,energy());}
+      }
+      await world.read();
+      // Lowest resting heights: cylinder on its side (r=.3) or cap (h=.25); capsule on its side (r=.3).
+      assert.ok(lowest>.245,`${spec.kind}: centre stays above the floor (lowest ${lowest})`);
+      // The drop releases ~6 J; pumping (the old rolling defect) would keep it moving, a jitter would not.
+      assert.ok(after<.02,`${spec.kind}: stays at rest after landing (max ${after} J)`);
+      assert.ok(energy()<1e-2,`${spec.kind}: settles (energy ${energy()})`);
+    } finally {world.destroy();}
+  }
 });

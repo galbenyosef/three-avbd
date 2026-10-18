@@ -57,8 +57,8 @@ These are comparable lower bounds, not identical measurements. Final kinetic ene
 
 Before these fixes, the same comparison read Spiky Wheel 119 / 97.5 mm, Primitives 155 / 21.6 mm,
 and Displace 70.4 / 17.7 mm at 0.51 J.
-- **Settled scenes:** they come to rest but keep far more residual energy than the reference
-  (1e-6 to 1e-3 J against 1e-19 to 1e-6 J).
+- **Scenes the reference settles:** at 6 s ours keep far more residual energy (1e-6 to 1e-3 J
+  against 1e-19 to 1e-6 J), and Cows on Spikes (0.023 J) is still moving.
 - **Rolling scenes:** they lose energy faster than the reference (Spiky Wheel 0.044 against 0.65 J).
 - **Contact counts:** about 1.2–2.3× the reference's.
 - **Cows on Spikes:** deep in both runs, by design of the scene.

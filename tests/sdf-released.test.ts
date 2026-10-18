@@ -67,8 +67,10 @@ test('analytic render surfaces lie on their field and face outward',async()=>{
     {kind:'spike-plate',halfExtents:[.7,.08,.7],count:10,spikeRadius:.045,minHeight:.12,maxHeight:.26},
     {kind:'warp',type:1,halfExtents:[1.15,.55,.28],k:1.25},{kind:'sphere',radius:.5},
     {kind:'capsule',radius:.3,halfLength:.4},{kind:'cylinder',radius:.4,halfHeight:.4}] as Spec[];
-  for(const spec of specs){
-    const field=new AnalyticField(spec),cells=72,geometry=fieldSurface(field,cells);
+  // Shipped resolutions: 72 cells for spikes and warps, 48 for smooth primitives (checked at both).
+  const smooth=new Set(['sphere','capsule','cylinder','cone','torus']);
+  for(const [spec,cells] of specs.flatMap(spec=>smooth.has(spec.kind)?[[spec,72],[spec,48]] as const:[[spec,72]] as const)){
+    const field=new AnalyticField(spec),geometry=fieldSurface(field,cells);
     const {min,max}=field.bounds,h=Math.max(...max.map((v,k)=>v-min[k]))/cells;
     const p=geometry.getAttribute('position'),index=geometry.index!;
     assert.ok(index.count>=3*100,`${spec.kind}: surface has triangles`);
