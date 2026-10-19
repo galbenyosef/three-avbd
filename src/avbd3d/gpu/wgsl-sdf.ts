@@ -5,17 +5,19 @@
  * representations about the suitability of this software for any purpose.
  * It is provided "as is" without express or implied warranty.
  */
-import { SDF_SUPPORTS_WGSL } from './wgsl-sdf-supports.ts';
+import { sdfSupportsSource } from './wgsl-sdf-supports.ts';
 import { SDF_FIELDS_WGSL } from './wgsl-sdf-fields.ts';
 import { SPHERE_FEATURE } from './layout.ts';
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
 /** Standalone Algorithm 1 pass: one invocation per pair, four cached + one new
  * candidate, independent per-point normals.
  */
-export const sdfNarrowphaseWGSL = /* wgsl */ `
+/** sdfNarrowphaseWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfNarrowphaseSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 struct Params { counts: vec4u, values: vec4f, distances: vec4f, flags: vec4u }
 struct Body { position: vec4f, rotation: vec4f, velocity: vec4f, omega: vec4f, lo: vec4f, hi: vec4f, anchorRotation: vec4f }
 struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 @group(0) @binding(0) var<uniform> params: Params;
 @group(0) @binding(1) var<storage,read> atlas: array<vec4u>;
 @group(0) @binding(2) var<storage,read> bodies: array<Body>;
@@ -107,7 +109,7 @@ fn addPoint(old: Point, seed: vec3f, cached: bool) {
     vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0));
   work.points[work.identity.w]=point; work.identity.w++;
 }
-${SDF_SUPPORTS_WGSL}
+${sdfSupportsSource(maxPoints)}
 @compute @workgroup_size(64)
 fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   let slot=invocation.x; if(slot>=params.counts.x) { return; }
@@ -126,7 +128,7 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
     let old=previous[pair.w];
     if(all(old.identity.xyz==pair.xyz)) {
       work.stats.z=old.stats.z;
-      for(var i=0u;i<min(old.identity.w,4u);i++) {
+      for(var i=0u;i<min(old.identity.w,${maxPoints - 1}u);i++) {
         let point=old.points[i];
         if(point.flags.z>=0x40000000u) { continue; }
         if(cached>=params.counts.z) { break; }
@@ -159,3 +161,4 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   results[slot]=work;
 }
 `;
+export const sdfNarrowphaseWGSL = sdfNarrowphaseSource();

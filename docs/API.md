@@ -75,7 +75,8 @@ renderer.setAnimationLoop(() => {
 
 `await world.enableSdfCollisions([{ body, field, scale?, rotation? }], params?, broadphase?)` installs SDF
 collisions for allocated body slots. Unassigned boxes/spheres use
-analytic fields. The spatial grid accepts optional `{ cellSize, maxPairs, autoGrow }`;
+analytic fields. The spatial grid accepts optional `{ cellSize, maxPairs, autoGrow, maxPointsPerPair }`;
+`maxPointsPerPair` (default 5, at most 20) bounds `cacheSize ≤ points−1` and `cacheSize + randomSamples ≤ points`;
 World grows capacity after overflow unless `autoGrow: false`. Overflowing frames
 remain incomplete; `adaptSdfCollisions()` can explicitly check/grow capacity.
 GPU bounds, collision masks and joint exclusions select candidates;

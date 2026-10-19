@@ -1,11 +1,11 @@
 // Internal collision replacement, with spatial automatic or explicit candidate pairs.
 import type { Field } from '../ref/sdf/shapes.ts';
 import { collisionParams, type CollisionParams } from '../ref/sdf/manifold.ts';
-import { packSdfPairs, packSdfParams, SDF_RESULT_WORDS, type SdfPair } from './sdf-layout.ts';
+import { packSdfPairs, packSdfParams, checkSdfPointCapacity, sdfResultWords, SDF_MAX_POINTS, type SdfPair } from './sdf-layout.ts';
 import { SdfSpatialBroadphase, sdfBroadphaseOptions, type SdfBroadphaseOptions } from './sdf-broadphase.ts';
 import { SdfNarrowphasePass } from './sdf-pass.ts';
 import type { GpuSolver3D, GpuCollisionBackend3D, GpuCollisionContext3D } from './solver.ts';
-import { sdfPrepareWGSL, sdfExportWGSL, sdfFilterWGSL, sdfEventsWGSL } from './wgsl-sdf-bridge.ts';
+import { sdfPrepareWGSL, sdfExportSource, sdfFilterWGSL, sdfEventsSource } from './wgsl-sdf-bridge.ts';
 
 import { Raycaster, type Ray } from '../../lib/raycast.ts';
 import { sdfRaycastWGSL, sdfRayLipschitz } from './sdf-raycast.ts';
@@ -46,10 +46,11 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
     if(solver.isDestroyed) throw new Error('SDF solver was destroyed');
     if(!bodies.length || bodies.length!==solver.bodyCount) throw new Error('SDF bridge requires a field for every GPU body slot');
     const size=sdfBroadphaseOptions(solver.device,bodies,options);
-    solver.reserveCollisionCapacity(size.maxPairs*5);
+    solver.reserveCollisionCapacity(size.maxPairs*size.maxPoints);
     return this.create(solver,bodies,[],params,size);
   }
-  static async create(solver: GpuSolver3D, bodies: readonly SdfBridgeBody[], pairs: readonly SdfBridgePair[], params: Partial<CollisionParams> = {}, spatialSize?: ReturnType<typeof sdfBroadphaseOptions>): Promise<SdfCollisionBridge> {
+  /** `maxPoints` (points per pair result, default 5) applies to explicit pairs; spatial sizes carry their own. */
+  static async create(solver: GpuSolver3D, bodies: readonly SdfBridgeBody[], pairs: readonly SdfBridgePair[], params: Partial<CollisionParams> = {}, spatialSize?: ReturnType<typeof sdfBroadphaseOptions>, maxPoints: number = SDF_MAX_POINTS): Promise<SdfCollisionBridge> {
     if(solver.isDestroyed) throw new Error('SDF solver was destroyed');
     if(bodies.length!==solver.bodyCount || !bodies.length) throw new Error('SDF bridge requires a field for every GPU body slot');
     if(Math.ceil(bodies.length/64)>solver.device.limits.maxComputeWorkgroupsPerDimension) throw new Error('SDF body preparation exceeds workgroup limit');
@@ -58,10 +59,11 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
     for (const body of bodies) if (body.rotation && (body.rotation.length !== 4 || !body.rotation.every(Number.isFinite) || Math.abs(Math.hypot(...body.rotation)-1)>1e-5)) throw new Error('SDF field rotation must be a unit quaternion');
     const collision={...collisionParams(),...params};
     if(!Number.isFinite(Math.fround(collision.allowedPenetration)) || collision.allowedPenetration<0) throw new Error('Invalid SDF allowed penetration');
-    packSdfParams(pairs.length,0,solver.params.dt,collision);
+    const points=checkSdfPointCapacity(spatialSize?.maxPoints??maxPoints);
+    packSdfParams(pairs.length,0,solver.params.dt,collision,points);
     const maxPairs=spatialSize?.maxPairs??Math.max(1,pairs.length);
-    if(maxPairs*5>Math.min(solver.contactCapacity,solver.manifoldCapacity)) throw new Error('SDF bridge requires capacity for five contacts/manifolds per candidate pair');
-    const sdf=await SdfNarrowphasePass.create(solver.device,bodies.map(b=>b.field),{maxBodies:bodies.length,maxPairs,meshVertexContacts:collision.meshVertexContacts});
+    if(maxPairs*points>Math.min(solver.contactCapacity,solver.manifoldCapacity)) throw new Error(`SDF bridge requires capacity for ${points} contacts/manifolds per candidate pair`);
+    const sdf=await SdfNarrowphasePass.create(solver.device,bodies.map(b=>b.field),{maxBodies:bodies.length,maxPairs,meshVertexContacts:collision.meshVertexContacts,maxPoints:points});
     let spatial:SdfSpatialBroadphase|null=null;
     try {
       const compile=async(code:string,entryPoint:string)=>{
@@ -71,9 +73,9 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
         return solver.device.createComputePipelineAsync({layout:'auto',compute:{module,entryPoint}});
       };
       const prepare=await compile(sdfPrepareWGSL,'prepare');
-      const output=await compile(sdfExportWGSL,'exportContacts');
+      const output=await compile(sdfExportSource(points),'exportContacts');
       const filter=await compile(sdfFilterWGSL,'filterPairs');
-      const events=await compile(sdfEventsWGSL,'reportPairs');
+      const events=await compile(sdfEventsSource(points),'reportPairs');
       if(spatialSize)spatial=await SdfSpatialBroadphase.create(solver.device,bodies.length,spatialSize);
       if(solver.isDestroyed) throw new Error('SDF solver was destroyed during setup');
       return new SdfCollisionBridge(solver,bodies,pairs,collision,sdf,prepare,output,filter,events,spatial);
@@ -125,9 +127,9 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
   prepare(solver: GpuSolver3D): void {
     if(this.disposed || solver!==this.solver) throw new Error('Invalid SDF bridge owner/lifecycle');
     if(solver.bodyCount!==this.sdf.options.maxBodies) throw new Error('Recreate SDF bridge after changing body slots');
-    if((this.spatial?this.sdf.options.maxPairs:this.pairs.length)*5>Math.min(solver.contactCapacity,solver.manifoldCapacity)) throw new Error('Insufficient SDF solver contact capacity');
+    if((this.spatial?this.sdf.options.maxPairs:this.pairs.length)*this.sdf.maxPoints>Math.min(solver.contactCapacity,solver.manifoldCapacity)) throw new Error('Insufficient SDF solver contact capacity');
     if(!Number.isFinite(Math.fround(this.params.allowedPenetration)) || this.params.allowedPenetration<0) throw new Error('Invalid SDF allowed penetration');
-    packSdfParams(this.pairs.length,0,solver.params.dt,this.params);
+    packSdfParams(this.pairs.length,0,solver.params.dt,this.params,this.sdf.maxPoints);
   }
   encode(pass: GPUComputePassEncoder, context: GpuCollisionContext3D): void {
     pass.setPipeline(this.preparePipeline); pass.setBindGroup(0,this.prepareGroup);
@@ -188,7 +190,7 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
     if(this.disposed||!this.spatial)throw new Error('SDF growth requires an active spatial bridge');
     if(!Number.isSafeInteger(required)||required<=this.capacity)throw new Error('Invalid SDF requested capacity');
     const limit=Math.min(this.solver.device.limits.maxBufferSize,this.solver.device.limits.maxStorageBufferBindingSize);
-    let capacity=Math.max(required,Math.min(this.capacity*2,Math.floor(limit/(SDF_RESULT_WORDS*4))));
+    let capacity=Math.max(required,Math.min(this.capacity*2,Math.floor(limit/(sdfResultWords(this.sdf.maxPoints)*4))));
     let spatial:SdfSpatialBroadphase;
     try {spatial=this.spatial.resized(capacity);}
     catch(error) {
@@ -198,7 +200,7 @@ export class SdfCollisionBridge implements GpuCollisionBackend3D {
     let sdf:SdfNarrowphasePass|undefined,bridge:SdfCollisionBridge|undefined;
     try {
       sdf=this.sdf.resized(capacity);
-      this.solver.reserveCollisionCapacity(capacity*5);
+      this.solver.reserveCollisionCapacity(capacity*this.sdf.maxPoints);
       bridge=new SdfCollisionBridge(this.solver,this.bindings,[],{...this.params},sdf,
         this.preparePipeline,this.exportPipeline,this.filterPipeline,this.eventPipeline,spatial);
       bridge.inheritHistory(this,Array(this.bindings.length).fill(true));
