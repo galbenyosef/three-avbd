@@ -86,8 +86,11 @@ export const K_RA = 0; // body-local anchor on A, w: key (feature | STICK_BIT, u
 export const K_RB = 4; // body-local anchor on B, w: C0 normal
 export const K_PEN = 8; // penalty xyz, w: C0 tangent 1
 export const K_LAM = 12; // lambda xyz, w: C0 tangent 2
-/** Static friction held last step (features use bits 0-25). */
+/** Static friction held last step. Built-in features use bits 0-25; SDF point ids bits 0-28
+ * (vertex contacts also 27 and 30); SDF_ROLLING_BIT is 29. */
 export const STICK_BIT = 0x80000000;
+/** Feature key of every built-in sphere contact; SDF point ids skip this value. */
+export const SPHERE_FEATURE = 3 << 24;
 /** SDF contact on a rolling analytic body: lever arms use the step-start rotation (wgsl-solve.ts). */
 export const SDF_ROLLING_BIT = 0x20000000;
 
@@ -155,7 +158,7 @@ const STICK_BIT = ${STICK_BIT}u;
 const C_MANIFOLDS = ${C_MANIFOLDS}u;
 const C_PREV_MANIFOLDS = ${C_PREV_MANIFOLDS}u;
 /** Feature key of every contact involving a sphere (one contact per pair). */
-const SPHERE_FEATURE = 3u << 24u;
+const SPHERE_FEATURE = ${SPHERE_FEATURE}u;
 // SDF contact on a rolling analytic body (sphere..torus): evaluate lever arms at the step-start
 // rotation, like SPHERE_FEATURE. Ordinary SDF ids stay below it; built-in features never set it.
 const SDF_ROLLING_BIT = ${SDF_ROLLING_BIT}u;

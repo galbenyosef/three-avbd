@@ -38,8 +38,9 @@ numeric IDs, avoiding subnormal flush and float-ID precision problems.
 - Atlas header: 8 vec4 records; kind/convex/seed offset/count; grid offset/dimensions;
   bounds min/cell; bounds max; COM; two analytic parameter records; voxel origin.
   The following records hold optional float4 grid nodes and vec4 seed positions.
-- Body: 6 vec4 records; COM position/uniform scale, quaternion, linear velocity/static
-  flag, angular velocity/header uint32 bits, world bounds min/max.
+- Body: 7 vec4 records; COM position/uniform scale, field quaternion, linear velocity/static
+  flag, angular velocity/header uint32 bits, world bounds min/max, and the anchor rotation
+  (field frame to production body frame; identity for the standalone pass).
 - Pair: 4 uint32s; body A, body B, stable pair key, prior result slot or `0xffffffff`.
   Pairs must have unique keys. Keep body ordering consistent. Change keys when
   body slots are reused. Prior slots may explicitly remap reordered pairs.
@@ -47,8 +48,11 @@ numeric IDs, avoiding subnormal flush and float-ID precision problems.
 - Result: 108 words (432 bytes); identity/count, query/iteration/next-ID counters,
   then five 20-word point records. Each point stores optimizer position/depth,
   world normal/separation, body-A anchor/softmax, body-B anchor/rank, and uint32
-  active/cached/persistent-ID flags. Anchors are offsets from COM in rotated body
-  coordinates, **already in world-length units**, not unscaled field coordinates.
+  active/cached/persistent-ID flags. Anchors are body-local offsets from COM in the
+  production body frame (field frame rotated by the anchor rotation), **already in
+  world-length units**, not unscaled field coordinates. Persistent ids stay below
+  `SDF_ROLLING_BIT` (0x20000000) and skip `SPHERE_FEATURE` (0x03000000); opt-in vertex
+  contacts use `0x40000000 | side << 27 | vertex`.
 
 Only `active` points are contact constraints; inactive ranked samples still belong
 in the next search cache. No friction/normal impulses are solved or transported by

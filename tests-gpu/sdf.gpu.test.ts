@@ -242,3 +242,20 @@ gpuTest('signed SDF static-box separation stays bounded where the moving gradien
     assert.ok(mixed>0,'exercise mixed samples');
   }finally{pass.destroy();}
 });
+
+gpuTest('SDF point ids skip the built-in SPHERE_FEATURE key', async device=>{
+  const {SPHERE_FEATURE}=await import('../src/avbd3d/gpu/layout.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});a.seeds=[];b.seeds=[];
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[0,.95,0])];
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  const params={...collisionParams(),cacheSize:0,randomSamples:1,maxIterations:1};
+  try {
+    pass.step(bodies,[{a:0,b:1,key:1}],0,params);await pass.readResults();
+    // Result slot 0, stats.z (word 6) is the per-pair id counter the next step continues from.
+    device.queue.writeBuffer(pass.storage.current,6*4,new Uint32Array([SPHERE_FEATURE-1]));
+    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,params);
+    const [result]=await pass.readResults();
+    assert.equal(result.points.length,1);
+    assert.equal(result.points[0].id,SPHERE_FEATURE+1,'the next new id steps over SPHERE_FEATURE');
+  }finally{pass.destroy();}
+});
