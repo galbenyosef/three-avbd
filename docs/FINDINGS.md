@@ -2,6 +2,69 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Paper Fig. 6: cache size dominates penetration; curvature gain not reproduced
+
+`scripts/sdf-fig6.ts` drops the released bunny (scale 1) and cow (scale 1.3) onto the ground plane
+from 100 deterministic random orientations (uniform on SO(3), identical across configurations).
+Each starts with its lowest vertex 0.25 m up. Runs use 500 frames with 4 substeps and 20 iterations
+on the production GPU path, with the released (paper-default) parameters.
+
+The sweep covers n_cache ∈ {4, 8, 16} × n_sto ∈ {1, 4} × uniform/curvature sampling, using
+`maxPointsPerPair` = max(5, n_cache + n_sto). All 100 rollouts of a configuration share one World,
+spaced so only body–ground pairs exist.
+
+Two metrics are recorded per frame and rollout:
+- **Penetration:** the lowest source-mesh vertex below the plane, which is exact for a plane.
+- **Intrusion:** depth below the solver's 1 cm rest gap, which separates configurations even when no
+  geometry overlaps.
+
+Tables report the mean over frames of the per-frame mean across rollouts, and the peak over frames
+of the per-frame maximum across rollouts. All values are in mm.
+
+| Shape | Sampling | n_cache | n_sto | Mean penetration | Peak penetration | Mean intrusion | Peak intrusion |
+|---|---|---|---|---|---|---|---|
+| bunny | uniform | 4 | 1 | 0.511 | 78.2 | 2.63 | 88.2 |
+| bunny | uniform | 4 | 4 | 0.005 | 5.9 | 1.25 | 15.9 |
+| bunny | uniform | 8 | 1 | 0.003 | 3.0 | 1.08 | 13.0 |
+| bunny | uniform | 8 | 4 | 0.000 | 0.0 | 1.02 | 3.8 |
+| bunny | uniform | 16 | 1 | 0.000 | 0.0 | 1.03 | 6.7 |
+| bunny | uniform | 16 | 4 | 0.000 | 0.0 | 1.10 | 3.1 |
+| bunny | curvature | 4 | 1 | 0.477 | 64.4 | 2.52 | 74.4 |
+| bunny | curvature | 4 | 4 | 0.017 | 5.9 | 1.32 | 15.9 |
+| bunny | curvature | 8 | 1 | 0.003 | 3.0 | 1.09 | 13.0 |
+| bunny | curvature | 8 | 4 | 0.000 | 0.0 | 1.03 | 3.8 |
+| bunny | curvature | 16 | 1 | 0.000 | 0.0 | 1.03 | 6.7 |
+| bunny | curvature | 16 | 4 | 0.000 | 0.0 | 1.10 | 3.2 |
+| cow | uniform | 4 | 1 | 3.810 | 300.0 | 7.59 | 310.0 |
+| cow | uniform | 4 | 4 | 0.234 | 82.1 | 2.65 | 92.1 |
+| cow | uniform | 8 | 1 | 0.170 | 69.5 | 1.78 | 79.5 |
+| cow | uniform | 8 | 4 | 0.000 | 2.2 | 1.00 | 12.2 |
+| cow | uniform | 16 | 1 | 0.001 | 4.2 | 1.06 | 14.2 |
+| cow | uniform | 16 | 4 | 0.000 | 0.0 | 0.96 | 10.0 |
+| cow | curvature | 4 | 1 | 3.684 | 334.7 | 7.94 | 344.7 |
+| cow | curvature | 4 | 4 | 0.586 | 101.1 | 3.03 | 111.1 |
+| cow | curvature | 8 | 1 | 0.134 | 35.3 | 1.62 | 45.3 |
+| cow | curvature | 8 | 4 | 0.001 | 5.9 | 1.03 | 15.9 |
+| cow | curvature | 16 | 1 | 0.001 | 4.2 | 1.09 | 14.2 |
+| cow | curvature | 16 | 4 | 0.000 | 0.0 | 0.97 | 10.0 |
+
+- **Reproduced: cache size dominates.** Going from n_cache 4 → 8 → 16 cuts mean penetration by
+  roughly 100× and then 100× again. Bunny goes 0.51 → 0.003 → 0 mm; cow goes 3.8 → 0.17 → 0.001 mm.
+  Four stochastic samples help most at small caches. This matches the paper's statement that
+  "sample caching exerts the most profound impact".
+- **Not reproduced: curvature sampling.** Curvature-aware sampling is only marginally better at
+  n_cache 4 / n_sto 1 (bunny 0.48 vs 0.51 mm, cow 3.68 vs 3.81 mm). It is *worse* for the cow at
+  n_cache 4 / n_sto 4 (0.59 vs 0.23 mm). The paper reports it "significantly suppresses
+  interpenetration".
+- **The release default is the weak case.** n_cache 4 / n_sto 1, the released default, lets a cow
+  sink up to 300 mm in the worst rollout. These runs use the released parameters without our
+  mesh-quality corrections, as the paper's experiment does.
+- **Not reproduced: the oracle and the paper's exact setup.** The paper's 1000-point brute-force
+  oracle simulation is a different collision method and is not reproduced. The paper's drop height,
+  frame count and averaging (mean vs max over rollouts) are unstated; both aggregates are stored.
+
+Measurements: `measurements/sdf-fig6-2026-10-18.json`, which holds per-frame curves for every run.
+
 ## 2026-10-18 — Paper Table 5 (Nelder–Mead rows): counts reproduced per pair
 
 `scripts/sdf-table5.ts` runs the operator-distorted Falling Boxes scenes on the GPU with the
