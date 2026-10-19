@@ -5,7 +5,7 @@ import { AnalyticField } from '../src/avbd3d/ref/sdf/shapes.ts';
 import { VoxelField } from '../src/avbd3d/ref/sdf/voxel.ts';
 import { SdfBody } from '../src/avbd3d/ref/sdf/body.ts';
 import { collisionParams } from '../src/avbd3d/ref/sdf/manifold.ts';
-import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, SDF_RESULT_WORDS, SDF_NO_CACHE } from '../src/avbd3d/gpu/sdf-layout.ts';
+import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, sdfResultWords, SDF_RESULT_WORDS, SDF_NO_CACHE } from '../src/avbd3d/gpu/sdf-layout.ts';
 import { sdfRayLipschitz } from '../src/avbd3d/gpu/sdf-raycast.ts';
 import { SdfNarrowphasePass } from '../src/avbd3d/gpu/sdf-pass.ts';
 
@@ -126,4 +126,21 @@ test('SDF ray slope bounds cover warped gradients and use the immutable atlas sn
     field.spec.kind==='warp'&&(field.spec.k=100);
     assert.equal(sdfRayLipschitz(atlas,0),bound,'user field mutation cannot alter packed bound');
   }
+});
+
+test('GPU SDF point capacity scales parameter bounds and result decoding',()=>{
+  const params=collisionParams();
+  // Default capacity: four cached plus one sample, unchanged.
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:5}));
+  // The paper's widest sweep (16 cached + 4 samples) needs a 20-point pass.
+  assert.doesNotThrow(()=>packSdfParams(1,0,.01,{...params,cacheSize:16,randomSamples:4},20));
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:17,randomSamples:4},20),/at most 19 cached\/20 total/);
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:20,randomSamples:0},20),/at most 19 cached/);
+  for(const bad of [1,21,4.5])assert.throws(()=>packSdfParams(1,0,.01,params,bad),/point capacity/);
+  assert.equal(sdfResultWords(),SDF_RESULT_WORDS);assert.equal(sdfResultWords(20),8+20*20);
+  const words=sdfResultWords(20),buffer=new ArrayBuffer(2*words*4),u=new Uint32Array(buffer);
+  u[3]=0;u[words+3]=12;for(let j=0;j<12;j++)u[words+8+j*20+18]=100+j;
+  const [first,second]=decodeSdfResults(buffer,2,20);
+  assert.equal(first.points.length,0);assert.deepEqual(second.points.map(p=>p.id),Array.from({length:12},(_,j)=>100+j));
+  u[words+3]=21;assert.throws(()=>decodeSdfResults(buffer,2,20),/count/);
 });

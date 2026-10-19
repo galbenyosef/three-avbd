@@ -1,8 +1,8 @@
 import type { Field } from '../ref/sdf/shapes.ts';
 import type { GpuCollisionContext3D } from './solver.ts';
 import type { SdfNarrowphasePass } from './sdf-pass.ts';
-import { SDF_RESULT_WORDS } from './sdf-layout.ts';
-import { sdfBroadphaseWGSL } from './wgsl-sdf-broadphase.ts';
+import { checkSdfPointCapacity, sdfResultWords, SDF_MAX_POINTS } from './sdf-layout.ts';
+import { sdfBroadphaseSource } from './wgsl-sdf-broadphase.ts';
 
 export interface SdfBroadphaseOptions {
   /** Grid cell width in world units; default is median field bounding diagonal. */
@@ -12,11 +12,15 @@ export interface SdfBroadphaseOptions {
   maxPairs?: number;
   /** World periodically grows capacity after overflow (default true). */
   autoGrow?: boolean;
+  /** Points per pair result (default 5, at most 20): the cache-size and sample budget
+   * ceiling (cache ≤ points−1). Larger values cost memory and solver contact capacity. */
+  maxPointsPerPair?: number;
 }
 const powerOfTwo=(n:number)=>2**Math.ceil(Math.log2(Math.max(2,n)));
 export function sdfBroadphaseOptions(device:GPUDevice,bodies:readonly {field:Field;scale?:number}[],options:SdfBroadphaseOptions) {
   const n=bodies.length, limit=Math.min(device.limits.maxBufferSize,device.limits.maxStorageBufferBindingSize);
-  const maximum=Math.min(Math.floor(limit/(SDF_RESULT_WORDS*4)),device.limits.maxComputeWorkgroupsPerDimension*64);
+  const maxPoints=checkSdfPointCapacity(options.maxPointsPerPair??SDF_MAX_POINTS);
+  const maximum=Math.min(Math.floor(limit/(sdfResultWords(maxPoints)*4)),device.limits.maxComputeWorkgroupsPerDimension*64);
   const maxPairs=options.maxPairs??Math.max(1,Math.min(n*(n-1)/2,Math.max(64,n*8),maximum));
   const sizes=bodies.map(b=>Math.hypot(...b.field.bounds.max.map((v,i)=>v-b.field.bounds.min[i]))*(b.scale??1)).sort((a,b)=>a-b);
   const cellSize=Math.fround(options.cellSize??sizes[Math.floor(n/2)]);
@@ -25,7 +29,7 @@ export function sdfBroadphaseOptions(device:GPUDevice,bodies:readonly {field:Fie
   const tableSize=powerOfTwo(n*2), cacheSize=powerOfTwo(maxPairs*2);
   const words=tableSize+n+4+cacheSize;
   if(words*4>limit||Math.ceil(Math.max(words,maxPairs)/64)>device.limits.maxComputeWorkgroupsPerDimension)throw new Error('SDF spatial grid exceeds device limits');
-  return {maxPairs,cellSize,tableSize,cacheSize,words};
+  return {maxPairs,maxPoints,cellSize,tableSize,cacheSize,words};
 }
 export class SdfSpatialBroadphase {
   private readonly grid:GPUBuffer;
@@ -37,7 +41,7 @@ export class SdfSpatialBroadphase {
   private readonly bodyCount:number;
   private disposed=false;
   static async create(device:GPUDevice,bodyCount:number,size:ReturnType<typeof sdfBroadphaseOptions>) {
-    const module=device.createShaderModule({label:'sdf spatial broadphase',code:sdfBroadphaseWGSL});
+    const module=device.createShaderModule({label:'sdf spatial broadphase',code:sdfBroadphaseSource(size.maxPoints)});
     const info=await module.getCompilationInfo(),errors=info.messages.filter(m=>m.type==='error');
     if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
     const types:GPUBufferBindingType[]=['uniform','uniform','read-only-storage','storage','storage','read-only-storage','read-only-storage','read-only-storage','read-only-storage','storage'];
@@ -56,7 +60,7 @@ export class SdfSpatialBroadphase {
   resized(maxPairs:number): SdfSpatialBroadphase {
     const cacheSize=powerOfTwo(maxPairs*2),words=this.size.tableSize+this.bodyCount+4+cacheSize;
     const limit=Math.min(this.device.limits.maxBufferSize,this.device.limits.maxStorageBufferBindingSize);
-    if(!Number.isSafeInteger(maxPairs)||maxPairs<this.size.maxPairs||maxPairs*SDF_RESULT_WORDS*4>limit||
+    if(!Number.isSafeInteger(maxPairs)||maxPairs<this.size.maxPairs||maxPairs*sdfResultWords(this.size.maxPoints)*4>limit||
       words*4>limit||Math.ceil(Math.max(words,maxPairs)/64)>this.device.limits.maxComputeWorkgroupsPerDimension)
       throw new Error('SDF growth exceeds device limits');
     return new SdfSpatialBroadphase(this.device,this.bodyCount,{...this.size,maxPairs,cacheSize,words},this.layout,this.pipelines);

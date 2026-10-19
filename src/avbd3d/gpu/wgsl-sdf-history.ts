@@ -1,7 +1,9 @@
 // Carry only history belonging to unchanged body/field slots into a replacement pass.
-export const sdfHistoryWGSL = /* wgsl */ `
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
+/** sdfHistoryWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfHistorySource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 @group(0) @binding(0) var<storage,read> source: array<Result>;
 @group(0) @binding(1) var<storage,read_write> destination: array<Result>;
 @group(0) @binding(2) var<storage,read> retained: array<u32>;
@@ -14,3 +16,4 @@ struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
   if(retained[p.x]!=0u&&retained[p.y]!=0u) { destination[i]=source[i]; }
 }
 `;
+export const sdfHistoryWGSL = sdfHistorySource();

@@ -273,3 +273,21 @@ gpuTest('World SDF tilted cylinder and capsule tumble onto an edge and stay at r
     } finally {world.destroy();}
   }
 });
+
+gpuTest('World SDF point capacity runs the paper widest cache sweep (16 cached + 4 samples)', async device=>{
+  const world=await World.create({device,maxBodies:2});
+  world.addBox({size:[20,.4,20],position:[0,-.2,0],fixed:true});
+  // A tilted torus offers many separate contact patches against the floor.
+  const body=world.addBox({size:[1,1,1],position:[0,.45,0],rotation:[.2,0,0,Math.sqrt(1-.04)],massProperties:{mass:1,moments:[.1,.2,.1]}})!;
+  await world.enableSdfCollisions([{body,field:new AnalyticField({kind:'torus',majorRadius:.4,minorRadius:.15})}],
+    {cacheSize:16,randomSamples:4},{maxPointsPerPair:20});
+  try {
+    let most=0;
+    for(let frame=0;frame<120;frame++){world.step();if(frame%20===19){const [r]=await world.readSdfResults();most=Math.max(most,r?.points.length??0);}}
+    await world.read();
+    assert.ok(most>5,`results exceed the default 5-point capacity (${most})`);
+    assert.ok(most<=20);
+    assert.ok(body.position.every(Number.isFinite)&&body.position[1]>.1,`torus rests on the floor (${body.position[1]})`);
+    await assert.rejects(async()=>{const w=await World.create({device,maxBodies:1});try{w.addBox({size:[1,1,1],position:[0,0,0]});await w.enableSdfCollisions([],{cacheSize:16,randomSamples:4});}finally{w.destroy();}},/at most 4 cached\/5 total/);
+  } finally {world.destroy();}
+});
