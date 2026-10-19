@@ -1,0 +1,624 @@
+{
+  "paper": "Giles & Andrews 2026, Table 5 SGD rows",
+  "reference": "sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e",
+  "frames": 360,
+  "method": "upstream oracle `scene INDEX 360 [k]` with OPT=2 and SGDV=variant, built from the pinned sources with sdf-sgd-variants-2026-10-18.patch applied (scratch build; not committed to tools/). Variant 0 output is byte-identical to the unpatched SGD run. Ratio: SGD iterations per pair divided by the unpatched Nelder-Mead iterations per pair of the same configuration.",
+  "variants": [
+    {
+      "variant": 0,
+      "description": "released: step and noise decay 1/sqrt(k+1); stop on |grad|<tau or |dx|<tau",
+      "meanRatio": 0.48315772228945686,
+      "meanIterations": 1088.4474305555555,
+      "meanContacts": 40.028055555555554,
+      "rows": [
+        {
+          "name": "Undistorted",
+          "contacts": 45.452777777777776,
+          "pairs": 21.947222222222223,
+          "iterations": 340.0027777777778,
+          "queries": 559.3569444444445,
+          "ratioToNelderMead": 0.41156268843580474,
+          "paper": {
+            "contacts": 52.2,
+            "iterations": 5269,
+            "ratioToNelderMead": 4.942776735459662
+          }
+        },
+        {
+          "name": "BEND 0.15",
+          "contacts": 37.55833333333333,
+          "pairs": 36.202777777777776,
+          "iterations": 819.2986111111111,
+          "queries": 1181.2375,
+          "ratioToNelderMead": 0.4082292852791854,
+          "paper": {
+            "contacts": 49.8,
+            "iterations": 8166,
+            "ratioToNelderMead": 3.4181665969024695
+          }
+        },
+        {
+          "name": "BEND 0.55",
+          "contacts": 46.830555555555556,
+          "pairs": 40.81111111111111,
+          "iterations": 1003.08125,
+          "queries": 1410.798611111111,
+          "ratioToNelderMead": 0.4233416234356025,
+          "paper": {
+            "contacts": 40.5,
+            "iterations": 8054,
+            "ratioToNelderMead": 3.43307757885763
+          }
+        },
+        {
+          "name": "BEND 0.95",
+          "contacts": 43.175,
+          "pairs": 42.11666666666667,
+          "iterations": 1247.0541666666666,
+          "queries": 1666.9652777777778,
+          "ratioToNelderMead": 0.4825636461482515,
+          "paper": {
+            "contacts": 43.7,
+            "iterations": 7557,
+            "ratioToNelderMead": 2.659042927515834
+          }
+        },
+        {
+          "name": "DISPLACE 0.05",
+          "contacts": 34.02777777777778,
+          "pairs": 26.469444444444445,
+          "iterations": 484.23819444444445,
+          "queries": 748.8673611111111,
+          "ratioToNelderMead": 0.37801842883785514,
+          "paper": {
+            "contacts": 42.3,
+            "iterations": 6506,
+            "ratioToNelderMead": 3.8113649677797303
+          }
+        },
+        {
+          "name": "DISPLACE 0.10",
+          "contacts": 33.66111111111111,
+          "pairs": 26.302777777777777,
+          "iterations": 401.5472222222222,
+          "queries": 664.4215277777778,
+          "ratioToNelderMead": 0.2857821359421608,
+          "paper": {
+            "contacts": 41.6,
+            "iterations": 6734,
+            "ratioToNelderMead": 3.618484685652875
+          }
+        },
+        {
+          "name": "DISPLACE 0.20",
+          "contacts": 36.43888888888889,
+          "pairs": 36.61666666666667,
+          "iterations": 543.1319444444445,
+          "queries": 909.0881944444444,
+          "ratioToNelderMead": 0.23291514451995146,
+          "paper": {
+            "contacts": 41.5,
+            "iterations": 7992,
+            "ratioToNelderMead": 3.4300429184549355
+          }
+        },
+        {
+          "name": "TWIST 0.50",
+          "contacts": 46.82222222222222,
+          "pairs": 44.361111111111114,
+          "iterations": 1049.3479166666666,
+          "queries": 1492.6055555555556,
+          "ratioToNelderMead": 0.41469478016575273,
+          "paper": {
+            "contacts": 47.8,
+            "iterations": 8635,
+            "ratioToNelderMead": 2.731730465042708
+          }
+        },
+        {
+          "name": "TWIST 2.50",
+          "contacts": 36.25277777777778,
+          "pairs": 43.43055555555556,
+          "iterations": 1839.7125,
+          "queries": 2267.9715277777777,
+          "ratioToNelderMead": 0.6414315861232817,
+          "paper": {
+            "contacts": 52.8,
+            "iterations": 9636,
+            "ratioToNelderMead": 2.8729874776386404
+          }
+        },
+        {
+          "name": "TWIST 5.00",
+          "contacts": 40.06111111111111,
+          "pairs": 37.916666666666664,
+          "iterations": 3157.0597222222223,
+          "queries": 3514.425,
+          "ratioToNelderMead": 1.1530379040067227,
+          "paper": {
+            "contacts": 50.6,
+            "iterations": 8526,
+            "ratioToNelderMead": 3.1082756106452787
+          }
+        }
+      ]
+    },
+    {
+      "variant": 1,
+      "description": "fixed step and noise (no decay)",
+      "meanRatio": 2.1540762476576334,
+      "meanIterations": 4632.221597222222,
+      "meanContacts": 42.17666666666666,
+      "rows": [
+        {
+          "name": "Undistorted",
+          "contacts": 43.391666666666666,
+          "pairs": 18.988888888888887,
+          "iterations": 1546.1277777777777,
+          "queries": 1724.9125,
+          "ratioToNelderMead": 2.1631115728284587,
+          "paper": {
+            "contacts": 52.2,
+            "iterations": 5269,
+            "ratioToNelderMead": 4.942776735459662
+          }
+        },
+        {
+          "name": "BEND 0.15",
+          "contacts": 42.93888888888889,
+          "pairs": 38.105555555555554,
+          "iterations": 4290.904861111111,
+          "queries": 4624.892361111111,
+          "ratioToNelderMead": 2.031254872481993,
+          "paper": {
+            "contacts": 49.8,
+            "iterations": 8166,
+            "ratioToNelderMead": 3.4181665969024695
+          }
+        },
+        {
+          "name": "BEND 0.55",
+          "contacts": 45.925,
+          "pairs": 44.77777777777778,
+          "iterations": 5506.336805555556,
+          "queries": 5890.4430555555555,
+          "ratioToNelderMead": 2.1180368557293985,
+          "paper": {
+            "contacts": 40.5,
+            "iterations": 8054,
+            "ratioToNelderMead": 3.43307757885763
+          }
+        },
+        {
+          "name": "BEND 0.95",
+          "contacts": 52.013888888888886,
+          "pairs": 45.65555555555556,
+          "iterations": 6212.01875,
+          "queries": 6588.059027777777,
+          "ratioToNelderMead": 2.2174937331763975,
+          "paper": {
+            "contacts": 43.7,
+            "iterations": 7557,
+            "ratioToNelderMead": 2.659042927515834
+          }
+        },
+        {
+          "name": "DISPLACE 0.05",
+          "contacts": 34.96944444444444,
+          "pairs": 26.008333333333333,
+          "iterations": 2863.6756944444446,
+          "queries": 3094.9166666666665,
+          "ratioToNelderMead": 2.2751501743961042,
+          "paper": {
+            "contacts": 42.3,
+            "iterations": 6506,
+            "ratioToNelderMead": 3.8113649677797303
+          }
+        },
+        {
+          "name": "DISPLACE 0.10",
+          "contacts": 37.23888888888889,
+          "pairs": 22.98611111111111,
+          "iterations": 2470.1555555555556,
+          "queries": 2675.922916666667,
+          "ratioToNelderMead": 2.0116798664436506,
+          "paper": {
+            "contacts": 41.6,
+            "iterations": 6734,
+            "ratioToNelderMead": 3.618484685652875
+          }
+        },
+        {
+          "name": "DISPLACE 0.20",
+          "contacts": 37.31111111111111,
+          "pairs": 38.40833333333333,
+          "iterations": 4381.831944444444,
+          "queries": 4719.707638888889,
+          "ratioToNelderMead": 1.7914366002236717,
+          "paper": {
+            "contacts": 41.5,
+            "iterations": 7992,
+            "ratioToNelderMead": 3.4300429184549355
+          }
+        },
+        {
+          "name": "TWIST 0.50",
+          "contacts": 52.00833333333333,
+          "pairs": 43.46111111111111,
+          "iterations": 4970.4111111111115,
+          "queries": 5351.046527777778,
+          "ratioToNelderMead": 2.0049473195200957,
+          "paper": {
+            "contacts": 47.8,
+            "iterations": 8635,
+            "ratioToNelderMead": 2.731730465042708
+          }
+        },
+        {
+          "name": "TWIST 2.50",
+          "contacts": 39.43888888888889,
+          "pairs": 42.68611111111111,
+          "iterations": 7145.36875,
+          "queries": 7456.346527777778,
+          "ratioToNelderMead": 2.534742364832486,
+          "paper": {
+            "contacts": 52.8,
+            "iterations": 9636,
+            "ratioToNelderMead": 2.8729874776386404
+          }
+        },
+        {
+          "name": "TWIST 5.00",
+          "contacts": 36.53055555555556,
+          "pairs": 40.13611111111111,
+          "iterations": 6935.384722222222,
+          "queries": 7230.430555555556,
+          "ratioToNelderMead": 2.3929091169440784,
+          "paper": {
+            "contacts": 50.6,
+            "iterations": 8526,
+            "ratioToNelderMead": 3.1082756106452787
+          }
+        }
+      ]
+    },
+    {
+      "variant": 2,
+      "description": "fixed step, decaying noise",
+      "meanRatio": 1.1523796871486571,
+      "meanIterations": 2682.419375,
+      "meanContacts": 40.25833333333333,
+      "rows": [
+        {
+          "name": "Undistorted",
+          "contacts": 44.625,
+          "pairs": 23.727777777777778,
+          "iterations": 788.0951388888889,
+          "queries": 1020.1222222222223,
+          "ratioToNelderMead": 0.8823780045687282,
+          "paper": {
+            "contacts": 52.2,
+            "iterations": 5269,
+            "ratioToNelderMead": 4.942776735459662
+          }
+        },
+        {
+          "name": "BEND 0.15",
+          "contacts": 40.07222222222222,
+          "pairs": 38.49722222222222,
+          "iterations": 2254.8791666666666,
+          "queries": 2620.835416666667,
+          "ratioToNelderMead": 1.056568631018932,
+          "paper": {
+            "contacts": 49.8,
+            "iterations": 8166,
+            "ratioToNelderMead": 3.4181665969024695
+          }
+        },
+        {
+          "name": "BEND 0.55",
+          "contacts": 44.16111111111111,
+          "pairs": 39.49166666666667,
+          "iterations": 2734.8395833333334,
+          "queries": 3097.667361111111,
+          "ratioToNelderMead": 1.1927781416398506,
+          "paper": {
+            "contacts": 40.5,
+            "iterations": 8054,
+            "ratioToNelderMead": 3.43307757885763
+          }
+        },
+        {
+          "name": "BEND 0.95",
+          "contacts": 45.56111111111111,
+          "pairs": 45.91388888888889,
+          "iterations": 2997.1666666666665,
+          "queries": 3421.529861111111,
+          "ratioToNelderMead": 1.063873742196302,
+          "paper": {
+            "contacts": 43.7,
+            "iterations": 7557,
+            "ratioToNelderMead": 2.659042927515834
+          }
+        },
+        {
+          "name": "DISPLACE 0.05",
+          "contacts": 33.06944444444444,
+          "pairs": 27.080555555555556,
+          "iterations": 978.4645833333333,
+          "queries": 1244.5458333333333,
+          "ratioToNelderMead": 0.7465970991624173,
+          "paper": {
+            "contacts": 42.3,
+            "iterations": 6506,
+            "ratioToNelderMead": 3.8113649677797303
+          }
+        },
+        {
+          "name": "DISPLACE 0.10",
+          "contacts": 33.11944444444445,
+          "pairs": 28.883333333333333,
+          "iterations": 934.23125,
+          "queries": 1218.9875,
+          "ratioToNelderMead": 0.6054902380598489,
+          "paper": {
+            "contacts": 41.6,
+            "iterations": 6734,
+            "ratioToNelderMead": 3.618484685652875
+          }
+        },
+        {
+          "name": "DISPLACE 0.20",
+          "contacts": 36.769444444444446,
+          "pairs": 36.9,
+          "iterations": 1921.3625,
+          "queries": 2268.4506944444443,
+          "ratioToNelderMead": 0.81762494292842,
+          "paper": {
+            "contacts": 41.5,
+            "iterations": 7992,
+            "ratioToNelderMead": 3.4300429184549355
+          }
+        },
+        {
+          "name": "TWIST 0.50",
+          "contacts": 46.297222222222224,
+          "pairs": 43.541666666666664,
+          "iterations": 1800.307638888889,
+          "queries": 2224.3819444444443,
+          "ratioToNelderMead": 0.7248583650059875,
+          "paper": {
+            "contacts": 47.8,
+            "iterations": 8635,
+            "ratioToNelderMead": 2.731730465042708
+          }
+        },
+        {
+          "name": "TWIST 2.50",
+          "contacts": 37.58888888888889,
+          "pairs": 37.522222222222226,
+          "iterations": 5796.8798611111115,
+          "queries": 6073.345138888889,
+          "ratioToNelderMead": 2.339384006088135,
+          "paper": {
+            "contacts": 52.8,
+            "iterations": 9636,
+            "ratioToNelderMead": 2.8729874776386404
+          }
+        },
+        {
+          "name": "TWIST 5.00",
+          "contacts": 41.31944444444444,
+          "pairs": 43.76111111111111,
+          "iterations": 6617.967361111111,
+          "queries": 6948.85,
+          "ratioToNelderMead": 2.0942437008179486,
+          "paper": {
+            "contacts": 50.6,
+            "iterations": 8526,
+            "ratioToNelderMead": 3.1082756106452787
+          }
+        }
+      ]
+    },
+    {
+      "variant": 3,
+      "description": "released, without the |dx|<tau stop (|grad|<tau or 50 iterations)",
+      "meanRatio": 3.4842266439001626,
+      "meanIterations": 7085.597777777778,
+      "meanContacts": 38.34222222222222,
+      "rows": [
+        {
+          "name": "Undistorted",
+          "contacts": 43.06111111111111,
+          "pairs": 21.105555555555554,
+          "iterations": 3835.3083333333334,
+          "queries": 3978.573611111111,
+          "ratioToNelderMead": 4.827659007669922,
+          "paper": {
+            "contacts": 52.2,
+            "iterations": 5269,
+            "ratioToNelderMead": 4.942776735459662
+          }
+        },
+        {
+          "name": "BEND 0.15",
+          "contacts": 38.516666666666666,
+          "pairs": 34.388888888888886,
+          "iterations": 6585.027777777777,
+          "queries": 6812.946527777778,
+          "ratioToNelderMead": 3.454166754312075,
+          "paper": {
+            "contacts": 49.8,
+            "iterations": 8166,
+            "ratioToNelderMead": 3.4181665969024695
+          }
+        },
+        {
+          "name": "BEND 0.55",
+          "contacts": 41.71944444444444,
+          "pairs": 36.291666666666664,
+          "iterations": 7320.354166666667,
+          "queries": 7550.445138888889,
+          "ratioToNelderMead": 3.474229129127355,
+          "paper": {
+            "contacts": 40.5,
+            "iterations": 8054,
+            "ratioToNelderMead": 3.43307757885763
+          }
+        },
+        {
+          "name": "BEND 0.95",
+          "contacts": 43.81666666666667,
+          "pairs": 42.78888888888889,
+          "iterations": 7774.747222222222,
+          "queries": 8062.252777777778,
+          "ratioToNelderMead": 2.9612736604560985,
+          "paper": {
+            "contacts": 43.7,
+            "iterations": 7557,
+            "ratioToNelderMead": 2.659042927515834
+          }
+        },
+        {
+          "name": "DISPLACE 0.05",
+          "contacts": 30.166666666666668,
+          "pairs": 25.66111111111111,
+          "iterations": 5267.470833333334,
+          "queries": 5424.330555555555,
+          "ratioToNelderMead": 4.2415582900883155,
+          "paper": {
+            "contacts": 42.3,
+            "iterations": 6506,
+            "ratioToNelderMead": 3.8113649677797303
+          }
+        },
+        {
+          "name": "DISPLACE 0.10",
+          "contacts": 32.88611111111111,
+          "pairs": 30.394444444444446,
+          "iterations": 5692.884027777778,
+          "queries": 5894.076388888889,
+          "ratioToNelderMead": 3.506212185055172,
+          "paper": {
+            "contacts": 41.6,
+            "iterations": 6734,
+            "ratioToNelderMead": 3.618484685652875
+          }
+        },
+        {
+          "name": "DISPLACE 0.20",
+          "contacts": 32.78333333333333,
+          "pairs": 39.35,
+          "iterations": 5596.346527777778,
+          "queries": 5899.413888888889,
+          "ratioToNelderMead": 2.233217639045137,
+          "paper": {
+            "contacts": 41.5,
+            "iterations": 7992,
+            "ratioToNelderMead": 3.4300429184549355
+          }
+        },
+        {
+          "name": "TWIST 0.50",
+          "contacts": 43.05,
+          "pairs": 46.47222222222222,
+          "iterations": 9204.640277777778,
+          "queries": 9502.009722222223,
+          "ratioToNelderMead": 3.47236092282315,
+          "paper": {
+            "contacts": 47.8,
+            "iterations": 8635,
+            "ratioToNelderMead": 2.731730465042708
+          }
+        },
+        {
+          "name": "TWIST 2.50",
+          "contacts": 38.78055555555556,
+          "pairs": 43.16111111111111,
+          "iterations": 9640.580555555556,
+          "queries": 9893.428472222222,
+          "ratioToNelderMead": 3.382254936530643,
+          "paper": {
+            "contacts": 52.8,
+            "iterations": 9636,
+            "ratioToNelderMead": 2.8729874776386404
+          }
+        },
+        {
+          "name": "TWIST 5.00",
+          "contacts": 38.641666666666666,
+          "pairs": 41.84166666666667,
+          "iterations": 9938.618055555555,
+          "queries": 10162.936805555555,
+          "ratioToNelderMead": 3.28933391389376,
+          "paper": {
+            "contacts": 50.6,
+            "iterations": 8526,
+            "ratioToNelderMead": 3.1082756106452787
+          }
+        }
+      ]
+    }
+  ],
+  "paperMean": {
+    "ratio": 3.4025949963949764,
+    "iterations": 7707.5,
+    "contacts": 46.28
+  },
+  "stopReasons": {
+    "note": "calls per stop reason over 360 frames (counting build); clamped = |dx|<tau stop where the projection onto V moved the step",
+    "variant0": {
+      "Undistorted": {
+        "gradient": 16726,
+        "dxClamped": 94413,
+        "dxFree": 46796,
+        "limit": 0,
+        "iterations": 489604
+      },
+      "BEND 0.55": {
+        "gradient": 17050,
+        "dxClamped": 107493,
+        "dxFree": 168885,
+        "limit": 257,
+        "iterations": 1444437
+      },
+      "TWIST 2.50": {
+        "gradient": 10063,
+        "dxClamped": 127362,
+        "dxFree": 166628,
+        "limit": 8587,
+        "iterations": 2649186
+      },
+      "DISPLACE 0.10": {
+        "gradient": 7720,
+        "dxClamped": 92660,
+        "dxFree": 88889,
+        "limit": 1,
+        "iterations": 578228
+      }
+    },
+    "variant3": {
+      "Undistorted": {
+        "gradient": 54447,
+        "limit": 97408,
+        "iterations": 5522844
+      },
+      "BEND 0.55": {
+        "gradient": 70091,
+        "limit": 191149,
+        "iterations": 10541310
+      },
+      "TWIST 2.50": {
+        "gradient": 53346,
+        "limit": 257409,
+        "iterations": 13882436
+      },
+      "DISPLACE 0.10": {
+        "gradient": 70957,
+        "limit": 147803,
+        "iterations": 8197753
+      }
+    }
+  }
+}

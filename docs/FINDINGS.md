@@ -2,6 +2,127 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Paper Table 5 SGD row matches SGD without its ‖Δx‖ < τ stop (opt-in added)
+
+The entry below found that the released SGD costs about 0.48× Nelder–Mead per pair, against the
+paper's 3.40×. To find which change matches the paper, the pinned upstream oracle was built in
+scratch with a runtime switch over four `gradientDescent` variants
+(`measurements/sdf-sgd-variants-2026-10-18.patch`). Each variant ran all ten Table 5
+configurations for 360 frames, with released parameters and optimizer 2. Variant 0's output is
+byte-identical to the unpatched SGD run.
+
+| Variant | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+|---|---|---|---|---|
+| 0 released (decaying step and noise; stop on ‖g‖ < τ or ‖Δx‖ < τ) | 0.48 | 1088 | 40.0 | −0.28 |
+| 1 fixed step and noise | 2.15 | 4632 | 42.2 | −0.16 |
+| 2 fixed step, decaying noise | 1.15 | 2682 | 40.3 | −0.36 |
+| 3 released without the ‖Δx‖ < τ stop | **3.48** | **7086** | 38.3 | 0.70 |
+| paper | 3.40 | 7708 | 46.3 | |
+
+- **Variant 3 matches the paper's row in aggregate and in pattern (r = 0.70):**
+  - The mean ratio and the iteration count are close.
+  - The per-configuration pattern matches, including Undistorted as the highest (4.83 vs 4.94).
+  - The largest miss is DISPLACE 0.20 (2.23 vs 3.43).
+- **The fixed step does not explain it.** The paper's prose attributes SGD's behaviour to a fixed
+  step size (Sec. 4), yet variant 1 neither reaches the paper's cost nor follows its pattern.
+- **Why released SGD stops early.** A counting build, Undistorted, 360 frames:
+  - 60% of calls stop on ‖Δx‖ < τ because the projection onto V pinned the iterate at the box
+    face;
+  - 30% stop on a small unclamped step;
+  - 11% stop on ‖g‖ < τ;
+  - none hit the limit;
+  - the result is about 3 iterations per call.
+
+  Without the Δx stop, 64% of calls run to the 50-iteration limit and the rest stop on the
+  gradient, about 36 iterations per call.
+- **Conclusion:** this is an inference, not a confirmation from the authors. The paper's SGD
+  numbers are consistent with an SGD that terminates only on the gradient norm or the iteration
+  limit. The released code also applies the paper's stated ‖x(k+1) − x(k)‖ < τ test (Sec. 3.3),
+  which mostly fires as a stall against V's boundary. Contacts remain lower than the paper's
+  (38–42 against 46) in every variant, which is the same trajectory gap seen for Nelder–Mead.
+- **Opt-in on our side:** `sgdGradientStopOnly` (default false) drops the Δx stop on the CPU and
+  GPU. The default keeps the released behaviour and the oracle fixtures.
+  - A CPU test checks the opt-in on the 16 oracle cases. With the same stream it replays the
+    released iterates, then stops only on the gradient or the limit.
+  - A GPU test runs an overlapping box pair over eight pair keys. On every key the opt-in never
+    stops sooner than released, and it extends the released stop on at least one key.
+- **GPU Table 5 SGD rows with the opt-in** (`scripts/sdf-table5.ts out 360 2 gradient-stop`, 360
+  frames, released parameters):
+
+  | | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+  |---|---|---|---|---|
+  | GPU, opt-in | 3.50 | 6674 | 46.7 | 0.73 |
+  | upstream variant 3 | 3.48 | 7086 | 38.3 | 0.70 |
+  | paper | 3.40 | 7708 | 46.3 | |
+
+  - The GPU and upstream variant 3 correlate at 0.81 per configuration.
+  - The largest misses against the paper are TWIST 0.50 (3.73 vs 2.73) and Undistorted (5.42 vs
+    4.94).
+  - Iterations per step run about 13% low. This follows from pair counts, which depend on the
+    trajectory (see the Nelder–Mead Table 5 entry).
+  - With this opt-in, the production GPU path matches all three Table 5 optimizer rows in
+    aggregate, and the SGD row also in pattern (r = 0.73). This is not a per-configuration match:
+    single configurations are off by up to 1.0 (TWIST 0.50), and t_coll is not measured.
+
+Measurements: `measurements/sdf-sgd-variants-2026-10-18.json`, with per-configuration rows, the paper
+values and the stop-reason counts.
+GPU opt-in rows: `measurements/sdf-table5-sgd-gradient-stop-2026-10-18.json`.
+
+## 2026-10-18 — GPU Ellipsoid and SGD; Table 5 rows match upstream, paper SGD row does not
+
+The GPU narrowphase now runs all three optimizers (`optimizer` 0/1/2). This supersedes the "GPU
+remains Nelder–Mead only" notes in the two entries below.
+- **Ellipsoid (1):** a WGSL port of the CPU reference. Each point record grows from 20 to 28 words,
+  to store its symmetric ellipsoid for the 0.75/0.25 warm start. A GPU test checks the position
+  (within τ) and the iteration count (within 2) against the verified CPU reference. A second test
+  re-optimizes a cached point from its stored ellipsoid and compares the position, the iterations
+  and the new ellipsoid against the CPU blend plus `ellipsoidMethod`. Removing the blend, or
+  corrupting the unpacking of the stored ellipsoid, makes that test fail.
+- **SGD (2):** noise comes from the GPU per-pair stream, so it matches upstream statistically, not
+  bitwise. Tested for descent and for repeatability.
+- **Params block:** 64 → 80 bytes (`optimizer`, `stepSize`). `stepSize` is validated and uploaded
+  only for SGD; other optimizers pack 0.
+- **Cost for every optimizer:** the 8 ellipsoid words are always present, including for the
+  Nelder–Mead default. That adds 40% per point record, so 108 → 148 words per pair result at the
+  default 5 points (592 bytes), with the same growth in history copies. The automatic pair
+  ceiling that `sdfBroadphaseOptions` derives from the storage-binding limit falls by about 27%. At
+  20 points, the private per-invocation result grows from about 1.6 KB to about 2.3 KB. We accepted
+  this for one layout across optimizers. It has not been measured on the M1 / GTX 1080 target. If it
+  costs there, the ellipsoid words can move to a separate buffer bound only for optimizer 1.
+
+`scripts/sdf-table5.ts` now takes an optimizer list. It ran 360 frames for each of the ten Table 5
+configurations with released parameters, swapping only the optimizer. For an upstream comparison,
+the pinned oracle was built in scratch with one extra line that sets `solver.params.optimizer`
+from `$OPT` after the scene is built. That line is not committed, so the driver hash is unchanged.
+That build's Nelder–Mead runs reproduce all ten committed upstream captures exactly (iterations
+and pairs).
+
+The cost measure is iterations per pair, divided by the same source's Nelder–Mead iterations per
+pair. Pair counts depend on the trajectory (see the Table 5 entry below), so the ratio isolates
+optimizer cost. Means over the ten configurations:
+
+| | GPU (ours) | upstream C++ | paper |
+|---|---|---|---|
+| Ellipsoid / NM | 2.35 | 2.35 | 2.22 |
+| SGD / NM | 0.49 | 0.48 | 3.40 |
+
+- **Ellipsoid:** reproduced. Per configuration, the GPU and upstream agree within ~16% (for
+  example BEND 0.95 at 158 vs 156 iterations per pair). Both are close to the paper.
+- **SGD:** the GPU matches upstream on every configuration, within 0.10 of the ratio. Upstream's
+  released `gradientDescent` stops after about 15–40 iterations per pair (88 on TWIST 5.00). The
+  paper reports about 3.4× Nelder–Mead, close to the 50-iteration limit on every point. So the
+  paper's SGD row is not reproduced by the released code itself. The likely cause is a different
+  step size or stopping rule in the paper's runs. That was not investigated further, and released
+  parameters were not changed.
+- **Queries:** the paper lists queries equal to iterations for Ellipsoid and SGD. Upstream (and
+  this pass) also counts one final query per point, and Ellipsoid feasibility cuts outside V need
+  no query. So queries are not directly comparable.
+- **Not covered:** contacts per call vary with the trajectory; SGD paths depend on the random
+  stream; t_coll is not measured.
+
+Measurements: `measurements/sdf-table5-optimizers-2026-10-18.json`, with GPU, upstream and paper
+rows and the ratios.
+
 ## 2026-10-18 — Ellipsoid and gradient-descent optimizers ported to the CPU reference
 
 The audit found only Nelder–Mead ported, while the paper compares three optimizers (Tables 1, 3–5).
@@ -131,10 +252,6 @@ the same way. The paper's numbers are from Table 5, p. 10. Collision time is not
 - **Upstream undistorted (701 against the paper's 1066):** the released code's convex skip,
   which the paper does not describe, likely explains this.
 - **Run:** a single deterministic rollout, repeated bit-identically.
-- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead is ported) and t_coll.
-
-Measurements: `measurements/sdf-table5-2026-10-18.json`.
-
 ## 2026-10-18 — Audit against the paper and upstream sdf-dcd-demo
 
 A read-only audit compared the CPU port, the GPU path and the docs with Giles & Andrews

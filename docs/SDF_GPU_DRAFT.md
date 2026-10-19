@@ -16,7 +16,10 @@ see `SDF_PRODUCTION_BRIDGE.md`. The default collision backend is unchanged.
   interpolation and outside-grid extension. Uniform scaling/COM transforms match
   the CPU body's convention. Custom fields must first be baked to voxels.
 - `wgsl-sdf.ts`: one invocation per pair, 64 invocations/workgroup; bounded
-  Nelder–Mead; four cached plus one fresh candidate by default; cached-point
+  Nelder–Mead (`optimizer` 0, default), deep-cut ellipsoid (1, cached points warm
+  started 0.75/0.25 from their stored ellipsoid) or stochastic gradient descent (2,
+  `stepSize`, noise from the per-pair stream; opt-in `sgdGradientStopOnly` drops the ‖Δx‖ < τ stop);
+  four cached plus one fresh candidate by default; cached-point
   velocity advection; curvature-seed reservoir sampling; first-wins duplicate
   removal; stable rank sorting; coherent per-point normals and projected anchors.
 - `sdf-pass.ts`: explicit async creation on a **caller-supplied** GPU device,
@@ -45,8 +48,8 @@ numeric IDs, avoiding subnormal flush and float-ID precision problems.
   Pairs must have unique keys. Keep body ordering consistent. Change keys when
   body slots are reused. Prior slots may explicitly remap reordered pairs.
   The shader checks A/B/key before using a cached record.
-- Result: 108 words (432 bytes); identity/count, query/iteration/next-ID counters,
-  then five 20-word point records. Each point stores optimizer position/depth,
+- Result: 148 words (592 bytes) at the default 5 points; identity/count, query/iteration/next-ID counters,
+  then 28-word point records (the last 8 words hold the symmetric ellipsoid warm start for optimizer 1; they are present for every optimizer, a 40% per-point cost, see FINDINGS). Each point stores optimizer position/depth,
   world normal/separation, body-A anchor/softmax, body-B anchor/rank, and uint32
   active/cached/persistent-ID flags. Anchors are body-local offsets from COM in the
   production body frame (field frame rotated by the anchor rotation), **already in

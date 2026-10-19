@@ -109,8 +109,9 @@ export function ellipsoidMethod(g: (x: Vec) => { value: number; gradient: Vec },
 }
 
 /** Stochastic projected gradient descent [RM51] (optimize.cpp gradientDescent): decaying step and
- * a decaying random perturbation drawn from the shared stream. */
-export function gradientDescent(g: (x: Vec) => { value: number; gradient: Vec }, seed: Vec, domain: Aabb, stepSize: number, tolerance: number, limit: number, rng: Random): { x: Vec; iterations: number } {
+ * a decaying random perturbation drawn from the shared stream. `stepStop` false drops the
+ * ‖Δx‖ < τ test (opt-in `sgdGradientStopOnly`); upstream always applies it. */
+export function gradientDescent(g: (x: Vec) => { value: number; gradient: Vec }, seed: Vec, domain: Aabb, stepSize: number, tolerance: number, limit: number, rng: Random, stepStop = true): { x: Vec; iterations: number } {
   let x = project(seed, domain), best = x, bestValue = Infinity, it = 0;
   for (; it < limit; it++) {
     const { value, gradient } = g(x);
@@ -120,7 +121,7 @@ export function gradientDescent(g: (x: Vec) => { value: number; gradient: Vec },
     const decay = div(1, sqrt(it + 1));
     const noise = scale(rng.onSphere(), mul(mul(0.25, decay), Math.max(gradLength, 1)));
     const next = project(minus(x, scale(plus(gradient, noise), mul(stepSize, decay))), domain);
-    const converged = length(minus(next, x)) < tolerance;
+    const converged = stepStop && length(minus(next, x)) < tolerance;
     x = next;
     if (converged) break;
   }

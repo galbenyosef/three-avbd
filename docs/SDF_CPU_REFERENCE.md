@@ -90,8 +90,11 @@ field)`. Call `dispose()` to restore the default box collision backend.
   gradient descent (2) drawing from the manifold's shared PCG stream. Both 1 and 2 use the
   analytic objective gradient. They are pinned to upstream by `optimizers.json` (16 cases,
   exact iteration and query counts) and `manifolds-optimizers.json`, which chains 4-step warm
-  ellipsoid and SGD manifolds and checks RNG consumption exactly. The GPU narrowphase still
-  implements Nelder–Mead only and rejects other optimizers.
+  ellipsoid and SGD manifolds and checks RNG consumption exactly. The GPU narrowphase ports
+  all three; its ellipsoid is checked against this reference, while its SGD noise comes from
+  the GPU per-pair stream, so SGD trajectories are statistically, not bitwise, comparable.
+  Opt-in `sgdGradientStopOnly` (not in upstream) drops SGD's ‖Δx‖ < τ stop; the default
+  keeps the released behaviour and the oracle fixtures.
 - Collision distance parameters use world units, while epsilon has length-squared
   units. `scaleCollisionParams` provides explicit common scene/pair scaling;
   no automatic per-body policy is applied. Low-level `SdfBody` supports uniform

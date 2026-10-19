@@ -90,6 +90,36 @@ test('SDF CPU objective gradient, Ellipsoid and gradient descent match the 16 or
   }
 });
 
+test('SDF CPU opt-in gradient-descent stop extends the released path to the gradient or iteration limit', () => {
+  let extended = 0;
+  for (const c of load('optimizers').cases) {
+    const a = new SdfBody(new AnalyticField(specs[c.shapeA]));
+    const b = new SdfBody(new AnalyticField(specs[c.shapeB]), vec(c.originB), c.rotationB.map(f) as Rotation);
+    const domain = intersection(a.bounds, b.bounds), repel = c.repulsionPoints.map((x: Vec) => ({ x: vec(x) }));
+    // Record every queried iterate and its gradient.
+    const traced = () => { const g = objectiveGradient(a, b, repel, f(c.epsilon), f(c.alpha), counters()), log: { x: Vec; gradient: Vec }[] = [];
+      return { log, g: (x: Vec) => { const r = g(x); log.push({ x, gradient: r.gradient }); return r; } }; };
+    const released = traced(), optIn = traced(), label = `${c.shapeA} seed ${c.seed}`;
+    const r = gradientDescent(released.g, vec(c.seed), domain, f(c.stepSize), f(c.tolerance), c.maxIterations, new Random());
+    const o = gradientDescent(optIn.g, vec(c.seed), domain, f(c.stepSize), f(c.tolerance), c.maxIterations, new Random(), false);
+    assert.equal(r.iterations, c.gradientDescent.iterations, `${label} released path unchanged`);
+    // Same stream, so the opt-in replays the released iterates, then continues.
+    assert.deepEqual(optIn.log.slice(0, released.log.length).map(q => q.x), released.log.map(q => q.x), `${label} prefix`);
+    assert.ok(o.iterations >= r.iterations, label);
+    const last = optIn.log[optIn.log.length - 1];
+    assert.ok(o.iterations === c.maxIterations || length(last.gradient) < f(c.tolerance), `${label}: stopped only on the gradient or the limit`);
+    if (o.iterations > r.iterations) extended++;
+  }
+  assert.ok(extended > 0, 'some released runs stop on the step test');
+  // Manifold level: the flag reaches the optimizer, and its absence keeps the released behaviour.
+  const run = (extra: Partial<ReturnType<typeof collisionParams>>) => {
+    const m = new SdfManifold(new SdfBody(new AnalyticField(specs.box)), new SdfBody(new AnalyticField(specs.box), [.35, .1, 0], [0, 0, f(.258819045), f(.965925826)]));
+    const stats = counters(); m.update({ ...collisionParams(), optimizer: 2, ...extra }, 0, new Random(), stats); return stats;
+  };
+  assert.deepEqual(run({ sgdGradientStopOnly: false }), run({}));
+  assert.ok(run({ sgdGradientStopOnly: true }).iterations > run({}).iterations);
+});
+
 test('SDF CPU Ellipsoid and gradient-descent manifolds match the oracle across chained warm steps', () => {
   // Fixture points omit each cached ellipsoid, so multi-step cases chain this manifold's own state.
   let m: SdfManifold | undefined, rng = new Random();

@@ -215,3 +215,8 @@ and detect separation deeper by more than one tolerance. Identity, independent
 normal and basis-transported warm force/penalty survive; tangential anchor error
 restarts at zero. This avoids preserving an obsolete support point over a newly
 penetrating contact. Default false; the released mesh-quality profile enables it.
+
+`collision.sgdGradientStopOnly` (only with `optimizer: 2`) stops gradient descent only on the
+gradient norm or `maxIterations`. It drops the released ‖Δx‖ < τ test, which mostly fires
+when the projected iterate stalls on the search box. This matches the paper's Table 5 SGD cost in
+aggregate and in pattern (r = 0.73), at about 6.5× the released SGD iterations (Table 5 mean). Default false, which matches the released code.
