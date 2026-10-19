@@ -40,9 +40,14 @@ test('SDF GPU uniforms enforce bounded workloads and preserve dimensional settin
   const params=collisionParams(), words=packSdfParams(3,7,1/60,params), f=new Float32Array(words.buffer);
   assert.equal(words.byteLength,80); assert.deepEqual(Array.from(words.slice(0,4)),[3,7,4,1]);
   assert.equal(f[5],params.epsilon); assert.equal(f[8],params.margin);
-  assert.equal(words[16],0); assert.equal(f[17],params.stepSize);
+  assert.equal(words[16],0); assert.equal(f[17],0);
   const sgd=packSdfParams(1,0,.01,{...params,optimizer:2,stepSize:.25}); assert.equal(sgd[16],2); assert.equal(new Float32Array(sgd.buffer)[17],.25);
-  for(const patch of [{cacheSize:5},{randomSamples:2},{maxIterations:513},{epsilon:0},{tolerance:NaN},{optimizer:3 as unknown as 0},{stepSize:0},{stepSize:NaN}]) assert.throws(()=>packSdfParams(1,0,.01,{...params,...patch}));
+  for(const patch of [{cacheSize:5},{randomSamples:2},{maxIterations:513},{epsilon:0},{tolerance:NaN}]) assert.throws(()=>packSdfParams(1,0,.01,{...params,...patch}));
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,optimizer:3 as unknown as 0}),/Unknown SDF optimizer/);
+  for(const stepSize of [0,NaN,Infinity,1e-50]) {
+    assert.throws(()=>packSdfParams(1,0,.01,{...params,optimizer:2,stepSize}),/stepSize/);
+    for(const optimizer of [0,1] as const) assert.equal(new Float32Array(packSdfParams(1,0,.01,{...params,optimizer,stepSize}).buffer)[17],0,'stepSize is unused and not uploaded outside gradient descent');
+  }
 });
 
 test('SDF GPU output decoder retains contact identity, independent normal and body anchors', () => {

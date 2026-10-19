@@ -9,10 +9,20 @@ remains Nelder–Mead only" notes in the two entries below.
 - **Ellipsoid (1):** a WGSL port of the CPU reference. Each point record grows from 20 to 28 words,
   to store its symmetric ellipsoid for the 0.75/0.25 warm start. A GPU test checks the position
   (within τ) and the iteration count (within 2) against the verified CPU reference. A second test
-  checks that a cached point carries its ellipsoid to the next step.
+  re-optimizes a cached point from its stored ellipsoid and compares the position, the iterations
+  and the new ellipsoid against the CPU blend plus `ellipsoidMethod`. Removing the blend, or
+  corrupting the unpacking of the stored ellipsoid, makes that test fail.
 - **SGD (2):** noise comes from the GPU per-pair stream, so it matches upstream statistically, not
   bitwise. Tested for descent and for repeatability.
-- **Params block:** 64 → 80 bytes (`optimizer`, `stepSize`).
+- **Params block:** 64 → 80 bytes (`optimizer`, `stepSize`). `stepSize` is validated and uploaded
+  only for SGD; other optimizers pack 0.
+- **Cost for every optimizer:** the 8 ellipsoid words are always present, including for the
+  Nelder–Mead default. That adds 40% per point record, so 108 → 148 words per pair result at the
+  default 5 points (592 bytes), with the same growth in history copies. The automatic pair
+  ceiling that `sdfBroadphaseOptions` derives from the storage-binding limit falls by about 27%. At
+  20 points, the private per-invocation result grows from about 1.6 KB to about 2.3 KB. We accepted
+  this for one layout across optimizers. It has not been measured on the M1 / GTX 1080 target. If it
+  costs there, the ellipsoid words can move to a separate buffer bound only for optimizer 1.
 
 `scripts/sdf-table5.ts` now takes an optimizer list. It ran 360 frames for each of the ten Table 5
 configurations with released parameters, swapping only the optimizer. For an upstream comparison,
@@ -176,7 +186,8 @@ the same way. The paper's numbers are from Table 5, p. 10. Collision time is not
 - **Upstream undistorted (701 against the paper's 1066):** the released code's convex skip,
   which the paper does not describe, likely explains this.
 - **Run:** a single deterministic rollout, repeated bit-identically.
-- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead is ported) and t_coll.
+- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead was ported at the time; see the
+  GPU Ellipsoid and SGD entry above) and t_coll.
 
 Measurements: `measurements/sdf-table5-2026-10-18.json`.
 

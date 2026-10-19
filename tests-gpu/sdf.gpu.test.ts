@@ -275,21 +275,38 @@ gpuTest('GPU SDF ellipsoid and gradient-descent optimizers match the verified CP
   } finally {pass.destroy();}
 });
 
-gpuTest('GPU SDF ellipsoid warm start carries a cached point ellipsoid to the next step', async device=>{
-  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});a.seeds=[];b.seeds=[];
-  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[0,.95,0])];
+gpuTest('GPU SDF ellipsoid warm start matches the CPU blend for a cached point', async device=>{
+  const {objectiveGradient,ellipsoidMethod,diagonal,blendEllipsoids,counters}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {intersection,size,plus,scale,minus,length}=await import('../src/avbd3d/ref/sdf/math.ts');
+  type V3=[number,number,number];
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds),center=scale(plus(domain.min,domain.max),.5);
+  a.seeds=[plus(center,[.05,-.03,.02])];b.seeds=[];
+  const base={...collisionParams(),optimizer:1 as const,margin:0,cacheSize:1};
   const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
-  try {
-    const params={...collisionParams(),optimizer:1 as const,cacheSize:1,randomSamples:1};
-    pass.step(bodies,[{a:0,b:1,key:1}],0,params);await pass.readResults();
-    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,params);
-    const [result]=await pass.readResults();
-    assert.ok(result.points.some(p=>p.cached),'a cached point is re-optimized');
-    // Raw read of the stored ellipsoid words (28-word points, ellipsoid at words 20-25).
-    const read=device.createBuffer({size:8*4+28*4,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
-    const encoder=device.createCommandEncoder();encoder.copyBufferToBuffer(pass.storage.current,0,read,0,8*4+28*4);device.queue.submit([encoder.finish()]);
+  // Raw first point of the current result: position (words 8-10) and stored ellipsoid (28-33).
+  const raw=async()=>{const bytes=(8+28)*4,read=device.createBuffer({size:bytes,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
+    const encoder=device.createCommandEncoder();encoder.copyBufferToBuffer(pass.storage.current,0,read,0,bytes);device.queue.submit([encoder.finish()]);
     await read.mapAsync(GPUMapMode.READ);const f=new Float32Array(read.getMappedRange().slice(0));read.destroy();
-    const e=Array.from(f.slice(8+20,8+26));
-    assert.ok(e.every(Number.isFinite)&&e.some((v,i)=>Math.abs(v-[1,0,0,1,0,1][i])>1e-6),`stored ellipsoid differs from identity: ${e}`);
+    const e=f.slice(28,34);return {x:Array.from(f.slice(8,11)) as V3,E:[[e[0],e[1],e[2]],[e[1],e[3],e[4]],[e[2],e[4],e[5]]] as [V3,V3,V3]};};
+  try {
+    pass.step(bodies,[{a:0,b:1,key:1}],0,{...base,randomSamples:1});
+    const [first]=await pass.readResults();assert.equal(first.points.length,1);
+    const stored=await raw(),id=first.points[0].id;
+    // Static bodies: the cached seed is the stored position. No new samples, so no repulsion.
+    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,{...base,randomSamples:0});
+    const [second]=await pass.readResults();
+    const point=second.points.find(p=>p.cached&&p.id===id);assert.ok(point,'the step-1 point is re-optimized as cached');
+    const g=objectiveGradient(bodies[0],bodies[1],[],base.epsilon,base.alpha,counters());
+    const extent=plus(scale(size(domain),.5),minus(stored.x,center).map(Math.abs) as V3);
+    const fresh=diagonal(extent.map(e=>e*e*3) as V3),cold=ellipsoidMethod(g,stored.x,domain,fresh,base.tolerance,base.maxIterations);
+    const cpu=ellipsoidMethod(g,stored.x,domain,blendEllipsoids(stored.E,fresh),base.tolerance,base.maxIterations);
+    assert.ok(length(minus(point.x as V3,cpu.x))<=base.tolerance,`GPU ${point.x} vs CPU ${cpu.x}`);
+    assert.ok(Math.abs(second.iterations-cpu.iterations)<=2,`iterations GPU ${second.iterations} vs CPU warm ${cpu.iterations} (cold ${cold.iterations})`);
+    // The warm start must matter here, so a dropped or wrong blend cannot pass by coincidence.
+    assert.notDeepEqual(blendEllipsoids(stored.E,fresh),fresh);
+    const next=await raw(),scaleE=Math.max(...cpu.ellipsoid.flat().map(Math.abs));
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++)assert.ok(Math.abs(next.E[r][c]-cpu.ellipsoid[r][c])<=1e-3*scaleE,`E[${r}][${c}] GPU ${next.E[r][c]} vs CPU ${cpu.ellipsoid[r][c]}`);
   } finally {pass.destroy();}
 });

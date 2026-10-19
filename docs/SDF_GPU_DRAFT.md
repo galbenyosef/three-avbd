@@ -47,7 +47,7 @@ numeric IDs, avoiding subnormal flush and float-ID precision problems.
   body slots are reused. Prior slots may explicitly remap reordered pairs.
   The shader checks A/B/key before using a cached record.
 - Result: 148 words (592 bytes) at the default 5 points; identity/count, query/iteration/next-ID counters,
-  then 28-word point records (the last 8 words hold the symmetric ellipsoid warm start for optimizer 1). Each point stores optimizer position/depth,
+  then 28-word point records (the last 8 words hold the symmetric ellipsoid warm start for optimizer 1; they are present for every optimizer, a 40% per-point cost, see FINDINGS). Each point stores optimizer position/depth,
   world normal/separation, body-A anchor/softmax, body-B anchor/rank, and uint32
   active/cached/persistent-ID flags. Anchors are offsets from COM in rotated body
   coordinates, **already in world-length units**, not unscaled field coordinates.
