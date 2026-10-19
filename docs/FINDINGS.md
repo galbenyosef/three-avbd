@@ -252,7 +252,15 @@ the same way. The paper's numbers are from Table 5, p. 10. Collision time is not
 - **Upstream undistorted (701 against the paper's 1066):** the released code's convex skip,
   which the paper does not describe, likely explains this.
 - **Run:** a single deterministic rollout, repeated bit-identically.
+- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead was ported at the time; see the
+  GPU Ellipsoid and SGD entry above) and t_coll.
+
+Measurements: `measurements/sdf-table5-2026-10-18.json`.
+
 ## 2026-10-18 — Audit against the paper and upstream sdf-dcd-demo
+
+Superseded in part by the entries above: the Ellipsoid and SGD optimizers, the Table 5 sweep and
+the Fig. 6 limits listed here as missing were added later the same day.
 
 A read-only audit compared the CPU port, the GPU path and the docs with Giles & Andrews
 (CGF 45(7) 2026) and the pinned upstream 1dcdf1e7.
