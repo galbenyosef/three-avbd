@@ -51,9 +51,13 @@ async function binary(read:ReadAsset, folder:string, name:string):Promise<Float3
   return floats;
 }
 
-export async function loadReleasedScene(id:number,read:ReadAsset):Promise<ReleasedScene> {
+/** Paper Table 5 warp strengths captured on the released Falling Boxes scenes (oracle `--warp-k`). */
+export const warpVariants:Readonly<Record<number,readonly string[]>>={3:['0.15','0.55','0.95'],4:['0.50','2.50','5.00'],5:['0.05','0.10','0.20']};
+
+export async function loadReleasedScene(id:number,read:ReadAsset,warpK?:string):Promise<ReleasedScene> {
   if(!releasedScenes.some(scene=>scene.id===id))throw new Error('Unknown released scene');
-  const capture:Capture=await json(read,`oracle-sdf/scene-${id}.json`);
+  if(warpK!==undefined&&!warpVariants[id]?.includes(warpK))throw new Error(`No captured warp strength ${warpK} for scene ${id}`);
+  const capture:Capture=await json(read,`oracle-sdf/scene-${id}${warpK===undefined?'':`-k${warpK}`}.json`);
   const fields=new Map<string,{field:Field;geometry:THREE.BufferGeometry}>();
   const meshes=new Map<string,THREE.BufferGeometry>();
   const bodies:PreparedBody[]=[];

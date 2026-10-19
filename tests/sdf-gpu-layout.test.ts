@@ -5,7 +5,7 @@ import { AnalyticField } from '../src/avbd3d/ref/sdf/shapes.ts';
 import { VoxelField } from '../src/avbd3d/ref/sdf/voxel.ts';
 import { SdfBody } from '../src/avbd3d/ref/sdf/body.ts';
 import { collisionParams } from '../src/avbd3d/ref/sdf/manifold.ts';
-import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, SDF_RESULT_WORDS, SDF_NO_CACHE } from '../src/avbd3d/gpu/sdf-layout.ts';
+import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, sdfResultWords, SDF_RESULT_WORDS, SDF_NO_CACHE } from '../src/avbd3d/gpu/sdf-layout.ts';
 import { sdfRayLipschitz } from '../src/avbd3d/gpu/sdf-raycast.ts';
 import { SdfNarrowphasePass } from '../src/avbd3d/gpu/sdf-pass.ts';
 
@@ -38,9 +38,18 @@ test('SDF GPU host packing rejects unsafe atlas sizes, unsupported fields and st
 
 test('SDF GPU uniforms enforce bounded workloads and preserve dimensional settings', () => {
   const params=collisionParams(), words=packSdfParams(3,7,1/60,params), f=new Float32Array(words.buffer);
-  assert.equal(words.byteLength,64); assert.deepEqual(Array.from(words.slice(0,4)),[3,7,4,1]);
+  assert.equal(words.byteLength,80); assert.deepEqual(Array.from(words.slice(0,4)),[3,7,4,1]);
   assert.equal(f[5],params.epsilon); assert.equal(f[8],params.margin);
+  assert.equal(words[16],0); assert.equal(f[17],0);
+  const sgd=packSdfParams(1,0,.01,{...params,optimizer:2,stepSize:.25}); assert.equal(sgd[16],2); assert.equal(new Float32Array(sgd.buffer)[17],.25); assert.equal(sgd[18],0);
+  assert.equal(packSdfParams(1,0,.01,{...params,optimizer:2,sgdGradientStopOnly:true})[18],1);
+  assert.equal(packSdfParams(1,0,.01,{...params,sgdGradientStopOnly:true})[18],0,'the SGD stop flag is only uploaded for SGD');
   for(const patch of [{cacheSize:5},{randomSamples:2},{maxIterations:513},{epsilon:0},{tolerance:NaN}]) assert.throws(()=>packSdfParams(1,0,.01,{...params,...patch}));
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,optimizer:3 as unknown as 0}),/Unknown SDF optimizer/);
+  for(const stepSize of [0,NaN,Infinity,1e-50]) {
+    assert.throws(()=>packSdfParams(1,0,.01,{...params,optimizer:2,stepSize}),/stepSize/);
+    for(const optimizer of [0,1] as const) assert.equal(new Float32Array(packSdfParams(1,0,.01,{...params,optimizer,stepSize}).buffer)[17],0,'stepSize is unused and not uploaded outside gradient descent');
+  }
 });
 
 test('SDF GPU output decoder retains contact identity, independent normal and body anchors', () => {
@@ -75,7 +84,7 @@ test('SDF dispatch host lifecycle swaps distinct result buffers and bounds uploa
   assert.notEqual(groups[0][4],groups[0][5]);assert.equal(groups[0][4],groups[1][5]);
   const bodies=[new SdfBody(field),new SdfBody(field,[.8,0,0])];
   pass.step(bodies,[{a:0,b:1,key:7}],1/60);pass.step(bodies,[{a:0,b:1,key:7,previous:0}],1/60);
-  assert.deepEqual(dispatched,[1,1]);assert.ok(uploads.includes(64));
+  assert.deepEqual(dispatched,[1,1]);assert.ok(uploads.includes(80));
   pass.step(bodies,[],1/60);assert.deepEqual(await pass.readResults(),[]);
   assert.throws(()=>pass.step(bodies,[{a:0,b:1,key:7,previous:0}],1/60),/previous/);
   pass.destroy();pass.destroy();assert.ok(buffers.every(b=>b.destroyed));
@@ -126,4 +135,21 @@ test('SDF ray slope bounds cover warped gradients and use the immutable atlas sn
     field.spec.kind==='warp'&&(field.spec.k=100);
     assert.equal(sdfRayLipschitz(atlas,0),bound,'user field mutation cannot alter packed bound');
   }
+});
+
+test('GPU SDF point capacity scales parameter bounds and result decoding',()=>{
+  const params=collisionParams();
+  // Default capacity: four cached plus one sample, unchanged.
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:5}));
+  // The paper's widest sweep (16 cached + 4 samples) needs a 20-point pass.
+  assert.doesNotThrow(()=>packSdfParams(1,0,.01,{...params,cacheSize:16,randomSamples:4},20));
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:17,randomSamples:4},20),/at most 19 cached\/20 total/);
+  assert.throws(()=>packSdfParams(1,0,.01,{...params,cacheSize:20,randomSamples:0},20),/at most 19 cached/);
+  for(const bad of [1,21,4.5])assert.throws(()=>packSdfParams(1,0,.01,params,bad),/point capacity/);
+  assert.equal(sdfResultWords(),SDF_RESULT_WORDS);assert.equal(sdfResultWords(20),8+20*28);
+  const words=sdfResultWords(20),buffer=new ArrayBuffer(2*words*4),u=new Uint32Array(buffer);
+  u[3]=0;u[words+3]=12;for(let j=0;j<12;j++)u[words+8+j*28+18]=100+j;
+  const [first,second]=decodeSdfResults(buffer,2,20);
+  assert.equal(first.points.length,0);assert.deepEqual(second.points.map(p=>p.id),Array.from({length:12},(_,j)=>100+j));
+  u[words+3]=21;assert.throws(()=>decodeSdfResults(buffer,2,20),/count/);
 });

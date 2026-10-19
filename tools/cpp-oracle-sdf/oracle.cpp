@@ -167,22 +167,27 @@ void randomDraws(Random before,const Random &after) {
     }
     std::cout<<"]}";
 }
-void manifolds(const std::string &assets) {
+// optimizers=true replays Ellipsoid/gradient-descent cases into a separate fixture.
+void manifolds(const std::string &assets,bool optimizers=false) {
     std::cout<<"{\"cases\":[";bool first=true;
-    const std::vector<std::string> cases={"cold-box","warm-box","static-a-advection","static-b-advection","dynamic-advection",
+    const std::vector<std::string> cases=optimizers?std::vector<std::string>{"ellipsoid-warm-box","ellipsoid-torus-seeds","sgd-warm-box","sgd-bend-seeds"}:
+        std::vector<std::string>{"cold-box","warm-box","static-a-advection","static-b-advection","dynamic-advection",
         "convex-skip","convex-no-skip","duplicate-cache","warm-disabled","no-cache","margin-gap","separated-spheres",
         "scaled-rotated","replacement-zero","replacement-high","torus-seeds","bend-seeds","voxel-seeds"};
     for(const auto &name:cases) {
-        std::string an=name=="torus-seeds"?"torus":name=="bend-seeds"?"bend":name=="voxel-seeds"?"bunny":name=="separated-spheres"?"sphere":"box";
+        const bool torus=name.find("torus-seeds")!=std::string::npos,bend=name.find("bend-seeds")!=std::string::npos;
+        std::string an=torus?"torus":bend?"bend":name=="voxel-seeds"?"bunny":name=="separated-spheres"?"sphere":"box";
         std::string bn=name=="separated-spheres"?"sphere":"box";
         auto a=shape(an,assets),b=shape(bn,assets);a->finalize();b->finalize();
-        float3 originB=name=="margin-gap"?float3{0,1.01f,0}:name=="separated-spheres"?float3{.85f,.85f,0}:name=="torus-seeds"?float3{.35f,.1f,0}:name=="bend-seeds"?float3{0,.3f,0}:float3{0,.85f,0};
+        float3 originB=name=="margin-gap"?float3{0,1.01f,0}:name=="separated-spheres"?float3{.85f,.85f,0}:torus?float3{.35f,.1f,0}:bend?float3{0,.3f,0}:float3{0,.85f,0};
         quat rot=name=="scaled-rotated"?axisAngle(normalize(float3{1,2,3}),.4f):quat{0,0,0,1};
         Body A(a,{0,0,0},{0,0,0,1},name=="scaled-rotated"?1.3f:1.f,name=="static-a-advection");
         Body B(b,originB,rot,name=="scaled-rotated"?.7f:1.f,name=="static-b-advection");
         CollisionParams p;float dt=1.f/60.f;Random rng;
         bool advect=name.find("advection")!=std::string::npos;
         if(advect) {A.velocity={.2f,.03f,-.1f};A.angularVelocity={.1f,.2f,.3f};B.velocity={-.1f,-.02f,.3f};B.angularVelocity={-.2f,.1f,-.15f};}
+        if(name.find("ellipsoid-")==0)p.optimizer=OPTIMIZER_ELLIPSOID;
+        if(name.find("sgd-")==0)p.optimizer=OPTIMIZER_GRADIENT_DESCENT;
         if(name=="convex-no-skip")p.skipConvexSamples=false;
         if(name=="warm-disabled")p.warmStart=false;
         if(name=="no-cache")p.cacheSize=0;
@@ -198,7 +203,7 @@ void manifolds(const std::string &assets) {
             if(name=="duplicate-cache")cp.x={0,.425f,0};
             cp.normal={0,1,0};cp.active=true;cp.normalImpulse=float(i+1);cp.frictionImpulse={.01f*float(i+1),0,0};m.points.push_back(cp);
         }
-        int steps=name=="warm-box"?4:1;
+        int steps=name.find("warm-box")!=std::string::npos?4:1;
         for(int step=0;step<steps;step++) {
             if(!first)std::cout<<',';first=false;
             std::cout<<"{\"name\":\""<<name<<"\",\"step\":"<<step<<",\"shapeA\":\""<<an<<"\",\"shapeB\":\""<<bn<<"\",\"bodyA\":";body(A);
@@ -259,14 +264,58 @@ void sceneMetrics(int index,int frames,const std::string &warpK) {
     }
     std::cout<<"]}\n";
 }
+
+// Ellipsoid and gradient-descent optimizers plus the analytic objective gradient (Sec. 3.3, Table 5).
+// Same bodies, domains and seeds as optimize(); each case also replays an ellipsoid warm start.
+void optimizers() {
+    std::cout << "{\"cases\":["; bool first=true;
+    for(const std::string name:{"box","sphere","torus","bend"})
+    for(int variant=0;variant<4;variant++) {
+        auto a=shape(name,""),b=shape("box","");
+        float3 origin{.35f,.1f,0}; quat rotation{0,0,.258819045f,.965925826f};
+        Body bodyA(a,{0,0,0},{0,0,0,1},1,true),bodyB(b,origin,rotation,1,true);
+        AABB domain=intersect(bodyA.bounds,bodyB.bounds);
+        float3 seed=variant==0?float3{2,-2,2}:variant==1?domain.min:variant==2?domain.max:(domain.min+domain.max)*.5f;
+        std::vector<ContactPoint> manifold;
+        if(variant==3) { ContactPoint p; p.x={.1f,.1f,.1f};manifold.push_back(p); }
+        int limit=variant==2?0:50;float epsilon=variant==1?0.f:.1f;
+        int queries=0;
+        Objective objective{&bodyA,&bodyB,&manifold,epsilon,.01f,&queries};
+        float3 gradient;float value=objective(seed,&gradient);
+        // collide.cpp: an ellipsoid centred at x enclosing V, warm started 0.75/0.25 when cached.
+        float3 extent=size(domain)*0.5f+abs(seed-center(domain));
+        float3x3 E0=diagonal(extent*extent*3.0f),E=E0;float3 ellipsoid=seed;
+        queries=0;int ellipsoidIterations=ellipsoidMethod(objective,ellipsoid,domain,E,.01f,limit);int ellipsoidQueries=queries;
+        float3 warmSeed=ellipsoid;float3 warmExtent=size(domain)*0.5f+abs(warmSeed-center(domain));
+        float3x3 warmStart=E*0.75f+diagonal(warmExtent*warmExtent*3.0f)*0.25f,warmE=warmStart;float3 warm=warmSeed;
+        queries=0;int warmIterations=ellipsoidMethod(objective,warm,domain,warmE,.01f,limit);int warmQueries=queries;
+        Random rng;float3 descent=seed;
+        queries=0;int descentIterations=gradientDescent(objective,descent,domain,.1f,.01f,limit,rng);int descentQueries=queries;
+        if(!first)std::cout<<',';first=false;
+        std::cout<<"{\"shapeA\":\""<<name<<"\",\"shapeB\":\"box\",\"originB\":";vector(origin);
+        std::cout<<",\"rotationB\":[0,0,0.258819045,0.965925826],\"domain\":";bounds(domain);
+        std::cout<<",\"seed\":";vector(seed);std::cout<<",\"epsilon\":";number(epsilon);
+        std::cout<<",\"alpha\":0.01,\"tolerance\":0.01,\"maxIterations\":"<<limit<<",\"stepSize\":0.1";
+        std::cout<<",\"repulsionPoints\":[";if(!manifold.empty())vector(manifold[0].x);std::cout<<"]";
+        std::cout<<",\"seedValue\":";number(value);std::cout<<",\"seedGradient\":";vector(gradient);
+        std::cout<<",\"ellipsoid\":{\"initial\":";matrix(E0);std::cout<<",\"x\":";vector(ellipsoid);std::cout<<",\"final\":";matrix(E);
+        std::cout<<",\"iterations\":"<<ellipsoidIterations<<",\"queries\":"<<ellipsoidQueries<<'}';
+        std::cout<<",\"warmEllipsoid\":{\"seed\":";vector(warmSeed);std::cout<<",\"initial\":";matrix(warmStart);std::cout<<",\"x\":";vector(warm);std::cout<<",\"final\":";matrix(warmE);
+        std::cout<<",\"iterations\":"<<warmIterations<<",\"queries\":"<<warmQueries<<'}';
+        std::cout<<",\"gradientDescent\":{\"x\":";vector(descent);std::cout<<",\"iterations\":"<<descentIterations<<",\"queries\":"<<descentQueries<<"}}";
+    }
+    std::cout<<"]}\n";
+}
 int main(int argc,char **argv) {
     try {
         std::cout<<std::setprecision(std::numeric_limits<float>::max_digits10);
         if(argc==2 && std::string(argv[1])=="optimize") optimize();
+        else if(argc==2 && std::string(argv[1])=="optimizers") optimizers();
         else if(argc==4 && std::string(argv[1])=="sample") samples(argv[2],argv[3]);
         else if(argc==4 && std::string(argv[1])=="seeds") seeds(argv[2],argv[3]);
         else if(argc==3 && std::string(argv[1])=="manifolds") manifolds(argv[2]);
+        else if(argc==3 && std::string(argv[1])=="manifolds-optimizers") manifolds(argv[2],true);
         else if((argc==4 || argc==5) && std::string(argv[1])=="scene") sceneMetrics(std::stoi(argv[2]),std::stoi(argv[3]),argc==5?argv[4]:"");
-        else throw std::runtime_error("usage: oracle optimize | sample/seeds SHAPE ASSETS | manifolds ASSETS | scene INDEX FRAMES");
+        else throw std::runtime_error("usage: oracle optimize | optimizers | sample/seeds SHAPE ASSETS | manifolds ASSETS | scene INDEX FRAMES");
     } catch(const std::exception &e) { std::cerr<<e.what()<<'\n';return 1; }
 }

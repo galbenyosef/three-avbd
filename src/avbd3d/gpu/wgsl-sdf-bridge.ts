@@ -1,6 +1,7 @@
 // Internal bridge: preserve the production contact ABI with one manifold per SDF point.
 import { PRELUDE_3D } from './layout.ts';
 import { IGNORE_PAIRS_WGSL } from './wgsl-collision.ts';
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
 
 export const sdfPrepareWGSL = /* wgsl */ `
 ${PRELUDE_3D}
@@ -24,10 +25,11 @@ struct Config { info: vec4u, rotation: vec4f }
     vec4f(body.angVel.xyz,bitcast<f32>(h)),vec4f(lo,bitcast<f32>(config.z)),vec4f(hi,0),configs[i].rotation);
 }`;
 
-export const sdfExportWGSL = /* wgsl */ `
+/** sdfExportWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfExportSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 struct BridgeParams { counts: vec4u, distances: vec4f }
 @group(0) @binding(0) var<uniform> params: Params;
 @group(0) @binding(1) var<uniform> bridge: BridgeParams;
@@ -99,6 +101,7 @@ struct BridgeParams { counts: vec4u, distances: vec4f }
     results[slot].points[i].flags.w=c+1u;
   }
 }`;
+export const sdfExportWGSL = sdfExportSource();
 
 
 /** Conservative SDF bounds and the exact production mask/joint exclusion policy. */
@@ -126,10 +129,11 @@ ${IGNORE_PAIRS_WGSL}
 }`;
 
 /** One reporting manifold per physical pair. Solver manifolds/forces stay untouched. */
-export const sdfEventsWGSL = /* wgsl */ `
+/** sdfEventsWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfEventsSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 struct BridgeParams { counts: vec4u, distances: vec4f }
 @group(0) @binding(0) var<uniform> bridge: BridgeParams;
 @group(0) @binding(1) var<storage,read> results: array<Result>;
@@ -153,3 +157,4 @@ struct BridgeParams { counts: vec4u, distances: vec4f }
   manifolds[i]=Manifold(vec4u(r.identity.xy,i,select(0u,1u,count>0u)),vec4f(normal,0));
   contacts[i]=Contact(anchor/f32(max(count,1u)),0u,vec3f(0),0,vec3f(0),0,vec3f(force,0,0),0);
 }`;
+export const sdfEventsWGSL = sdfEventsSource();

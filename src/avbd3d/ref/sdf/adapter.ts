@@ -76,7 +76,7 @@ export class SdfCollisionAdapter {
   constructor(solver: Solver, params: Partial<CollisionParams> = {}) {
     if (solver.collisionDetection) throw new Error('Solver already has a collision backend');
     this.solver = solver; this.params = { ...collisionParams(), ...params };
-    if (this.params.optimizer !== 0 || this.params.cacheSize < 0 || !Number.isInteger(this.params.cacheSize) || this.params.randomSamples < 0 || !Number.isInteger(this.params.randomSamples)) throw new Error('Invalid SDF collision parameters');
+    if (![0, 1, 2].includes(this.params.optimizer) || this.params.cacheSize < 0 || !Number.isInteger(this.params.cacheSize) || this.params.randomSamples < 0 || !Number.isInteger(this.params.randomSamples)) throw new Error('Invalid SDF collision parameters');
     solver.collisionDetection = this.detect;
   }
   attach(body: Rigid, field: Field): void {

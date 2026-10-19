@@ -242,3 +242,108 @@ gpuTest('signed SDF static-box separation stays bounded where the moving gradien
     assert.ok(mixed>0,'exercise mixed samples');
   }finally{pass.destroy();}
 });
+
+gpuTest('SDF point ids skip the built-in SPHERE_FEATURE key', async device=>{
+  const {SPHERE_FEATURE}=await import('../src/avbd3d/gpu/layout.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});a.seeds=[];b.seeds=[];
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[0,.95,0])];
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  const params={...collisionParams(),cacheSize:0,randomSamples:1,maxIterations:1};
+  try {
+    pass.step(bodies,[{a:0,b:1,key:1}],0,params);await pass.readResults();
+    // Result slot 0, stats.z (word 6) is the per-pair id counter the next step continues from.
+    device.queue.writeBuffer(pass.storage.current,6*4,new Uint32Array([SPHERE_FEATURE-1]));
+    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,params);
+    const [result]=await pass.readResults();
+    assert.equal(result.points.length,1);
+    assert.equal(result.points[0].id,SPHERE_FEATURE+1,'the next new id steps over SPHERE_FEATURE');
+  }finally{pass.destroy();}
+});
+
+gpuTest('GPU SDF ellipsoid and gradient-descent optimizers match the verified CPU reference', async device=>{
+  const {objectiveGradient,ellipsoidMethod,diagonal}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {counters}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {intersection,size,plus,scale,minus,length}=await import('../src/avbd3d/ref/sdf/math.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds),seed=scale(plus(domain.min,domain.max),.5);
+  // One curvature seed inside V makes the GPU's stochastic sample deterministic.
+  a.seeds=[seed];b.seeds=[];
+  const params={...collisionParams(),margin:0,cacheSize:0,randomSamples:1};
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  try {
+    // CPU reference (pinned to upstream fixtures) from the same seed and domain.
+    const g=objectiveGradient(bodies[0],bodies[1],[],params.epsilon,params.alpha,counters());
+    const extent=plus(scale(size(domain),.5),minus(seed,scale(plus(domain.min,domain.max),.5)).map(Math.abs) as [number,number,number]);
+    const cpu=ellipsoidMethod(g,seed,domain,diagonal(extent.map(e=>e*e*3) as [number,number,number]),params.tolerance,params.maxIterations);
+    pass.step(bodies,[{a:0,b:1,key:1}],0,{...params,optimizer:1});
+    const [ellipsoid]=await pass.readResults();
+    assert.equal(ellipsoid.points.length,1);
+    assert.ok(length(minus(ellipsoid.points[0].x as [number,number,number],cpu.x))<=params.tolerance,`GPU ${ellipsoid.points[0].x} vs CPU ${cpu.x}`);
+    assert.ok(Math.abs(ellipsoid.iterations-cpu.iterations)<=2,`iterations GPU ${ellipsoid.iterations} vs CPU ${cpu.iterations}`);
+    // Gradient descent: its noise uses the GPU stream (seeded by pair key and step index), so check
+    // improvement, and repeatability on fresh passes at the same step.
+    const run=async()=>{const fresh=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+      try{fresh.step(bodies,[{a:0,b:1,key:2}],0,{...params,optimizer:2});return (await fresh.readResults())[0];}finally{fresh.destroy();}};
+    const first=await run(),second=await run();
+    assert.ok(first.iterations>0);
+    assert.ok(g(first.points[0].x as [number,number,number]).value<g(seed).value,'descent improves on the seed');
+    assert.deepEqual(second.points[0].x,first.points[0].x,'repeatable for the same pair key and step');
+  } finally {pass.destroy();}
+});
+
+gpuTest('GPU SDF ellipsoid warm start matches the CPU blend for a cached point', async device=>{
+  const {objectiveGradient,ellipsoidMethod,diagonal,blendEllipsoids,counters}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {intersection,size,plus,scale,minus,length}=await import('../src/avbd3d/ref/sdf/math.ts');
+  type V3=[number,number,number];
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds),center=scale(plus(domain.min,domain.max),.5);
+  a.seeds=[plus(center,[.05,-.03,.02])];b.seeds=[];
+  const base={...collisionParams(),optimizer:1 as const,margin:0,cacheSize:1};
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  // Raw first point of the current result: position (words 8-10) and stored ellipsoid (28-33).
+  const raw=async()=>{const bytes=(8+28)*4,read=device.createBuffer({size:bytes,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
+    const encoder=device.createCommandEncoder();encoder.copyBufferToBuffer(pass.storage.current,0,read,0,bytes);device.queue.submit([encoder.finish()]);
+    await read.mapAsync(GPUMapMode.READ);const f=new Float32Array(read.getMappedRange().slice(0));read.destroy();
+    const e=f.slice(28,34);return {x:Array.from(f.slice(8,11)) as V3,E:[[e[0],e[1],e[2]],[e[1],e[3],e[4]],[e[2],e[4],e[5]]] as [V3,V3,V3]};};
+  try {
+    pass.step(bodies,[{a:0,b:1,key:1}],0,{...base,randomSamples:1});
+    const [first]=await pass.readResults();assert.equal(first.points.length,1);
+    const stored=await raw(),id=first.points[0].id;
+    // Static bodies: the cached seed is the stored position. No new samples, so no repulsion.
+    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,{...base,randomSamples:0});
+    const [second]=await pass.readResults();
+    const point=second.points.find(p=>p.cached&&p.id===id);assert.ok(point,'the step-1 point is re-optimized as cached');
+    const g=objectiveGradient(bodies[0],bodies[1],[],base.epsilon,base.alpha,counters());
+    const extent=plus(scale(size(domain),.5),minus(stored.x,center).map(Math.abs) as V3);
+    const fresh=diagonal(extent.map(e=>e*e*3) as V3),cold=ellipsoidMethod(g,stored.x,domain,fresh,base.tolerance,base.maxIterations);
+    const cpu=ellipsoidMethod(g,stored.x,domain,blendEllipsoids(stored.E,fresh),base.tolerance,base.maxIterations);
+    assert.ok(length(minus(point.x as V3,cpu.x))<=base.tolerance,`GPU ${point.x} vs CPU ${cpu.x}`);
+    assert.ok(Math.abs(second.iterations-cpu.iterations)<=2,`iterations GPU ${second.iterations} vs CPU warm ${cpu.iterations} (cold ${cold.iterations})`);
+    // The warm start must matter here, so a dropped or wrong blend cannot pass by coincidence.
+    assert.notDeepEqual(blendEllipsoids(stored.E,fresh),fresh);
+    const next=await raw(),scaleE=Math.max(...cpu.ellipsoid.flat().map(Math.abs));
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++)assert.ok(Math.abs(next.E[r][c]-cpu.ellipsoid[r][c])<=1e-3*scaleE,`E[${r}][${c}] GPU ${next.E[r][c]} vs CPU ${cpu.ellipsoid[r][c]}`);
+  } finally {pass.destroy();}
+});
+
+gpuTest('GPU SDF opt-in gradient-descent stop never stops sooner and extends released stops', async device=>{
+  const {intersection,plus,scale}=await import('../src/avbd3d/ref/sdf/math.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds);a.seeds=[scale(plus(domain.min,domain.max),.5)];b.seeds=[];
+  // On the CPU stream this overlap stops after 2-8 released iterations and runs to the limit with
+  // the opt-in. The GPU stream differs, so per key only require the opt-in never to stop sooner.
+  const params={...collisionParams(),margin:0,optimizer:2 as const,cacheSize:0,randomSamples:1};
+  const run=async(key:number,sgdGradientStopOnly?:boolean)=>{const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+    try{pass.step(bodies,[{a:0,b:1,key}],0,{...params,sgdGradientStopOnly});const [r]=await pass.readResults();assert.equal(r.points.length,1);return r.iterations;}finally{pass.destroy();}};
+  let extended=0;
+  for(const key of [1,2,3,4,5,6,7,8]) {
+    const released=await run(key),explicit=await run(key,false),optIn=await run(key,true);
+    assert.equal(explicit,released,`key ${key}: absent and false are the released behaviour`);
+    assert.ok(optIn>=released && optIn<=params.maxIterations,`key ${key}: opt-in ${optIn} vs released ${released}`);
+    if(optIn>released)extended++;
+  }
+  assert.ok(extended>0,'the opt-in runs past the released stop on some key');
+});

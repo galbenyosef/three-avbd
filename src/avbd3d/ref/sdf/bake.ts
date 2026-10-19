@@ -12,9 +12,11 @@ import { VoxelField } from './voxel.ts';
 
 export interface TriangleMesh { positions: ArrayLike<number>; indices?: ArrayLike<number> }
 export interface BakeOptions {
-  /** Cells along the longest bounding-box axis. Default 32; integer 4–256. */
+  /** Cells along the longest bounding-box axis. Default 32; integer 4–256. Upstream
+   * sdf-dcd-demo always bakes at 100 (see SDF_BAKING.md, "Differences from upstream"). */
   resolution?: number;
-  /** Normalize longest axis to one; default false (preserve geometry units). */
+  /** Normalize longest axis to one; default false (preserve geometry units). Upstream
+   * always normalizes; pass `{ resolution: 100, normalize: true }` to match its grids. */
   normalize?: boolean;
   /** Grid allocation ceiling, excluding input/BVH. Default 64 MiB. */
   maxGridBytes?: number;

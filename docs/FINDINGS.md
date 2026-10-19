@@ -2,6 +2,310 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Paper Table 5 SGD row matches SGD without its ‖Δx‖ < τ stop (opt-in added)
+
+The entry below found that the released SGD costs about 0.48× Nelder–Mead per pair, against the
+paper's 3.40×. To find which change matches the paper, the pinned upstream oracle was built in
+scratch with a runtime switch over four `gradientDescent` variants
+(`measurements/sdf-sgd-variants-2026-10-18.patch`). Each variant ran all ten Table 5
+configurations for 360 frames, with released parameters and optimizer 2. Variant 0's output is
+byte-identical to the unpatched SGD run.
+
+| Variant | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+|---|---|---|---|---|
+| 0 released (decaying step and noise; stop on ‖g‖ < τ or ‖Δx‖ < τ) | 0.48 | 1088 | 40.0 | −0.28 |
+| 1 fixed step and noise | 2.15 | 4632 | 42.2 | −0.16 |
+| 2 fixed step, decaying noise | 1.15 | 2682 | 40.3 | −0.36 |
+| 3 released without the ‖Δx‖ < τ stop | **3.48** | **7086** | 38.3 | 0.70 |
+| paper | 3.40 | 7708 | 46.3 | |
+
+- **Variant 3 matches the paper's row in aggregate and in pattern (r = 0.70):**
+  - The mean ratio and the iteration count are close.
+  - The per-configuration pattern matches, including Undistorted as the highest (4.83 vs 4.94).
+  - The largest miss is DISPLACE 0.20 (2.23 vs 3.43).
+- **The fixed step does not explain it.** The paper's prose attributes SGD's behaviour to a fixed
+  step size (Sec. 4), yet variant 1 neither reaches the paper's cost nor follows its pattern.
+- **Why released SGD stops early.** A counting build, Undistorted, 360 frames:
+  - 60% of calls stop on ‖Δx‖ < τ because the projection onto V pinned the iterate at the box
+    face;
+  - 30% stop on a small unclamped step;
+  - 11% stop on ‖g‖ < τ;
+  - none hit the limit;
+  - the result is about 3 iterations per call.
+
+  Without the Δx stop, 64% of calls run to the 50-iteration limit and the rest stop on the
+  gradient, about 36 iterations per call.
+- **Conclusion:** this is an inference, not a confirmation from the authors. The paper's SGD
+  numbers are consistent with an SGD that terminates only on the gradient norm or the iteration
+  limit. The released code also applies the paper's stated ‖x(k+1) − x(k)‖ < τ test (Sec. 3.3),
+  which mostly fires as a stall against V's boundary. Contacts remain lower than the paper's
+  (38–42 against 46) in every variant, which is the same trajectory gap seen for Nelder–Mead.
+- **Opt-in on our side:** `sgdGradientStopOnly` (default false) drops the Δx stop on the CPU and
+  GPU. The default keeps the released behaviour and the oracle fixtures.
+  - A CPU test checks the opt-in on the 16 oracle cases. With the same stream it replays the
+    released iterates, then stops only on the gradient or the limit.
+  - A GPU test runs an overlapping box pair over eight pair keys. On every key the opt-in never
+    stops sooner than released, and it extends the released stop on at least one key.
+- **GPU Table 5 SGD rows with the opt-in** (`scripts/sdf-table5.ts out 360 2 gradient-stop`, 360
+  frames, released parameters):
+
+  | | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+  |---|---|---|---|---|
+  | GPU, opt-in | 3.50 | 6674 | 46.7 | 0.73 |
+  | upstream variant 3 | 3.48 | 7086 | 38.3 | 0.70 |
+  | paper | 3.40 | 7708 | 46.3 | |
+
+  - The GPU and upstream variant 3 correlate at 0.81 per configuration.
+  - The largest misses against the paper are TWIST 0.50 (3.73 vs 2.73) and Undistorted (5.42 vs
+    4.94).
+  - Iterations per step run about 13% low. This follows from pair counts, which depend on the
+    trajectory (see the Nelder–Mead Table 5 entry).
+  - With this opt-in, the production GPU path matches all three Table 5 optimizer rows in
+    aggregate, and the SGD row also in pattern (r = 0.73). This is not a per-configuration match:
+    single configurations are off by up to 1.0 (TWIST 0.50), and t_coll is not measured.
+
+Measurements: `measurements/sdf-sgd-variants-2026-10-18.json`, with per-configuration rows, the paper
+values and the stop-reason counts.
+GPU opt-in rows: `measurements/sdf-table5-sgd-gradient-stop-2026-10-18.json`.
+
+## 2026-10-18 — GPU Ellipsoid and SGD; Table 5 rows match upstream, paper SGD row does not
+
+The GPU narrowphase now runs all three optimizers (`optimizer` 0/1/2). This supersedes the "GPU
+remains Nelder–Mead only" notes in the two entries below.
+- **Ellipsoid (1):** a WGSL port of the CPU reference. Each point record grows from 20 to 28 words,
+  to store its symmetric ellipsoid for the 0.75/0.25 warm start. A GPU test checks the position
+  (within τ) and the iteration count (within 2) against the verified CPU reference. A second test
+  re-optimizes a cached point from its stored ellipsoid and compares the position, the iterations
+  and the new ellipsoid against the CPU blend plus `ellipsoidMethod`. Removing the blend, or
+  corrupting the unpacking of the stored ellipsoid, makes that test fail.
+- **SGD (2):** noise comes from the GPU per-pair stream, so it matches upstream statistically, not
+  bitwise. Tested for descent and for repeatability.
+- **Params block:** 64 → 80 bytes (`optimizer`, `stepSize`). `stepSize` is validated and uploaded
+  only for SGD; other optimizers pack 0.
+- **Cost for every optimizer:** the 8 ellipsoid words are always present, including for the
+  Nelder–Mead default. That adds 40% per point record, so 108 → 148 words per pair result at the
+  default 5 points (592 bytes), with the same growth in history copies. The automatic pair
+  ceiling that `sdfBroadphaseOptions` derives from the storage-binding limit falls by about 27%. At
+  20 points, the private per-invocation result grows from about 1.6 KB to about 2.3 KB. We accepted
+  this for one layout across optimizers. It has not been measured on the M1 / GTX 1080 target. If it
+  costs there, the ellipsoid words can move to a separate buffer bound only for optimizer 1.
+
+`scripts/sdf-table5.ts` now takes an optimizer list. It ran 360 frames for each of the ten Table 5
+configurations with released parameters, swapping only the optimizer. For an upstream comparison,
+the pinned oracle was built in scratch with one extra line that sets `solver.params.optimizer`
+from `$OPT` after the scene is built. That line is not committed, so the driver hash is unchanged.
+That build's Nelder–Mead runs reproduce all ten committed upstream captures exactly (iterations
+and pairs).
+
+The cost measure is iterations per pair, divided by the same source's Nelder–Mead iterations per
+pair. Pair counts depend on the trajectory (see the Table 5 entry below), so the ratio isolates
+optimizer cost. Means over the ten configurations:
+
+| | GPU (ours) | upstream C++ | paper |
+|---|---|---|---|
+| Ellipsoid / NM | 2.35 | 2.35 | 2.22 |
+| SGD / NM | 0.49 | 0.48 | 3.40 |
+
+- **Ellipsoid:** reproduced. Per configuration, the GPU and upstream agree within ~16% (for
+  example BEND 0.95 at 158 vs 156 iterations per pair). Both are close to the paper.
+- **SGD:** the GPU matches upstream on every configuration, within 0.10 of the ratio. Upstream's
+  released `gradientDescent` stops after about 15–40 iterations per pair (88 on TWIST 5.00). The
+  paper reports about 3.4× Nelder–Mead, close to the 50-iteration limit on every point. So the
+  paper's SGD row is not reproduced by the released code itself. The likely cause is a different
+  step size or stopping rule in the paper's runs. That was not investigated further, and released
+  parameters were not changed.
+- **Queries:** the paper lists queries equal to iterations for Ellipsoid and SGD. Upstream (and
+  this pass) also counts one final query per point, and Ellipsoid feasibility cuts outside V need
+  no query. So queries are not directly comparable.
+- **Not covered:** contacts per call vary with the trajectory; SGD paths depend on the random
+  stream; t_coll is not measured.
+
+Measurements: `measurements/sdf-table5-optimizers-2026-10-18.json`, with GPU, upstream and paper
+rows and the ratios.
+
+## 2026-10-18 — Ellipsoid and gradient-descent optimizers ported to the CPU reference
+
+The audit found only Nelder–Mead ported, while the paper compares three optimizers (Tables 1, 3–5).
+The CPU reference now implements all three, ported line for line from `optimize.cpp` and
+`collide.cpp` with float32 emulation:
+- the analytic objective gradient: the softmax blend of the field gradients, minus repulsion;
+- the deep-cut ellipsoid method [LM24], with upstream's initial ellipsoid and 0.75/0.25 warm start;
+- stochastic projected gradient descent [RM51], with decaying step and noise from the manifold's
+  shared stream.
+
+SGD also keeps its samples under the convex skip, as upstream does.
+
+Upstream ground truth comes from new driver commands, run through the existing harness on a clean
+pinned checkout:
+- `optimizers.json`: 16 cases. Each records the objective and gradient at the seed, an ellipsoid
+  run, a warm-started ellipsoid run, and an SGD run.
+- `manifolds-optimizers.json`: 4-step warm ellipsoid and SGD boxes, and ellipsoid-on-torus and
+  SGD-on-bend seed cases.
+
+`verify` first confirmed every existing fixture reproduces exactly. After generation, only the
+manifest changed (driver hash plus the new entries); all other fixtures were byte-identical.
+On macOS the harness needs `SDKROOT=$(xcrun --show-sdk-path)`.
+
+The port matches on the first run:
+- iteration and query counts are exact;
+- positions are within τ and final ellipsoids within 1e-4;
+- manifold points, ranks, flags, stats and RNG consumption are exact across chained warm steps.
+
+The GPU narrowphase remains Nelder–Mead only, so the Ellipsoid and SGD rows of Tables 1, 3–5
+are still not reproduced on the production path.
+
+
+## 2026-10-18 — Paper Fig. 6: cache size dominates penetration; curvature gain not reproduced
+
+`scripts/sdf-fig6.ts` drops the released bunny (scale 1) and cow (scale 1.3) onto the ground plane
+from 100 deterministic random orientations (uniform on SO(3), identical across configurations).
+Each starts with its lowest vertex 0.25 m up. Runs use 500 frames with 4 substeps and 20 iterations
+on the production GPU path, with the released (paper-default) parameters.
+
+The sweep covers n_cache ∈ {4, 8, 16} × n_sto ∈ {1, 4} × uniform/curvature sampling, using
+`maxPointsPerPair` = max(5, n_cache + n_sto). All 100 rollouts of a configuration share one World,
+spaced so only body–ground pairs exist.
+
+Two metrics are recorded per frame and rollout:
+- **Penetration:** the lowest source-mesh vertex below the plane, which is exact for a plane.
+- **Intrusion:** depth below the solver's 1 cm rest gap, which separates configurations even when no
+  geometry overlaps.
+
+Tables report the mean over frames of the per-frame mean across rollouts, and the peak over frames
+of the per-frame maximum across rollouts. All values are in mm.
+
+| Shape | Sampling | n_cache | n_sto | Mean penetration | Peak penetration | Mean intrusion | Peak intrusion |
+|---|---|---|---|---|---|---|---|
+| bunny | uniform | 4 | 1 | 0.511 | 78.2 | 2.63 | 88.2 |
+| bunny | uniform | 4 | 4 | 0.005 | 5.9 | 1.25 | 15.9 |
+| bunny | uniform | 8 | 1 | 0.003 | 3.0 | 1.08 | 13.0 |
+| bunny | uniform | 8 | 4 | 0.000 | 0.0 | 1.02 | 3.8 |
+| bunny | uniform | 16 | 1 | 0.000 | 0.0 | 1.03 | 6.7 |
+| bunny | uniform | 16 | 4 | 0.000 | 0.0 | 1.10 | 3.1 |
+| bunny | curvature | 4 | 1 | 0.477 | 64.4 | 2.52 | 74.4 |
+| bunny | curvature | 4 | 4 | 0.017 | 5.9 | 1.32 | 15.9 |
+| bunny | curvature | 8 | 1 | 0.003 | 3.0 | 1.09 | 13.0 |
+| bunny | curvature | 8 | 4 | 0.000 | 0.0 | 1.03 | 3.8 |
+| bunny | curvature | 16 | 1 | 0.000 | 0.0 | 1.03 | 6.7 |
+| bunny | curvature | 16 | 4 | 0.000 | 0.0 | 1.10 | 3.2 |
+| cow | uniform | 4 | 1 | 3.810 | 300.0 | 7.59 | 310.0 |
+| cow | uniform | 4 | 4 | 0.234 | 82.1 | 2.65 | 92.1 |
+| cow | uniform | 8 | 1 | 0.170 | 69.5 | 1.78 | 79.5 |
+| cow | uniform | 8 | 4 | 0.000 | 2.2 | 1.00 | 12.2 |
+| cow | uniform | 16 | 1 | 0.001 | 4.2 | 1.06 | 14.2 |
+| cow | uniform | 16 | 4 | 0.000 | 0.0 | 0.96 | 10.0 |
+| cow | curvature | 4 | 1 | 3.684 | 334.7 | 7.94 | 344.7 |
+| cow | curvature | 4 | 4 | 0.586 | 101.1 | 3.03 | 111.1 |
+| cow | curvature | 8 | 1 | 0.134 | 35.3 | 1.62 | 45.3 |
+| cow | curvature | 8 | 4 | 0.001 | 5.9 | 1.03 | 15.9 |
+| cow | curvature | 16 | 1 | 0.001 | 4.2 | 1.09 | 14.2 |
+| cow | curvature | 16 | 4 | 0.000 | 0.0 | 0.97 | 10.0 |
+
+- **Reproduced: cache size dominates.** Going from n_cache 4 → 8 → 16 cuts mean penetration by
+  roughly 100× and then 100× again. Bunny goes 0.51 → 0.003 → 0 mm; cow goes 3.8 → 0.17 → 0.001 mm.
+  Four stochastic samples help most at small caches. This matches the paper's statement that
+  "sample caching exerts the most profound impact".
+- **Not reproduced: curvature sampling.** Curvature-aware sampling is only marginally better at
+  n_cache 4 / n_sto 1 (bunny 0.48 vs 0.51 mm, cow 3.68 vs 3.81 mm). It is *worse* for the cow at
+  n_cache 4 / n_sto 4 (0.59 vs 0.23 mm). The paper reports it "significantly suppresses
+  interpenetration".
+- **The release default is the weak case.** n_cache 4 / n_sto 1, the released default, lets a cow
+  sink up to 300 mm in the worst rollout. These runs use the released parameters without our
+  mesh-quality corrections, as the paper's experiment does.
+- **Not reproduced: the oracle and the paper's exact setup.** The paper's 1000-point brute-force
+  oracle simulation is a different collision method and is not reproduced. The paper's drop height,
+  frame count and averaging (mean vs max over rollouts) are unstated; both aggregates are stored.
+
+Measurements: `measurements/sdf-fig6-2026-10-18.json`, which holds per-frame curves for every run.
+
+## 2026-10-18 — Paper Table 5 (Nelder–Mead rows): counts reproduced per pair
+
+`scripts/sdf-table5.ts` runs the operator-distorted Falling Boxes scenes on the GPU with the
+released parameters, which are the paper's defaults. It covers the undistorted baseline and
+Bend, Displace and Twist at the paper's three strengths each, using the oracle's `--warp-k`
+captures (`loadReleasedScene(id, read, k)`). For each it reports contacts, Nelder–Mead
+iterations and SDF queries per collision call. Each frame's sums are divided by its 4
+substeps, then averaged over 360 frames. Upstream's per-call numbers come from its captures
+the same way. The paper's numbers are from Table 5, p. 10. Collision time is not measured.
+
+| Config | Ours (GPU): contacts / iterations / queries | Upstream capture | Paper (NM) | Iterations per pair, ours / upstream |
+|---|---|---|---|---|
+| Undistorted | 48.0 / 834 / 1965 | 39.8 / 701 / 1650 | 45.7 / 1066 / 2302 | 35.4 / 37.6 |
+| Bend 0.15 | 55.7 / 2076 / 4375 | 44.4 / 2281 / 4897 | 46.0 / 2389 / 5010 | 61.7 / 55.4 |
+| Bend 0.55 | 51.9 / 2288 / 4967 | 40.3 / 2399 / 5117 | 39.8 / 2346 / 4896 | 54.0 / 58.1 |
+| Bend 0.95 | 63.5 / 2950 / 6278 | 50.2 / 3073 / 6491 | 36.4 / 2842 / 5870 | 60.7 / 61.4 |
+| Displace 0.05 | 58.8 / 1693 / 3675 | 38.9 / 1225 / 2714 | 42.0 / 1707 / 3600 | 53.5 / 48.4 |
+| Displace 0.10 | 49.3 / 1492 / 3222 | 40.4 / 1429 / 3078 | 36.1 / 1861 / 3939 | 54.6 / 53.4 |
+| Displace 0.20 | 36.1 / 1392 / 2939 | 41.8 / 2566 / 5386 | 36.1 / 2330 / 4982 | 61.6 / 63.7 |
+| Twist 0.50 | 57.1 / 2081 / 4544 | 50.4 / 2536 / 5416 | 45.8 / 3161 / 6561 | 51.4 / 57.0 |
+| Twist 2.50 | 52.8 / 2610 / 5518 | 40.0 / 2751 / 5811 | 42.1 / 3354 / 7081 | 66.0 / 66.0 |
+| Twist 5.00 | 43.6 / 2399 / 5022 | 36.5 / 2663 / 5583 | 43.5 / 2743 / 5871 | 74.7 / 72.2 |
+
+- **Per pair:** our Nelder–Mead cost matches upstream's within about 12% in every configuration.
+- **Totals:** both implementations land within roughly ±40% of the paper. The ordering matches:
+  distortion costs 1.7–3.5× the undistorted baseline here, against the paper's 1.6–3.1×, and
+  queries run about 2.1× iterations in all three.
+- **Displace 0.20 outlier (−40%):** this is pair count. Our planks spend fewer frames in contact
+  (22.6 against 40.3 pairs), a trajectory difference from AVBD versus sequential impulses.
+- **Contacts:** 36–64 per call, against the paper's 36–46. This matches our generally higher
+  contact counts.
+- **Upstream undistorted (701 against the paper's 1066):** the released code's convex skip,
+  which the paper does not describe, likely explains this.
+- **Run:** a single deterministic rollout, repeated bit-identically.
+- **Not reproduced:** the Ellipsoid and SGD rows (only Nelder–Mead was ported at the time; see the
+  GPU Ellipsoid and SGD entry above) and t_coll.
+
+Measurements: `measurements/sdf-table5-2026-10-18.json`.
+
+## 2026-10-18 — Audit against the paper and upstream sdf-dcd-demo
+
+Superseded in part by the entries above: the Ellipsoid and SGD optimizers, the Table 5 sweep and
+the Fig. 6 limits listed here as missing were added later the same day.
+
+A read-only audit compared the CPU port, the GPU path and the docs with Giles & Andrews
+(CGF 45(7) 2026) and the pinned upstream 1dcdf1e7.
+
+**Faithful on the default path:**
+- Algorithm 1: caching, Eq. 6 advection, top-up, convex skip, curvature reservoir sampling,
+  deduplication, ranking, Eq. 5 normals and separation, and the gap outside both bodies.
+- Eqs. 2–3 and the defaults (ε 0.1, α 0.01, τ 0.01, 50 iterations, margin 0.02, allowed
+  penetration 0.01).
+- Nelder–Mead, every analytic field and warp, voxel sampling and its outside-grid extension.
+- Curvature seeds and mass integration. All 11 analytic seed sets match the captures to ≈1e-7.
+- Documented GPU difference: the per-pair 32-bit random stream.
+
+**Where upstream itself departs from the paper (inherited):**
+- Activity is decided by `separation < margin`, not φA<0 and φB<0 (paper p5).
+- The solver uses separation (φA+φB, or the Newton gap), not the paper's depth d.
+- Not in the paper: the convex-pair sample skip, replacement-threshold rank hysteresis, the
+  cached-point simplex cap, the coherent-normal rule, and the search box grown by margin/2.
+- Displace treats k as amplitude with a fixed frequency of 7; the paper writes k as frequency.
+- Collision runs on every substep, 4× per frame.
+
+**Our deviations from upstream:**
+- The AVBD contact skin. Now documented in SDF_PRODUCTION_BRIDGE.md.
+- Rolling handling covers the whole pair.
+- Warm-start forces are rotated as a whole vector.
+- Velocities come from AVBD position differences.
+- Pair orientation is reversed (a > b), which changes tie-breaks only.
+- The CPU adapter does not apply SDF mass, full inertia or scale.
+- Bake defaults differ. Now documented in SDF_BAKING.md.
+- Ellipsoid and SGD optimizers are missing; only Nelder–Mead exists.
+
+**Fixed here:**
+- SDF point ids could equal `SPHERE_FEATURE` (0x03000000), making `evalContact` treat the contact
+  as a built-in sphere. New ids now skip it; a GPU test seeds the counter just below it.
+- Stale docs: the body layout and anchor frame (SDF_GPU_DRAFT.md), the rolling-pair wording and
+  skin semantics (SDF_PRODUCTION_BRIDGE.md), and the key-bit comment in `layout.ts`.
+
+**Open:**
+- No quantitative paper experiment is reproduced: Tables 1–5 and Figs. 6–7. Table 5's k-sweep
+  captures exist but are unused.
+- The GPU limits (cache ≤4, total ≤5, ε>0) block the Table 2 and Fig. 6 sweeps on the GPU.
+- WGSL `sin`/`cos` outside [-π,π] in Displace and the spiky wheel is a CPU/GPU parity risk.
+
+
+
 ## 2026-10-18 — All eleven released SDF scenes reproduced; rolling contacts and non-convex quality
 
 `sdf-released.html` and `sdf-released-compare.ts` now load every sdf-dcd-demo scene. New: Falling

@@ -4,7 +4,7 @@ import { gunzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { principalInertia } from '../src/lib/inertia.ts';
-import { loadReleasedScene, releasedSettings, releasedScenes, type ReadAsset } from '../src/sdf-released/scenes.ts';
+import { loadReleasedScene, releasedSettings, releasedScenes, warpVariants, type ReadAsset } from '../src/sdf-released/scenes.ts';
 const read:ReadAsset=async path=>{const b=await readFile(new URL(`./fixtures/${path}`,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength) as ArrayBuffer;};
 const near=(a:number,b:number)=>assert.ok(Math.abs(a-b)<1e-6*Math.max(1,Math.abs(b)),`${a} != ${b}`);
 
@@ -87,4 +87,18 @@ test('analytic render surfaces lie on their field and face outward',async()=>{
     assert.ok(outward>=.99*total,`${spec.kind}: ${(100*outward/total).toFixed(2)}% of surface area faces outward`);
     geometry.dispose();
   }
+});
+
+test('released warp scenes load every captured Table 5 strength',async()=>{
+  for(const [id,strengths] of Object.entries(warpVariants)){
+    for(const k of strengths){
+      const scene=await loadReleasedScene(Number(id),read,k);
+      try{
+        const warps=scene.bodies.filter(b=>b.original.shape.kind==='warp');
+        assert.equal(warps.length,12,`scene ${id} k ${k}`);
+        for(const b of warps)near(b.original.shape.k as number,Number(k));
+      }finally{scene.dispose();}
+    }
+  }
+  await assert.rejects(loadReleasedScene(2,read,'0.15'),/No captured warp strength/);
 });

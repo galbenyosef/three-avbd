@@ -31,11 +31,18 @@ solver.setCollisionBackend(null);
   from the old basis to world space and into the new basis, then scaled by the
   solver's alpha/gamma. Penalties decay/clamp as in the production solver, including
   its optional mass-based normal penalty floor.
-- Sticking nonspherical contacts retain their local anchors. Spherical contacts
-  refresh anchors to avoid pinning a rotating material point. `Result.stats.w`
-  carries this spherical-pair flag; sampling query/iteration/ID counters are unchanged.
+- Sticking contacts retain their local anchors, except on rolling bodies: when either
+  body is an analytic sphere, capsule, cylinder, cone or torus (atlas kinds 1-5), anchors
+  are refreshed every step so a rotating material point is not pinned, and the contact
+  key carries `SDF_ROLLING_BIT` so `evalContact` uses step-start lever arms (as for the
+  built-in `SPHERE_FEATURE`). `Result.stats.w` carries this rolling-pair flag; sampling
+  query/iteration/ID counters are unchanged. The flag applies to the whole pair, so a box
+  resting on a sphere also refreshes its anchors (FINDINGS 2026-10-18).
 - The normal constraint uses `separation - margin + allowedPenetration`, matching
-  the CPU SDF bridge. Fresh tangent constraints start at zero; retained sticking
+  the CPU SDF bridge. This differs from upstream's sequential impulses inside the skin:
+  upstream stops all approach once `separation < margin` and adds Baumgarte correction
+  only beyond the allowed penetration, while this AVBD constraint applies force only
+  below `margin - allowedPenetration`. Resting gaps agree; behaviour within the skin does not. Fresh tangent constraints start at zero; retained sticking
   anchors retain their tangential displacement.
 - The standard pair hash is bypassed while this backend is installed. Multiple
   same-pair manifolds therefore cannot alias through its single-pair lookup.

@@ -3,11 +3,13 @@
 // have an unbounded (body-count-limited) list, rather than the old 64-body ceiling.
 import { PRELUDE_3D } from './layout.ts';
 import { IGNORE_PAIRS_WGSL } from './wgsl-collision.ts';
-export const sdfBroadphaseWGSL = /* wgsl */ `
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
+/** sdfBroadphaseWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfBroadphaseSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
 struct SdfBody { position: vec4f, rotation: vec4f, velocity: vec4f, omega: vec4f, lo: vec4f, hi: vec4f, anchorRotation: vec4f }
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 // counts: bodies, pair capacity, cell table size, cache table size.
 // offsets: next links, large head, pair counter, cache table. The next two words
 // after the pair counter hold tested pairs and large-body count.
@@ -102,3 +104,4 @@ fn candidate(i:u32,j:u32) {
   }
 }
 `;
+export const sdfBroadphaseWGSL = sdfBroadphaseSource();

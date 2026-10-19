@@ -1,6 +1,8 @@
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
 /** Exact mesh vertex contacts: a support against a covering box top face (meshPlaneContacts) or a
  * witness between two dynamic meshes (meshMeshContacts). Other pairs use Algorithm 1 only. */
-export const SDF_SUPPORTS_WGSL = /* wgsl */ `
+/** SDF_SUPPORTS_WGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfSupportsSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 fn meshPlaneContacts(pair: vec4u) -> bool {
   if(params.distances.w==0.0) { return false; }
   let fixedA=bodyA.velocity.w!=0.0 && atlas[bodyHeader(bodyA)].x==0u;
@@ -40,10 +42,10 @@ fn meshPlaneContacts(pair: vec4u) -> bool {
       for(var j=0u;j<old.identity.w;j++) { if(old.points[j].flags.z==id) { cached=1u; } }
     }
   }
-  let slot=min(work.identity.w,4u);
+  let slot=min(work.identity.w,${maxPoints - 1}u);
   work.points[slot]=Point(vec4f(p,min(0.0,separation)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,a-bodyA.position.xyz)),0),
-    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0));
+    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0),vec4f(1,0,0,1),vec4f(0,1,0,0));
   work.identity.w=slot+1u;
   return true;
 }
@@ -76,11 +78,12 @@ fn meshMeshContacts(pair: vec4u) -> bool {
       for(var j=0u;j<old.identity.w;j++) { if(old.points[j].flags.z==id) { cached=1u; } }
     }
   }
-  let slot=min(work.identity.w,4u);
+  let slot=min(work.identity.w,${maxPoints - 1}u);
   work.points[slot]=Point(vec4f(p,min(0.0,separation)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,a-bodyA.position.xyz)),0),
-    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0));
+    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0),vec4f(1,0,0,1),vec4f(0,1,0,0));
   work.identity.w=slot+1u;
   return true;
 }
 `;
+export const SDF_SUPPORTS_WGSL = sdfSupportsSource();

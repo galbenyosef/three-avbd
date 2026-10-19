@@ -40,6 +40,34 @@ triangles. Multiple shells must use consistent solid/cavity winding. Edge counts
 do not prove absence of self intersections; thin features may disappear at coarse
 resolution. Degenerate triangles and malformed/non-finite input are rejected.
 
+### Differences from upstream sdf-dcd-demo defaults
+
+The defaults are deliberately lighter than the released C++ baker, which always
+normalizes the mesh to a unit box and bakes at resolution 100. That is a 100³-node,
+roughly 16 MB float32 grid and a long synchronous bake, too heavy as a browser
+default. To match upstream's grids, pass both options explicitly:
+
+```ts
+bakeVoxelSdf(geometry, { resolution: 100, normalize: true });
+```
+
+Other intentional differences, from the 2026-10-18 audit:
+- **Degenerate triangles.** Zero-area and malformed triangles throw here. Upstream welds
+  positions within 1e-5 of the extent and silently drops index-degenerate triangles.
+  Clean such meshes before baking.
+- **Welding.** Only exactly equal positions are welded, and only for the edge
+  diagnostic. Upstream's tolerance weld also affects which triangles survive.
+- **Empty interiors.** `finalizeSdf` throws when no interior sample is found. Upstream
+  clamps the volume to 1e-6 and uses the bounds centre as the centre of mass.
+- **Fields without source triangles.** A `VoxelField` built from a raw grid falls back to
+  projected random points for curvature seeds. Upstream always samples its mesh by area.
+- **Numerics.** The determinant and zero-distance gradient cutoffs are relative to the
+  cell size (upstream uses absolute 1e-12 and 1e-6). Distances agree; gradients can
+  differ at medial-axis ties, as noted below.
+
+The released scenes are unaffected: they load upstream's captured resolution-100 grids
+and seeds rather than rebaking.
+
 The baker uses a median triangle BVH for nearest-surface distances and the
 oracle's three-axis jittered winding-vote approach for signs. Triangle ordering
 and arithmetic differ from the C++ baker, so baked grids are not claimed to be

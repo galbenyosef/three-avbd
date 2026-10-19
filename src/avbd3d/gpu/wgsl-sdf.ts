@@ -5,16 +5,19 @@
  * representations about the suitability of this software for any purpose.
  * It is provided "as is" without express or implied warranty.
  */
-import { SDF_SUPPORTS_WGSL } from './wgsl-sdf-supports.ts';
+import { sdfSupportsSource } from './wgsl-sdf-supports.ts';
 import { SDF_FIELDS_WGSL } from './wgsl-sdf-fields.ts';
+import { SPHERE_FEATURE } from './layout.ts';
+import { SDF_MAX_POINTS } from './sdf-layout.ts';
 /** Standalone Algorithm 1 pass: one invocation per pair, four cached + one new
  * candidate, independent per-point normals.
  */
-export const sdfNarrowphaseWGSL = /* wgsl */ `
-struct Params { counts: vec4u, values: vec4f, distances: vec4f, flags: vec4u }
+/** sdfNarrowphaseWGSL for a pass whose pair results hold `maxPoints` points. */
+export const sdfNarrowphaseSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
+struct Params { counts: vec4u, values: vec4f, distances: vec4f, flags: vec4u, opt: vec4u }
 struct Body { position: vec4f, rotation: vec4f, velocity: vec4f, omega: vec4f, lo: vec4f, hi: vec4f, anchorRotation: vec4f }
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
-struct Result { identity: vec4u, stats: vec4u, points: array<Point,5> }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
+struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 @group(0) @binding(0) var<uniform> params: Params;
 @group(0) @binding(1) var<storage,read> atlas: array<vec4u>;
 @group(0) @binding(2) var<storage,read> bodies: array<Body>;
@@ -38,6 +41,58 @@ fn objective(p: vec3f) -> f32 {
   work.stats.x++; var value=smoothMax(worldField(bodyA,p).phi,worldField(bodyB,p).phi);
   for(var i=0u;i<work.identity.w;i++) { value -= params.values.z*length(p-work.points[i].x.xyz); }
   return value;
+}
+// Objective with its analytic gradient (collide.cpp): xyz gradient, w value. One query.
+fn objectiveGradient(p: vec3f) -> vec4f {
+  work.stats.x++; let a=worldField(bodyA,p); let b=worldField(bodyB,p);
+  let root=sqrt((a.phi-b.phi)*(a.phi-b.phi)+params.values.y); var value=0.5*(a.phi+b.phi+root);
+  let t=select(0.0,(a.phi-b.phi)/root,root>0.0);
+  var gradient=a.gradient*(0.5*(1.0+t))+b.gradient*(0.5*(1.0-t));
+  for(var i=0u;i<work.identity.w;i++) {
+    let dx=p-work.points[i].x.xyz; let len=length(dx);
+    value-=params.values.z*len; if(len>1e-9) { gradient-=dx*(params.values.z/len); }
+  }
+  return vec4f(gradient,value);
+}
+var<private> ellipsoidState: mat3x3f;
+// Deep-cut ellipsoid method [LM24] (optimize.cpp). E is symmetric, so row/column order agrees.
+fn ellipsoidMethod(seed: vec3f, initial: mat3x3f) -> vec3f {
+  var x=seed; var E=initial; var best=clamp(x,lo,hi); var bestValue=3.4e38; var it=0u;
+  for(;it<params.flags.x;it++) {
+    var grad=vec3f(0); var value=0.0; var violation=0.0;
+    for(var i=0u;i<3u;i++) {
+      let below=lo[i]-x[i]; let above=x[i]-hi[i];
+      if(max(below,above)>violation) { violation=max(below,above); grad=vec3f(0); grad[i]=select(-1.0,1.0,above>below); }
+    }
+    if(violation==0.0) {
+      let r=objectiveGradient(x); value=r.w; grad=r.xyz;
+      if(value<bestValue) { bestValue=value; best=x; }
+      if(length(grad)<params.values.w) { break; }
+    }
+    let Eg=E*grad; let gEg=dot(grad,Eg);
+    if(!(gEg>1e-12)) { break; }
+    let s=sqrt(gEg); let a=min(select(value-bestValue,violation,violation>0.0)/s,0.5);
+    let step=Eg*((1.0+3.0*a)/(4.0*s)); x-=step;
+    E=(E-mat3x3f(Eg*Eg.x,Eg*Eg.y,Eg*Eg.z)*(2.0*(1.0+3.0*a)/(4.0*(1.0+a)*gEg)))*(9.0*(1.0-a*a)/8.0);
+    E=(E+transpose(E))*0.5;
+    if(length(step)<params.values.w) { break; }
+  }
+  work.stats.y+=it; ellipsoidState=E; return best;
+}
+// Uniform direction (maths.h onSphere): z, then the angle.
+fn onSphere() -> vec3f { let z=-1.0+2.0*randomFloat(); let angle=6.2831855*randomFloat(); let r=sqrt(max(0.0,1.0-z*z)); return vec3f(r*cos(angle),r*sin(angle),z); }
+// Stochastic projected gradient descent [RM51] (optimize.cpp).
+fn gradientDescent(seed: vec3f) -> vec3f {
+  var x=clamp(seed,lo,hi); var best=x; var bestValue=3.4e38; var it=0u; let stepSize=bitcast<f32>(params.opt.y);
+  for(;it<params.flags.x;it++) {
+    let r=objectiveGradient(x);
+    if(r.w<bestValue) { bestValue=r.w; best=x; }
+    let gradLength=length(r.xyz); if(gradLength<params.values.w) { break; }
+    let decay=1.0/sqrt(f32(it+1u)); let noise=onSphere()*(0.25*decay*max(gradLength,1.0));
+    let next=clamp(x-(r.xyz+noise)*(stepSize*decay),lo,hi); let converged=params.opt.z==0u && length(next-x)<params.values.w;
+    x=next; if(converged) { break; }
+  }
+  work.stats.y+=it; return best;
 }
 fn optimize(seed: vec3f, step: vec3f) -> vec3f {
   var x: array<vec3f,4>; var values: array<f32,4>; x[0]=clamp(seed,lo,hi);
@@ -76,9 +131,25 @@ fn seedPoint() -> vec3f {
 }
 fn velocity(body: Body,p: vec3f) -> vec3f { return body.velocity.xyz+cross(body.omega.xyz,p-body.position.xyz); }
 fn addPoint(old: Point, seed: vec3f, cached: bool) {
-  var step=max(0.1*(hi-lo),vec3f(0.5*params.values.w));
-  if(cached) { step=min(step,vec3f(max(length(seed-old.x.xyz),5.0*params.values.w))); }
-  let p=optimize(seed,step); let a=worldField(bodyA,p); let b=worldField(bodyB,p); work.stats.x++;
+  var ellipsoidA=vec4f(1,0,0,1); var ellipsoidB=vec4f(0,1,0,0); var p: vec3f;
+  if(params.opt.x==1u) {
+    // An ellipsoid centred at the seed enclosing V; cached points blend 0.75/0.25 (collide.cpp).
+    let extent=0.5*(hi-lo)+abs(seed-0.5*(lo+hi)); let d=extent*extent*3.0;
+    var E=mat3x3f(vec3f(d.x,0,0),vec3f(0,d.y,0),vec3f(0,0,d.z));
+    if(cached) {
+      let C=mat3x3f(old.ellipsoidA.xyz,vec3f(old.ellipsoidA.y,old.ellipsoidA.w,old.ellipsoidB.x),vec3f(old.ellipsoidA.z,old.ellipsoidB.x,old.ellipsoidB.y));
+      E=C*0.75+E*0.25;
+    }
+    p=ellipsoidMethod(seed,E); let F=ellipsoidState;
+    ellipsoidA=vec4f(F[0][0],F[0][1],F[0][2],F[1][1]); ellipsoidB=vec4f(F[1][2],F[2][2],0,0);
+  } else if(params.opt.x==2u) {
+    p=gradientDescent(seed);
+  } else {
+    var step=max(0.1*(hi-lo),vec3f(0.5*params.values.w));
+    if(cached) { step=min(step,vec3f(max(length(seed-old.x.xyz),5.0*params.values.w))); }
+    p=optimize(seed,step);
+  }
+  let a=worldField(bodyA,p); let b=worldField(bodyB,p); work.stats.x++;
   let na=unit(a.gradient); let nb=-unit(b.gradient); var normal=select(nb,na,a.phi<b.phi);
   if(cached) { normal=select(nb,na,dot(na,old.normal.xyz)>dot(nb,old.normal.xyz)); }
   let offsetA=a.gradient*(a.phi/max(dot(a.gradient,a.gradient),1e-8)); let offsetB=b.gradient*(b.phi/max(dot(b.gradient,b.gradient),1e-8));
@@ -97,13 +168,16 @@ fn addPoint(old: Point, seed: vec3f, cached: bool) {
     }
     if(a.phi>0.0 && b.phi>0.0 && separation>1e-6 && !(cached && dot(gap,old.normal.xyz)<0.0)) { normal=gap/separation; }
   }
-  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==0u || work.stats.z>=0x20000000u) { work.stats.z=1u; } id=work.stats.z; }
+  // New ids stay below SDF_ROLLING_BIT and never equal SPHERE_FEATURE, which evalContact
+  // would otherwise treat as a built-in sphere contact.
+  var id=old.flags.z; if(!cached) { work.stats.z++; if(work.stats.z==${SPHERE_FEATURE}u) { work.stats.z++; }
+    if(work.stats.z==0u || work.stats.z>=0x20000000u) { work.stats.z=1u; } id=work.stats.z; }
   let point=Point(vec4f(p,min(a.phi,b.phi)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,p-offsetA-bodyA.position.xyz)),smoothMax(a.phi,b.phi)),
-    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0));
+    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0),ellipsoidA,ellipsoidB);
   work.points[work.identity.w]=point; work.identity.w++;
 }
-${SDF_SUPPORTS_WGSL}
+${sdfSupportsSource(maxPoints)}
 @compute @workgroup_size(64)
 fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   let slot=invocation.x; if(slot>=params.counts.x) { return; }
@@ -122,7 +196,7 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
     let old=previous[pair.w];
     if(all(old.identity.xyz==pair.xyz)) {
       work.stats.z=old.stats.z;
-      for(var i=0u;i<min(old.identity.w,4u);i++) {
+      for(var i=0u;i<min(old.identity.w,${maxPoints - 1}u);i++) {
         let point=old.points[i];
         if(point.flags.z>=0x40000000u) { continue; }
         if(cached>=params.counts.z) { break; }
@@ -133,7 +207,8 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
       }
     }
   }
-  let skip=params.flags.w!=0u && activeCount>0u && activeCount==params.counts.z && atlas[bodyHeader(bodyA)].y!=0u && atlas[bodyHeader(bodyB)].y!=0u;
+  // Gradient descent keeps its samples under the convex skip (collide.cpp).
+  let skip=params.flags.w!=0u && params.opt.x!=2u && activeCount>0u && activeCount==params.counts.z && atlas[bodyHeader(bodyA)].y!=0u && atlas[bodyHeader(bodyB)].y!=0u;
   let samples=select(params.counts.w,0u,skip)+params.counts.z-cached;
   for(var i=0u;i<samples;i++) { var empty: Point; addPoint(empty,seedPoint(),false); }
   // First-wins duplicate rejection, then stable ranking (Algorithm 1).
@@ -155,3 +230,4 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   results[slot]=work;
 }
 `;
+export const sdfNarrowphaseWGSL = sdfNarrowphaseSource();

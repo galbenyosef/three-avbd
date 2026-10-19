@@ -16,7 +16,10 @@ see `SDF_PRODUCTION_BRIDGE.md`. The default collision backend is unchanged.
   interpolation and outside-grid extension. Uniform scaling/COM transforms match
   the CPU body's convention. Custom fields must first be baked to voxels.
 - `wgsl-sdf.ts`: one invocation per pair, 64 invocations/workgroup; bounded
-  Nelder–Mead; four cached plus one fresh candidate by default; cached-point
+  Nelder–Mead (`optimizer` 0, default), deep-cut ellipsoid (1, cached points warm
+  started 0.75/0.25 from their stored ellipsoid) or stochastic gradient descent (2,
+  `stepSize`, noise from the per-pair stream; opt-in `sgdGradientStopOnly` drops the ‖Δx‖ < τ stop);
+  four cached plus one fresh candidate by default; cached-point
   velocity advection; curvature-seed reservoir sampling; first-wins duplicate
   removal; stable rank sorting; coherent per-point normals and projected anchors.
 - `sdf-pass.ts`: explicit async creation on a **caller-supplied** GPU device,
@@ -38,17 +41,21 @@ numeric IDs, avoiding subnormal flush and float-ID precision problems.
 - Atlas header: 8 vec4 records; kind/convex/seed offset/count; grid offset/dimensions;
   bounds min/cell; bounds max; COM; two analytic parameter records; voxel origin.
   The following records hold optional float4 grid nodes and vec4 seed positions.
-- Body: 6 vec4 records; COM position/uniform scale, quaternion, linear velocity/static
-  flag, angular velocity/header uint32 bits, world bounds min/max.
+- Body: 7 vec4 records; COM position/uniform scale, field quaternion, linear velocity/static
+  flag, angular velocity/header uint32 bits, world bounds min/max, and the anchor rotation
+  (field frame to production body frame; identity for the standalone pass).
 - Pair: 4 uint32s; body A, body B, stable pair key, prior result slot or `0xffffffff`.
   Pairs must have unique keys. Keep body ordering consistent. Change keys when
   body slots are reused. Prior slots may explicitly remap reordered pairs.
   The shader checks A/B/key before using a cached record.
-- Result: 108 words (432 bytes); identity/count, query/iteration/next-ID counters,
-  then five 20-word point records. Each point stores optimizer position/depth,
+- Result: 148 words (592 bytes) at the default 5 points; identity/count, query/iteration/next-ID counters,
+  then 28-word point records (the last 8 words hold the symmetric ellipsoid warm start for optimizer 1; they are present for every optimizer, a 40% per-point cost, see FINDINGS). Each point stores optimizer position/depth,
   world normal/separation, body-A anchor/softmax, body-B anchor/rank, and uint32
-  active/cached/persistent-ID flags. Anchors are offsets from COM in rotated body
-  coordinates, **already in world-length units**, not unscaled field coordinates.
+  active/cached/persistent-ID flags. Anchors are body-local offsets from COM in the
+  production body frame (field frame rotated by the anchor rotation), **already in
+  world-length units**, not unscaled field coordinates. Persistent ids stay below
+  `SDF_ROLLING_BIT` (0x20000000) and skip `SPHERE_FEATURE` (0x03000000); opt-in vertex
+  contacts use `0x40000000 | side << 27 | vertex`.
 
 Only `active` points are contact constraints; inactive ranked samples still belong
 in the next search cache. No friction/normal impulses are solved or transported by

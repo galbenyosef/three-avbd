@@ -80,6 +80,13 @@ It does not roll back or replay the overflowing step. Preallocate for peak densi
 when losing even one frame of contacts is unacceptable.
 
 `maxPairs` is the initial capacity. Set `autoGrow: false` to keep it fixed.
+
+`maxPointsPerPair` (default 5, at most 20) is the per-pair point capacity of the GPU narrowphase.
+It sets the ceiling `cacheSize ≤ points−1` and `cacheSize + randomSamples ≤ points`. The default
+holds four cached points plus one fresh sample. The paper's widest sweep (Fig. 6 and Table 2:
+16 cached + 4 samples) needs 20. Memory scales with it: each pair's result is `8 + 20·points`
+words, and the solver reserves `points` contacts per candidate pair. The 5-point default is
+bit-identical to the previous fixed layout.
 `await world.adaptSdfCollisions()` explicitly checks/grows capacity and returns
 whether it grew. It reads counters only; it never reads poses or contacts.
 `sdfCollisionCapacity` reports current capacity. A device-limit/allocation failure
@@ -208,3 +215,8 @@ and detect separation deeper by more than one tolerance. Identity, independent
 normal and basis-transported warm force/penalty survive; tangential anchor error
 restarts at zero. This avoids preserving an obsolete support point over a newly
 penetrating contact. Default false; the released mesh-quality profile enables it.
+
+`collision.sgdGradientStopOnly` (only with `optimizer: 2`) stops gradient descent only on the
+gradient norm or `maxIterations`. It drops the released ‖Δx‖ < τ test, which mostly fires
+when the projected iterate stalls on the search box. This matches the paper's Table 5 SGD cost in
+aggregate and in pattern (r = 0.73), at about 6.5× the released SGD iterations (Table 5 mean). Default false, which matches the released code.

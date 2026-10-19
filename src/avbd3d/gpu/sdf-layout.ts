@@ -6,9 +6,20 @@ import { SdfBody } from '../ref/sdf/body.ts';
 import { collisionParams, type CollisionParams } from '../ref/sdf/manifold.ts';
 export const SDF_HEADER_WORDS = 32;
 export const SDF_BODY_WORDS = 28;
-export const SDF_POINT_WORDS = 20;
+/** Point record: position/depth, normal/separation, anchors, flags, then the symmetric ellipsoid
+ * warm start (e00 e01 e02 e11 | e12 e22) used by optimizer 1. */
+export const SDF_POINT_WORDS = 28;
+/** Default points per pair result: four cached plus one fresh sample. */
 export const SDF_MAX_POINTS = 5;
-export const SDF_RESULT_WORDS = 8 + SDF_MAX_POINTS * SDF_POINT_WORDS;
+/** Largest per-pass point capacity (the paper's widest sweep is 16 cached + 4 sampled). */
+export const SDF_POINT_LIMIT = 20;
+/** Words per pair result for a pass built with `maxPoints` points. */
+export const sdfResultWords = (maxPoints: number = SDF_MAX_POINTS) => 8 + maxPoints * SDF_POINT_WORDS;
+export const SDF_RESULT_WORDS = sdfResultWords();
+export function checkSdfPointCapacity(maxPoints: number): number {
+  if (!Number.isInteger(maxPoints) || maxPoints < 2 || maxPoints > SDF_POINT_LIMIT) throw new Error(`SDF point capacity must be an integer 2–${SDF_POINT_LIMIT}`);
+  return maxPoints;
+}
 export const SDF_NO_CACHE = 0xffffffff;
 export interface SdfPair { a: number; b: number; key: number; previous?: number }
 export interface SdfAtlas { data: Uint32Array<ArrayBuffer>; offsets: ReadonlyMap<Field, number> }
@@ -85,25 +96,32 @@ export function packSdfPairs(pairs: readonly SdfPair[], bodyCount: number, previ
   });
   return data;
 }
-export function packSdfParams(pairCount: number, step: number, dt: number, p: CollisionParams = collisionParams()): Uint32Array<ArrayBuffer> {
+/** `maxPoints` is the pass's point capacity: cache ≤ maxPoints−1, cache + samples ≤ maxPoints. */
+export function packSdfParams(pairCount: number, step: number, dt: number, p: CollisionParams = collisionParams(), maxPoints: number = SDF_MAX_POINTS): Uint32Array<ArrayBuffer> {
   if (!Number.isInteger(pairCount) || pairCount < 0 || pairCount > 0xffffffff || !Number.isInteger(step) || step < 0 || step > 0xffffffff || !Number.isFinite(dt) || dt < 0) throw new Error('Invalid SDF dispatch parameters');
-  if (p.optimizer !== 0 || !Number.isInteger(p.cacheSize) || p.cacheSize < 0 || p.cacheSize > 4 || !Number.isInteger(p.randomSamples) || p.randomSamples < 0 || p.cacheSize + p.randomSamples > 5 || !Number.isInteger(p.maxIterations) || p.maxIterations < 1 || p.maxIterations > 512) throw new Error('GPU SDF supports at most four cached/five total samples and 1–512 iterations');
+  checkSdfPointCapacity(maxPoints);
+  if (![0, 1, 2].includes(p.optimizer)) throw new Error(`Unknown SDF optimizer ${p.optimizer}`);
+  // Only gradient descent reads stepSize; other optimizers pack 0 so no unchecked float reaches the GPU.
+  if (p.optimizer === 2 && !(Math.fround(p.stepSize) > 0 && Number.isFinite(Math.fround(p.stepSize)))) throw new Error('SDF gradient descent needs a finite positive stepSize');
+  if (!Number.isInteger(p.cacheSize) || p.cacheSize < 0 || p.cacheSize > maxPoints - 1 || !Number.isInteger(p.randomSamples) || p.randomSamples < 0 || p.cacheSize + p.randomSamples > maxPoints || !Number.isInteger(p.maxIterations) || p.maxIterations < 1 || p.maxIterations > 512) throw new Error(`This GPU SDF pass supports at most ${maxPoints - 1} cached/${maxPoints} total samples and 1–512 iterations`);
   if (![p.epsilon, p.tolerance].every(v => Math.fround(v) > 0 && Number.isFinite(Math.fround(v))) || ![p.alpha, p.margin, p.replacementThreshold].every(v => v >= 0 && Number.isFinite(Math.fround(v)))) throw new Error('Invalid SDF collision distances');
-  const data = new Uint32Array(16), f = new Float32Array(data.buffer);
+  const data = new Uint32Array(20), f = new Float32Array(data.buffer);
   data.set([pairCount, step, p.cacheSize, p.randomSamples]);
   f.set([dt, p.epsilon, p.alpha, p.tolerance], 4);
   f.set([p.margin, p.replacementThreshold, +(p.signedSeparation ?? false), +(p.meshVertexContacts ?? false)], 8);
   data.set([p.maxIterations, +p.warmStart, +p.curvatureSampling, +p.skipConvexSamples], 12);
+  data[16] = p.optimizer; f[17] = p.optimizer === 2 ? p.stepSize : 0; data[18] = +(p.optimizer === 2 && (p.sgdGradientStopOnly ?? false));
   finite(f.subarray(4, 12), 'SDF parameters'); return data;
 }
 export interface GpuSdfPoint { x: number[]; depth: number; normal: number[]; separation: number; anchorA: number[]; anchorB: number[]; rank: number; active: boolean; cached: boolean; id: number }
 export interface GpuSdfResult { a: number; b: number; key: number; queries: number; iterations: number; points: GpuSdfPoint[] }
-export function decodeSdfResults(buffer: ArrayBuffer, count: number): GpuSdfResult[] {
-  if (!Number.isSafeInteger(count) || count < 0 || buffer.byteLength < count * SDF_RESULT_WORDS * 4) throw new Error('SDF result buffer too short');
+export function decodeSdfResults(buffer: ArrayBuffer, count: number, maxPoints: number = SDF_MAX_POINTS): GpuSdfResult[] {
+  const stride = sdfResultWords(checkSdfPointCapacity(maxPoints));
+  if (!Number.isSafeInteger(count) || count < 0 || buffer.byteLength < count * stride * 4) throw new Error('SDF result buffer too short');
   const u = new Uint32Array(buffer), f = new Float32Array(buffer), results: GpuSdfResult[] = [];
   for (let i = 0; i < count; i++) {
-    const at = i * SDF_RESULT_WORDS, n = u[at + 3];
-    if (n > SDF_MAX_POINTS) throw new Error('Invalid SDF result count');
+    const at = i * stride, n = u[at + 3];
+    if (n > maxPoints) throw new Error('Invalid SDF result count');
     const points: GpuSdfPoint[] = [];
     for (let j = 0; j < n; j++) {
       const o = at + 8 + j * SDF_POINT_WORDS; finite(f.subarray(o, o + 16), 'SDF output');
