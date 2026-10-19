@@ -57,6 +57,13 @@ export class Random {
     return ((x >>> r) | (x << ((-r) & 31))) >>> 0;
   }
   uniform(): number { return (this.next() >>> 8) / 16777216; }
+  /** uniform(a, b): a + (b - a)·uniform(). */
+  range(a: number, b: number): number { return add(a, mul(sub(b, a), this.uniform())); }
+  /** Uniform direction (maths.h onSphere): z, then the angle, are drawn in that order. */
+  onSphere(): Vec {
+    const z = this.range(-1, 1), a = this.range(0, mul(2, f(Math.PI))), r = sqrt(Math.max(0, sub(1, mul(z, z))));
+    return [mul(r, cos(a)), mul(r, sin(a)), z];
+  }
   integer(n: number): number { return this.next() % n; }
   inBox(b: Aabb): Vec {
     const s = size(b);

@@ -36,12 +36,18 @@ with tempfile.TemporaryDirectory(prefix='avbd-sdf-oracle-') as temp:
     # Repeat the optimizer to detect accidental nondeterminism without relying on fixtures.
     if outputs['optimizer.json'] != json.loads(run(executable,'optimize')):
         raise SystemExit('Optimizer output is not repeatable')
+    outputs['optimizers.json'] = json.loads(run(executable,'optimizers'))
+    if outputs['optimizers.json'] != json.loads(run(executable,'optimizers')):
+        raise SystemExit('Ellipsoid/gradient-descent output is not repeatable')
     for name in SHAPES:
         print('Finalizing seeds', name, flush=True)
         outputs['seeds-'+name+'.json'] = json.loads(run(executable,'seeds',name,str(source/'assets')))
     outputs['manifolds.json'] = json.loads(run(executable,'manifolds',str(source/'assets')))
     if outputs['manifolds.json'] != json.loads(run(executable,'manifolds',str(source/'assets'))):
         raise SystemExit('Manifold output is not repeatable')
+    outputs['manifolds-optimizers.json'] = json.loads(run(executable,'manifolds-optimizers',str(source/'assets')))
+    if outputs['manifolds-optimizers.json'] != json.loads(run(executable,'manifolds-optimizers',str(source/'assets'))):
+        raise SystemExit('Optimizer manifold output is not repeatable')
     for index in range(11):
         print('Simulating scene', index, flush=True)
         outputs[f'scene-{index}.json'] = json.loads(run(executable,'scene',str(index),'360'))

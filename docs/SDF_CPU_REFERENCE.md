@@ -85,8 +85,13 @@ field)`. Call `dispose()` to restore the default box collision backend.
   now exposed through the unpublished `three-avbd/sdf` subpath; see
   `SDF_BAKING.md`. `finalizeSdf` assigns ordered seeds; without supplied seeds,
   the upstream uniform-domain fallback is used. GPU World binding remains deferred.
-- Only the default Nelder–Mead optimizer is ported. Selecting an alternative
-  optimizer throws; it never silently substitutes another algorithm.
+- All three upstream optimizers are ported: Nelder–Mead (0, default), the deep-cut
+  ellipsoid method (1) with its 0.75/0.25 cached-ellipsoid warm start, and stochastic
+  gradient descent (2) drawing from the manifold's shared PCG stream. Both 1 and 2 use the
+  analytic objective gradient. They are pinned to upstream by `optimizers.json` (16 cases,
+  exact iteration and query counts) and `manifolds-optimizers.json`, which chains 4-step warm
+  ellipsoid and SGD manifolds and checks RNG consumption exactly. The GPU narrowphase still
+  implements Nelder–Mead only and rejects other optimizers.
 - Collision distance parameters use world units, while epsilon has length-squared
   units. `scaleCollisionParams` provides explicit common scene/pair scaling;
   no automatic per-body policy is applied. Low-level `SdfBody` supports uniform

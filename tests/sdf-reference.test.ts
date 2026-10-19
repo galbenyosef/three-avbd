@@ -11,7 +11,7 @@ import { Rigid } from '../src/avbd3d/ref/body.ts';
 import { SdfCollisionAdapter } from '../src/avbd3d/ref/sdf/adapter.ts';
 import { SdfBody } from '../src/avbd3d/ref/sdf/body.ts';
 import { Random, f, vec, intersection, length, minus, type Vec, type Rotation } from '../src/avbd3d/ref/sdf/math.ts';
-import { objective, counters, nelderMead } from '../src/avbd3d/ref/sdf/optimize.ts';
+import { objective, objectiveGradient, counters, nelderMead, ellipsoidMethod, gradientDescent, type Mat3 } from '../src/avbd3d/ref/sdf/optimize.ts';
 import { SdfManifold, collisionParams, type SdfContact } from '../src/avbd3d/ref/sdf/manifold.ts';
 
 const load = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/oracle-sdf/${name}.json`, import.meta.url), 'utf8'));
@@ -61,6 +61,62 @@ test('SDF CPU Nelder–Mead matches the 16 oracle optimizations within tau', () 
     assert.ok(length(minus(result.x, vec(c.x))) <= c.tolerance, `${c.shapeA}: ${result.x} vs ${c.x}`);
     close(g(result.x), c.objective, 1e-5, c.shapeA);
     assert.equal(result.iterations, c.iterations); assert.equal(stats.queries - 1, c.queries);
+  }
+});
+
+test('SDF CPU objective gradient, Ellipsoid and gradient descent match the 16 oracle optimizations', () => {
+  const mat = (m: number[][]) => m.map(r => vec(r)) as Mat3;
+  for (const c of load('optimizers').cases) {
+    const a = new SdfBody(new AnalyticField(specs[c.shapeA]));
+    const b = new SdfBody(new AnalyticField(specs[c.shapeB]), vec(c.originB), c.rotationB.map(f) as Rotation);
+    const domain = intersection(a.bounds, b.bounds), repel = c.repulsionPoints.map((x: Vec) => ({ x: vec(x) }));
+    const label = `${c.shapeA} seed ${c.seed}`;
+    const g = (stats = counters()) => objectiveGradient(a, b, repel, f(c.epsilon), f(c.alpha), stats);
+    const atSeed = g()(vec(c.seed));
+    close(atSeed.value, c.seedValue, 2e-6, `${label} value`);
+    atSeed.gradient.forEach((x, i) => close(x, c.seedGradient[i], 2e-5, `${label} gradient ${i}`));
+    for (const [run, initial, seed] of [['ellipsoid', c.ellipsoid.initial, c.seed], ['warmEllipsoid', c.warmEllipsoid.initial, c.warmEllipsoid.seed]] as const) {
+      const expected = c[run], stats = counters();
+      const result = ellipsoidMethod(g(stats), vec(seed), domain, mat(initial), f(c.tolerance), c.maxIterations);
+      assert.ok(length(minus(result.x, vec(expected.x))) <= c.tolerance, `${label} ${run}: ${result.x} vs ${expected.x}`);
+      assert.equal(result.iterations, expected.iterations, `${label} ${run} iterations`);
+      assert.equal(stats.queries, expected.queries, `${label} ${run} queries`);
+      result.ellipsoid.forEach((row, i) => row.forEach((x, j) => close(x, expected.final[i][j], 1e-4, `${label} ${run} E[${i}][${j}]`)));
+    }
+    const stats = counters(), descent = gradientDescent(g(stats), vec(c.seed), domain, f(c.stepSize), f(c.tolerance), c.maxIterations, new Random());
+    assert.ok(length(minus(descent.x, vec(c.gradientDescent.x))) <= c.tolerance, `${label} SGD: ${descent.x} vs ${c.gradientDescent.x}`);
+    assert.equal(descent.iterations, c.gradientDescent.iterations, `${label} SGD iterations`);
+    assert.equal(stats.queries, c.gradientDescent.queries, `${label} SGD queries`);
+  }
+});
+
+test('SDF CPU Ellipsoid and gradient-descent manifolds match the oracle across chained warm steps', () => {
+  // Fixture points omit each cached ellipsoid, so multi-step cases chain this manifold's own state.
+  let m: SdfManifold | undefined, rng = new Random();
+  for (const c of load('manifolds-optimizers').cases) {
+    const make = (name: string, b: typeof c.bodyA) => {
+      const result = new SdfBody(field(name), vec(b.position), b.orientation.map(f) as Rotation, b.scale, b.static);
+      result.velocity = vec(b.velocity); result.angularVelocity = vec(b.angularVelocity); return result;
+    };
+    if (c.step === 0) {
+      m = new SdfManifold(make(c.shapeA, c.bodyA), make(c.shapeB, c.bodyB)); rng = new Random();
+      rng.state = BigInt(c.rng.before); m.points = c.initialCache.map((p: SdfContact) => ({ ...p, x: vec(p.x), normal: vec(p.normal) }));
+    }
+    assert.equal(rng.state.toString(), c.rng.before, `${c.name} step ${c.step} RNG before`);
+    const params = { ...collisionParams(), ...c.params }, stats = counters();
+    for (const key of ['epsilon', 'alpha', 'replacementThreshold', 'tolerance', 'stepSize', 'margin', 'allowedPenetration']) params[key] = f(params[key]);
+    m!.update(params, f(c.dt), rng, stats);
+    const label = `${c.name} step ${c.step}`;
+    assert.equal(rng.state.toString(), c.rng.after, `${label} RNG`);
+    assert.equal(m!.points.length, c.points.length, `${label} count`);
+    m!.points.forEach((p, i) => {
+      const q = c.points[i];
+      assert.ok(length(minus(p.x, vec(q.x))) <= c.params.tolerance, `${label} ${i}: ${p.x} vs ${q.x}`);
+      assert.equal(p.active, q.active, label); assert.equal(p.cached, q.cached, label);
+      p.normal.forEach((x, j) => close(x, q.normal[j], 2e-5, `${label} normal`));
+      close(p.depth, q.depth, 2e-5, label); close(p.separation, q.separation, 2e-5, label); close(p.rank, q.rank, 2e-5, label);
+    });
+    assert.deepEqual(stats, c.stats, label);
   }
 });
 
