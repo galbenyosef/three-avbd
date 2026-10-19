@@ -2,7 +2,7 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
-## 2026-10-18 — Paper Table 5 SGD row matches upstream SGD without its ‖Δx‖ < τ stop
+## 2026-10-18 — Paper Table 5 SGD row matches SGD without its ‖Δx‖ < τ stop (opt-in added)
 
 The entry below found that the released SGD costs about 0.48× Nelder–Mead per pair, against the
 paper's 3.40×. To find which change reproduces the paper, the pinned upstream oracle was built in
@@ -40,12 +40,31 @@ byte-identical to the unpatched SGD run.
   limit. The released code also applies the paper's stated ‖x(k+1) − x(k)‖ < τ test (Sec. 3.3),
   which mostly fires as a stall against V's boundary. Contacts remain lower than the paper's
   (38–42 against 46) in every variant, which is the same trajectory gap seen for Nelder–Mead.
-- **Not changed:** our CPU and GPU ports keep the released behaviour, which matches upstream.
-  Reproducing the paper's row on our side would need a new opt-in parameter that drops the Δx
-  stop for SGD.
+- **Opt-in on our side:** `sgdGradientStopOnly` (default false) drops the Δx stop on the CPU and
+  GPU. The default keeps the released behaviour and the oracle fixtures.
+  - A CPU test checks the opt-in on the 16 oracle cases. With the same stream it replays the
+    released iterates, then stops only on the gradient or the limit.
+  - A GPU test checks it on an overlapping box pair: released stops early, the opt-in runs to 50.
+- **GPU Table 5 SGD rows with the opt-in** (`scripts/sdf-table5.ts out 360 2 gradient-stop`, 360
+  frames, released parameters):
+
+  | | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+  |---|---|---|---|---|
+  | GPU, opt-in | 3.50 | 6674 | 46.7 | 0.73 |
+  | upstream variant 3 | 3.48 | 7086 | 38.3 | 0.70 |
+  | paper | 3.40 | 7708 | 46.3 | |
+
+  - The GPU and upstream variant 3 correlate at 0.81 per configuration.
+  - The largest misses against the paper are TWIST 0.50 (3.73 vs 2.73) and Undistorted (5.42 vs
+    4.94).
+  - Iterations per step run about 13% low. This follows from pair counts, which depend on the
+    trajectory (see the Nelder–Mead Table 5 entry).
+  - With this opt-in, all three Table 5 optimizer rows are reproduced on the production GPU path,
+    except t_coll.
 
 Measurements: `measurements/sdf-sgd-variants-2026-10-18.json`, with per-configuration rows, the paper
 values and the stop-reason counts.
+GPU opt-in rows: `measurements/sdf-table5-sgd-gradient-stop-2026-10-18.json`.
 
 ## 2026-10-18 — GPU Ellipsoid and SGD; Table 5 rows match upstream, paper SGD row does not
 

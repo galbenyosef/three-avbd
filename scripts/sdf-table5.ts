@@ -8,8 +8,10 @@ import { create, globals } from 'webgpu';
 import { loadReleasedScene, instantiateReleased, type ReadAsset } from '../src/sdf-released/scenes.ts';
 import { measuredFrame } from '../src/sdf-released/metrics.ts';
 const output=process.argv[2],frames=Number(process.argv[3]??360),optimizers=(process.argv[4]??'0').split(',').map(Number);
-if(!output||!Number.isInteger(frames)||frames<1||frames>360||optimizers.some(o=>![0,1,2].includes(o)))
-  throw new Error('Usage: sdf-table5.ts output.json [frames 1..360] [optimizers e.g. 0,1,2]');
+// 'gradient-stop' sets sgdGradientStopOnly (SGD stops only on the gradient norm or the limit).
+const sgdGradientStopOnly=process.argv[5]==='gradient-stop';
+if(!output||!Number.isInteger(frames)||frames<1||frames>360||optimizers.some(o=>![0,1,2].includes(o))||(process.argv[5]!==undefined&&!sgdGradientStopOnly))
+  throw new Error('Usage: sdf-table5.ts output.json [frames 1..360] [optimizers e.g. 0,1,2] [gradient-stop]');
 const optimizerNames=['Nelder–Mead','Ellipsoid','gradient descent'];
 // Paper Table 5: contacts, iterations, SDF queries per time step. The paper lists queries equal to
 // iterations for Ellipsoid and SGD; upstream (and this pass) also count one final query per point.
@@ -37,7 +39,7 @@ const rows:unknown[]=[];
 try{
   for(const optimizer of optimizers)for(const [name,id,k] of configs){
     const scene=await loadReleasedScene(id,read,k);
-    scene.capture.params={...scene.capture.params,optimizer:optimizer as 0|1|2};
+    scene.capture.params={...scene.capture.params,optimizer:optimizer as 0|1|2,...(sgdGradientStopOnly?{sgdGradientStopOnly}:{})};
     const paper=paperRows[optimizer];
     const {world,bodies}=await instantiateReleased(scene,{device},'reference');
     const substeps=Math.round(scene.capture.solver.dt/world.dt);
@@ -59,6 +61,6 @@ try{
     } finally {world.destroy();scene.dispose();}
   }
   if(errors.length)throw new Error(errors.join('\n'));
-  await writeFile(output,JSON.stringify({paper:'Giles & Andrews 2026, Table 5',optimizers,reference:'sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e',frames,profile:'reference (released parameters)',
+  await writeFile(output,JSON.stringify({paper:'Giles & Andrews 2026, Table 5',optimizers,sgdGradientStopOnly,reference:'sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e',frames,profile:'reference (released parameters)',
     conventions:'per collision call: iterations and queries are frame sums divided by substeps; contacts are the last substep of each frame; averaged over frames',rows},null,2)+'\n');
 } finally {device.destroy();}

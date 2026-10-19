@@ -110,7 +110,7 @@ export function packSdfParams(pairCount: number, step: number, dt: number, p: Co
   f.set([dt, p.epsilon, p.alpha, p.tolerance], 4);
   f.set([p.margin, p.replacementThreshold, +(p.signedSeparation ?? false), +(p.meshVertexContacts ?? false)], 8);
   data.set([p.maxIterations, +p.warmStart, +p.curvatureSampling, +p.skipConvexSamples], 12);
-  data[16] = p.optimizer; f[17] = p.optimizer === 2 ? p.stepSize : 0;
+  data[16] = p.optimizer; f[17] = p.optimizer === 2 ? p.stepSize : 0; data[18] = +(p.optimizer === 2 && (p.sgdGradientStopOnly ?? false));
   finite(f.subarray(4, 12), 'SDF parameters'); return data;
 }
 export interface GpuSdfPoint { x: number[]; depth: number; normal: number[]; separation: number; anchorA: number[]; anchorB: number[]; rank: number; active: boolean; cached: boolean; id: number }

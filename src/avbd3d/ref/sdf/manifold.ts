@@ -19,6 +19,9 @@ export interface CollisionParams {
   meshVertexContacts?: boolean;
   /** Refresh sticking anchors when a relocated contact is deeper by more than tolerance. */
   refreshDeeperContacts?: boolean;
+  /** Opt-in for optimizer 2: stop only on the gradient norm or the iteration limit, dropping the
+   * released ‖Δx‖ < τ test. Reproduces the paper's Table 5 SGD cost (see FINDINGS). */
+  sgdGradientStopOnly?: boolean;
   /** 0 Nelder–Mead (default), 1 deep-cut ellipsoid [LM24], 2 stochastic gradient descent [RM51]. */
   optimizer: 0 | 1 | 2; cacheSize: number; randomSamples: number; warmStart: boolean; curvatureSampling: boolean;
   skipConvexSamples: boolean; epsilon: number; alpha: number; replacementThreshold: number;
@@ -106,7 +109,7 @@ export class SdfManifold {
       point.ellipsoid = out.ellipsoid; result = out;
     } else if (p.optimizer === 2) {
       const g = objectiveGradient(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
-      result = gradientDescent(g, seed, this.volume, p.stepSize, p.tolerance, p.maxIterations, rng);
+      result = gradientDescent(g, seed, this.volume, p.stepSize, p.tolerance, p.maxIterations, rng, !p.sgdGradientStopOnly);
     } else {
       const g = objective(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
       let step = vmax(scale(size(this.volume), f(0.1)), [mul(0.5, p.tolerance), mul(0.5, p.tolerance), mul(0.5, p.tolerance)]);

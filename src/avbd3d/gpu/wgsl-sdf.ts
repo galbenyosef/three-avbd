@@ -88,7 +88,7 @@ fn gradientDescent(seed: vec3f) -> vec3f {
     if(r.w<bestValue) { bestValue=r.w; best=x; }
     let gradLength=length(r.xyz); if(gradLength<params.values.w) { break; }
     let decay=1.0/sqrt(f32(it+1u)); let noise=onSphere()*(0.25*decay*max(gradLength,1.0));
-    let next=clamp(x-(r.xyz+noise)*(stepSize*decay),lo,hi); let converged=length(next-x)<params.values.w;
+    let next=clamp(x-(r.xyz+noise)*(stepSize*decay),lo,hi); let converged=params.opt.z==0u && length(next-x)<params.values.w;
     x=next; if(converged) { break; }
   }
   work.stats.y+=it; return best;

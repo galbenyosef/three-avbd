@@ -18,7 +18,8 @@ see `SDF_PRODUCTION_BRIDGE.md`. The default collision backend is unchanged.
 - `wgsl-sdf.ts`: one invocation per pair, 64 invocations/workgroup; bounded
   Nelder–Mead (`optimizer` 0, default), deep-cut ellipsoid (1, cached points warm
   started 0.75/0.25 from their stored ellipsoid) or stochastic gradient descent (2,
-  `stepSize`, noise from the per-pair stream); four cached plus one fresh candidate by default; cached-point
+  `stepSize`, noise from the per-pair stream; opt-in `sgdGradientStopOnly` drops the ‖Δx‖ < τ stop);
+  four cached plus one fresh candidate by default; cached-point
   velocity advection; curvature-seed reservoir sampling; first-wins duplicate
   removal; stable rank sorting; coherent per-point normals and projected anchors.
 - `sdf-pass.ts`: explicit async creation on a **caller-supplied** GPU device,

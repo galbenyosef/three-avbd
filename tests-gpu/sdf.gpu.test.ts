@@ -310,3 +310,19 @@ gpuTest('GPU SDF ellipsoid warm start matches the CPU blend for a cached point',
     for(let r=0;r<3;r++)for(let c=0;c<3;c++)assert.ok(Math.abs(next.E[r][c]-cpu.ellipsoid[r][c])<=1e-3*scaleE,`E[${r}][${c}] GPU ${next.E[r][c]} vs CPU ${cpu.ellipsoid[r][c]}`);
   } finally {pass.destroy();}
 });
+
+gpuTest('GPU SDF opt-in gradient-descent stop runs to the gradient or iteration limit', async device=>{
+  const {intersection,plus,scale}=await import('../src/avbd3d/ref/sdf/math.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds);a.seeds=[scale(plus(domain.min,domain.max),.5)];b.seeds=[];
+  // The overlap gradient never falls below tau here: the CPU reference stops after 2-8 released
+  // iterations for any stream offset, and always runs to the limit with the opt-in.
+  const params={...collisionParams(),margin:0,optimizer:2 as const,cacheSize:0,randomSamples:1};
+  const run=async(sgdGradientStopOnly?:boolean)=>{const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+    try{pass.step(bodies,[{a:0,b:1,key:3}],0,{...params,sgdGradientStopOnly});const [r]=await pass.readResults();assert.equal(r.points.length,1);return r.iterations;}finally{pass.destroy();}};
+  const released=await run(),explicit=await run(false),optIn=await run(true);
+  assert.ok(released<params.maxIterations,`released stops early (${released})`);
+  assert.equal(explicit,released,'absent and false are the released behaviour');
+  assert.equal(optIn,params.maxIterations);
+});
