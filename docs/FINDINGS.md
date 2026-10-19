@@ -2,6 +2,51 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Paper Table 5 SGD row matches upstream SGD without its ‖Δx‖ < τ stop
+
+The entry below found that the released SGD costs about 0.48× Nelder–Mead per pair, against the
+paper's 3.40×. To find which change reproduces the paper, the pinned upstream oracle was built in
+scratch with a runtime switch over four `gradientDescent` variants
+(`measurements/sdf-sgd-variants-2026-10-18.patch`). Each variant ran all ten Table 5
+configurations for 360 frames, with released parameters and optimizer 2. Variant 0's output is
+byte-identical to the unpatched SGD run.
+
+| Variant | SGD / NM per pair (mean) | iterations per step | contacts | per-config corr. with paper |
+|---|---|---|---|---|
+| 0 released (decaying step and noise; stop on ‖g‖ < τ or ‖Δx‖ < τ) | 0.48 | 1088 | 40.0 | −0.28 |
+| 1 fixed step and noise | 2.15 | 4632 | 42.2 | −0.16 |
+| 2 fixed step, decaying noise | 1.15 | 2682 | 40.3 | −0.36 |
+| 3 released without the ‖Δx‖ < τ stop | **3.48** | **7086** | 38.3 | 0.70 |
+| paper | 3.40 | 7708 | 46.3 | |
+
+- **Variant 3 reproduces the paper's row:**
+  - The mean ratio and the iteration count are close.
+  - The per-configuration pattern matches, including Undistorted as the highest (4.83 vs 4.94).
+  - The largest miss is DISPLACE 0.20 (2.23 vs 3.43).
+- **The fixed step does not explain it.** The paper's prose attributes SGD's behaviour to a fixed
+  step size (Sec. 4), yet variant 1 neither reaches the paper's cost nor follows its pattern.
+- **Why released SGD stops early.** A counting build, Undistorted, 360 frames:
+  - 60% of calls stop on ‖Δx‖ < τ because the projection onto V pinned the iterate at the box
+    face;
+  - 30% stop on a small unclamped step;
+  - 11% stop on ‖g‖ < τ;
+  - none hit the limit;
+  - the result is about 3 iterations per call.
+
+  Without the Δx stop, 64% of calls run to the 50-iteration limit and the rest stop on the
+  gradient, about 36 iterations per call.
+- **Conclusion:** this is an inference, not a confirmation from the authors. The paper's SGD
+  numbers are consistent with an SGD that terminates only on the gradient norm or the iteration
+  limit. The released code also applies the paper's stated ‖x(k+1) − x(k)‖ < τ test (Sec. 3.3),
+  which mostly fires as a stall against V's boundary. Contacts remain lower than the paper's
+  (38–42 against 46) in every variant, which is the same trajectory gap seen for Nelder–Mead.
+- **Not changed:** our CPU and GPU ports keep the released behaviour, which matches upstream.
+  Reproducing the paper's row on our side would need a new opt-in parameter that drops the Δx
+  stop for SGD.
+
+Measurements: `measurements/sdf-sgd-variants-2026-10-18.json`, with per-configuration rows, the paper
+values and the stop-reason counts.
+
 ## 2026-10-18 — GPU Ellipsoid and SGD; Table 5 rows match upstream, paper SGD row does not
 
 The GPU narrowphase now runs all three optimizers (`optimizer` 0/1/2). This supersedes the "GPU
