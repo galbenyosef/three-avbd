@@ -242,3 +242,54 @@ gpuTest('signed SDF static-box separation stays bounded where the moving gradien
     assert.ok(mixed>0,'exercise mixed samples');
   }finally{pass.destroy();}
 });
+
+gpuTest('GPU SDF ellipsoid and gradient-descent optimizers match the verified CPU reference', async device=>{
+  const {objectiveGradient,ellipsoidMethod,diagonal}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {counters}=await import('../src/avbd3d/ref/sdf/optimize.ts');
+  const {intersection,size,plus,scale,minus,length}=await import('../src/avbd3d/ref/sdf/math.ts');
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[.35,.1,0],[0,0,.258819045,.965925826])];
+  const domain=intersection(bodies[0].bounds,bodies[1].bounds),seed=scale(plus(domain.min,domain.max),.5);
+  // One curvature seed inside V makes the GPU's stochastic sample deterministic.
+  a.seeds=[seed];b.seeds=[];
+  const params={...collisionParams(),margin:0,cacheSize:0,randomSamples:1};
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  try {
+    // CPU reference (pinned to upstream fixtures) from the same seed and domain.
+    const g=objectiveGradient(bodies[0],bodies[1],[],params.epsilon,params.alpha,counters());
+    const extent=plus(scale(size(domain),.5),minus(seed,scale(plus(domain.min,domain.max),.5)).map(Math.abs) as [number,number,number]);
+    const cpu=ellipsoidMethod(g,seed,domain,diagonal(extent.map(e=>e*e*3) as [number,number,number]),params.tolerance,params.maxIterations);
+    pass.step(bodies,[{a:0,b:1,key:1}],0,{...params,optimizer:1});
+    const [ellipsoid]=await pass.readResults();
+    assert.equal(ellipsoid.points.length,1);
+    assert.ok(length(minus(ellipsoid.points[0].x as [number,number,number],cpu.x))<=params.tolerance,`GPU ${ellipsoid.points[0].x} vs CPU ${cpu.x}`);
+    assert.ok(Math.abs(ellipsoid.iterations-cpu.iterations)<=2,`iterations GPU ${ellipsoid.iterations} vs CPU ${cpu.iterations}`);
+    // Gradient descent: its noise uses the GPU stream (seeded by pair key and step index), so check
+    // improvement, and repeatability on fresh passes at the same step.
+    const run=async()=>{const fresh=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+      try{fresh.step(bodies,[{a:0,b:1,key:2}],0,{...params,optimizer:2});return (await fresh.readResults())[0];}finally{fresh.destroy();}};
+    const first=await run(),second=await run();
+    assert.ok(first.iterations>0);
+    assert.ok(g(first.points[0].x as [number,number,number]).value<g(seed).value,'descent improves on the seed');
+    assert.deepEqual(second.points[0].x,first.points[0].x,'repeatable for the same pair key and step');
+  } finally {pass.destroy();}
+});
+
+gpuTest('GPU SDF ellipsoid warm start carries a cached point ellipsoid to the next step', async device=>{
+  const a=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]}),b=new AnalyticField({kind:'box',halfExtents:[.5,.5,.5]});a.seeds=[];b.seeds=[];
+  const bodies=[new SdfBody(a,[0,0,0]),new SdfBody(b,[0,.95,0])];
+  const pass=await SdfNarrowphasePass.create(device,[a,b],{maxBodies:2,maxPairs:1});
+  try {
+    const params={...collisionParams(),optimizer:1 as const,cacheSize:1,randomSamples:1};
+    pass.step(bodies,[{a:0,b:1,key:1}],0,params);await pass.readResults();
+    pass.step(bodies,[{a:0,b:1,key:1,previous:0}],0,params);
+    const [result]=await pass.readResults();
+    assert.ok(result.points.some(p=>p.cached),'a cached point is re-optimized');
+    // Raw read of the stored ellipsoid words (28-word points, ellipsoid at words 20-25).
+    const read=device.createBuffer({size:8*4+28*4,usage:GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST});
+    const encoder=device.createCommandEncoder();encoder.copyBufferToBuffer(pass.storage.current,0,read,0,8*4+28*4);device.queue.submit([encoder.finish()]);
+    await read.mapAsync(GPUMapMode.READ);const f=new Float32Array(read.getMappedRange().slice(0));read.destroy();
+    const e=Array.from(f.slice(8+20,8+26));
+    assert.ok(e.every(Number.isFinite)&&e.some((v,i)=>Math.abs(v-[1,0,0,1,0,1][i])>1e-6),`stored ellipsoid differs from identity: ${e}`);
+  } finally {pass.destroy();}
+});

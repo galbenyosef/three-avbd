@@ -8,7 +8,7 @@ import { SDF_MAX_POINTS } from './sdf-layout.ts';
 export const sdfBroadphaseSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
 struct SdfBody { position: vec4f, rotation: vec4f, velocity: vec4f, omega: vec4f, lo: vec4f, hi: vec4f, anchorRotation: vec4f }
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
 struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 // counts: bodies, pair capacity, cell table size, cache table size.
 // offsets: next links, large head, pair counter, cache table. The next two words

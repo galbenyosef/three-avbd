@@ -45,7 +45,7 @@ fn meshPlaneContacts(pair: vec4u) -> bool {
   let slot=min(work.identity.w,${maxPoints - 1}u);
   work.points[slot]=Point(vec4f(p,min(0.0,separation)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,a-bodyA.position.xyz)),0),
-    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0));
+    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0),vec4f(1,0,0,1),vec4f(0,1,0,0));
   work.identity.w=slot+1u;
   return true;
 }
@@ -81,7 +81,7 @@ fn meshMeshContacts(pair: vec4u) -> bool {
   let slot=min(work.identity.w,${maxPoints - 1}u);
   work.points[slot]=Point(vec4f(p,min(0.0,separation)),vec4f(normal,separation),
     vec4f(rot(bodyA.anchorRotation,invrot(bodyA.rotation,a-bodyA.position.xyz)),0),
-    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0));
+    vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,b-bodyB.position.xyz)),0),vec4u(1,cached,id,0),vec4f(1,0,0,1),vec4f(0,1,0,0));
   work.identity.w=slot+1u;
   return true;
 }

@@ -58,7 +58,7 @@ export class SdfNarrowphasePass {
       this.shapeBuffer=make('sdf atlas',atlas.data.byteLength); device.queue.writeBuffer(this.shapeBuffer,0,atlas.data);
       this.bodyBuffer=make('sdf bodies',options.maxBodies*SDF_BODY_WORDS*4);
       this.pairBuffer=make('sdf pairs',options.maxPairs*16);
-      this.paramsBuffer=make('sdf params',64,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);
+      this.paramsBuffer=make('sdf params',80,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);
       this.output=[make('sdf results 0',options.maxPairs*this.resultWords*4),make('sdf results 1',options.maxPairs*this.resultWords*4)];
       const group=(index:number)=>device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[this.paramsBuffer,this.shapeBuffer,this.bodyBuffer,this.pairBuffer,this.output[index^1],this.output[index]].map((buffer,binding)=>({binding,resource:{buffer}}))});
       this.groups=[group(0),group(1)];

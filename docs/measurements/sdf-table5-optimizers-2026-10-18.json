@@ -1,0 +1,654 @@
+{
+  "paper": "Giles & Andrews 2026, Table 5",
+  "optimizers": [
+    1,
+    2
+  ],
+  "reference": "sdf-dcd-demo 1dcdf1e7fa07d16fda15826ad8c2e6697075a76e",
+  "frames": 360,
+  "profile": "reference (released parameters)",
+  "conventions": "per collision call: iterations and queries are frame sums divided by substeps; contacts are the last substep of each frame; averaged over frames; ratioToNelderMead divides iterations per pair by the same source's Nelder-Mead iterations per pair (paper: iterations by its NM iterations)",
+  "rows": [
+    {
+      "name": "Undistorted",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 2,
+      "warpK": null,
+      "substeps": 4,
+      "gpu": {
+        "contacts": 53.208333333333336,
+        "pairs": 24.88888888888889,
+        "iterations": 2032.09375,
+        "queries": 1730.6340277777779,
+        "iterationsPerPair": 81.64662388392857
+      },
+      "upstream": {
+        "contacts": 41.28888888888889,
+        "pairs": 22.488888888888887,
+        "iterations": 2170.0493055555557,
+        "queries": 1782.8590277777778,
+        "iterationsPerPair": 96.49428730237156
+      },
+      "paper": {
+        "contacts": 36.8,
+        "iterations": 1949,
+        "queries": 1949
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.308627222640946,
+        "upstream": 2.5635081006291007,
+        "paper": 1.8283302063789868
+      }
+    },
+    {
+      "name": "BEND 0.15",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 3,
+      "warpK": "0.15",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 43.861111111111114,
+        "pairs": 37.21111111111111,
+        "iterations": 5784.492361111111,
+        "queries": 5097.697916666667,
+        "iterationsPerPair": 155.45067557479845
+      },
+      "upstream": {
+        "contacts": 39.31388888888889,
+        "pairs": 38.86944444444445,
+        "iterations": 6242.533333333334,
+        "queries": 5476.946527777778,
+        "iterationsPerPair": 160.60258700778962
+      },
+      "paper": {
+        "contacts": 39.8,
+        "iterations": 5149,
+        "queries": 5149
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.5202985955960107,
+        "upstream": 2.897052524342419,
+        "paper": 2.1552951025533695
+      }
+    },
+    {
+      "name": "BEND 0.55",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 3,
+      "warpK": "0.55",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 61.830555555555556,
+        "pairs": 40.833333333333336,
+        "iterations": 6337.503472222223,
+        "queries": 5627.439583333334,
+        "iterationsPerPair": 155.20416666666668
+      },
+      "upstream": {
+        "contacts": 42.49166666666667,
+        "pairs": 38.28055555555556,
+        "iterations": 6074.46875,
+        "queries": 5516.1375,
+        "iterationsPerPair": 158.68287860097234
+      },
+      "paper": {
+        "contacts": 37.2,
+        "iterations": 5223,
+        "queries": 5223
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.8766724458800748,
+        "upstream": 2.733149247227912,
+        "paper": 2.2263427109974425
+      }
+    },
+    {
+      "name": "BEND 0.95",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 3,
+      "warpK": "0.95",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 67.26944444444445,
+        "pairs": 45.894444444444446,
+        "iterations": 7246.676388888889,
+        "queries": 6566.110416666666,
+        "iterationsPerPair": 157.89877133518945
+      },
+      "upstream": {
+        "contacts": 45.40833333333333,
+        "pairs": 45.975,
+        "iterations": 7192.086111111111,
+        "queries": 6638.666666666667,
+        "iterationsPerPair": 156.43471693553258
+      },
+      "paper": {
+        "contacts": 36.8,
+        "iterations": 5224,
+        "queries": 5224
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.6000335860451544,
+        "upstream": 2.549508215306636,
+        "paper": 1.8381421534130893
+      }
+    },
+    {
+      "name": "DISPLACE 0.05",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 5,
+      "warpK": "0.05",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 52.147222222222226,
+        "pairs": 31.261111111111113,
+        "iterations": 3916.1444444444446,
+        "queries": 3631.3409722222223,
+        "iterationsPerPair": 125.27208103785321
+      },
+      "upstream": {
+        "contacts": 39.07222222222222,
+        "pairs": 25.766666666666666,
+        "iterations": 2854.608333333333,
+        "queries": 2624.8930555555557,
+        "iterationsPerPair": 110.78686934023285
+      },
+      "paper": {
+        "contacts": 34.5,
+        "iterations": 3317,
+        "queries": 3317
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.3419893796119444,
+        "upstream": 2.289217448179043,
+        "paper": 1.9431751611013475
+      }
+    },
+    {
+      "name": "DISPLACE 0.10",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 5,
+      "warpK": "0.10",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 46.772222222222226,
+        "pairs": 28.70277777777778,
+        "iterations": 3602.797916666667,
+        "queries": 3386.097222222222,
+        "iterationsPerPair": 125.52087970579696
+      },
+      "upstream": {
+        "contacts": 39.78055555555556,
+        "pairs": 25.944444444444443,
+        "iterations": 3231.0895833333334,
+        "queries": 3080.554861111111,
+        "iterationsPerPair": 124.53878479657389
+      },
+      "paper": {
+        "contacts": 33.4,
+        "iterations": 5077,
+        "queries": 5077
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.2982105449841552,
+        "upstream": 2.3313350411735567,
+        "paper": 2.7281031703385277
+      }
+    },
+    {
+      "name": "DISPLACE 0.20",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 5,
+      "warpK": "0.20",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 56.61666666666667,
+        "pairs": 38.236111111111114,
+        "iterations": 5073.229166666667,
+        "queries": 4884.2125,
+        "iterationsPerPair": 132.6816200508536
+      },
+      "upstream": {
+        "contacts": 42.95,
+        "pairs": 39.272222222222226,
+        "iterations": 4918.940277777778,
+        "queries": 4712.969444444445,
+        "iterationsPerPair": 125.25240486631772
+      },
+      "paper": {
+        "contacts": 32.6,
+        "iterations": 6144,
+        "queries": 6144
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.155415670264499,
+        "upstream": 1.9667866917561663,
+        "paper": 2.6369098712446353
+      }
+    },
+    {
+      "name": "TWIST 0.50",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 4,
+      "warpK": "0.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 47.65833333333333,
+        "pairs": 40.55833333333333,
+        "iterations": 5465.643055555555,
+        "queries": 4821.242361111111,
+        "iterationsPerPair": 134.76005068146017
+      },
+      "upstream": {
+        "contacts": 46.93055555555556,
+        "pairs": 43.76111111111111,
+        "iterations": 6022.038194444444,
+        "queries": 5327.947222222222,
+        "iterationsPerPair": 137.61163831407896
+      },
+      "paper": {
+        "contacts": 44.4,
+        "iterations": 7092,
+        "queries": 7092
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.621269658333319,
+        "upstream": 2.4124962387078477,
+        "paper": 2.24359379943056
+      }
+    },
+    {
+      "name": "TWIST 2.50",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 4,
+      "warpK": "2.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 53.125,
+        "pairs": 38.68611111111111,
+        "iterations": 5491.985416666666,
+        "queries": 5155.177083333333,
+        "iterationsPerPair": 141.9627163064551
+      },
+      "upstream": {
+        "contacts": 38.986111111111114,
+        "pairs": 42.87222222222222,
+        "iterations": 5807.6194444444445,
+        "queries": 5277.394444444444,
+        "iterationsPerPair": 135.4634573020604
+      },
+      "paper": {
+        "contacts": 38,
+        "iterations": 7073,
+        "queries": 7073
+      },
+      "ratioToNelderMead": {
+        "gpu": 2.1512421490620968,
+        "upstream": 2.0512468316867567,
+        "paper": 2.108825283243888
+      }
+    },
+    {
+      "name": "TWIST 5.00",
+      "optimizer": 1,
+      "optimizerName": "Ellipsoid",
+      "scene": 4,
+      "warpK": "5.00",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 42.791666666666664,
+        "pairs": 23.92222222222222,
+        "iterations": 2875.4791666666665,
+        "queries": 2820.145138888889,
+        "iterationsPerPair": 120.20117278216442
+      },
+      "upstream": {
+        "contacts": 39.51111111111111,
+        "pairs": 37.71111111111111,
+        "iterations": 4761.002777777778,
+        "queries": 4627.381944444444,
+        "iterationsPerPair": 126.24933706540955
+      },
+      "paper": {
+        "contacts": 39.2,
+        "iterations": 6747,
+        "queries": 6747
+      },
+      "ratioToNelderMead": {
+        "gpu": 1.609747189322594,
+        "upstream": 1.7483164486670169,
+        "paper": 2.4597156398104265
+      }
+    },
+    {
+      "name": "Undistorted",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 2,
+      "warpK": null,
+      "substeps": 4,
+      "gpu": {
+        "contacts": 52.263888888888886,
+        "pairs": 27.336111111111112,
+        "iterations": 493.1659722222222,
+        "queries": 766.2076388888889,
+        "iterationsPerPair": 18.04082410324154
+      },
+      "upstream": {
+        "contacts": 45.452777777777776,
+        "pairs": 21.947222222222223,
+        "iterations": 340.0027777777778,
+        "queries": 559.3569444444445,
+        "iterationsPerPair": 15.491836476395394
+      },
+      "paper": {
+        "contacts": 52.2,
+        "iterations": 5269,
+        "queries": 5269
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.5101195329623263,
+        "upstream": 0.41156268843580474,
+        "paper": 4.942776735459662
+      }
+    },
+    {
+      "name": "BEND 0.15",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 3,
+      "warpK": "0.15",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 51.236111111111114,
+        "pairs": 38.925,
+        "iterations": 923.53125,
+        "queries": 1312.5506944444444,
+        "iterationsPerPair": 23.725915221579964
+      },
+      "upstream": {
+        "contacts": 37.55833333333333,
+        "pairs": 36.202777777777776,
+        "iterations": 819.2986111111111,
+        "queries": 1181.2375,
+        "iterationsPerPair": 22.63082176014732
+      },
+      "paper": {
+        "contacts": 49.8,
+        "iterations": 8166,
+        "queries": 8166
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.38466472140486563,
+        "upstream": 0.4082292852791854,
+        "paper": 3.4181665969024695
+      }
+    },
+    {
+      "name": "BEND 0.55",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 3,
+      "warpK": "0.55",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 59.358333333333334,
+        "pairs": 42.93333333333333,
+        "iterations": 1105.7513888888889,
+        "queries": 1534.5881944444445,
+        "iterationsPerPair": 25.755078933747413
+      },
+      "upstream": {
+        "contacts": 46.830555555555556,
+        "pairs": 40.81111111111111,
+        "iterations": 1003.08125,
+        "queries": 1410.798611111111,
+        "iterationsPerPair": 24.578631227879118
+      },
+      "paper": {
+        "contacts": 40.5,
+        "iterations": 8054,
+        "queries": 8054
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.47736428410004594,
+        "upstream": 0.4233416234356025,
+        "paper": 3.43307757885763
+      }
+    },
+    {
+      "name": "BEND 0.95",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 3,
+      "warpK": "0.95",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 57.53611111111111,
+        "pairs": 46.1,
+        "iterations": 1212.3548611111112,
+        "queries": 1672.5215277777777,
+        "iterationsPerPair": 26.298370089178118
+      },
+      "upstream": {
+        "contacts": 43.175,
+        "pairs": 42.11666666666667,
+        "iterations": 1247.0541666666666,
+        "queries": 1666.9652777777778,
+        "iterationsPerPair": 29.609517214087848
+      },
+      "paper": {
+        "contacts": 43.7,
+        "iterations": 7557,
+        "queries": 7557
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.4330410231309376,
+        "upstream": 0.4825636461482515,
+        "paper": 2.659042927515834
+      }
+    },
+    {
+      "name": "DISPLACE 0.05",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 5,
+      "warpK": "0.05",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 42.736111111111114,
+        "pairs": 24.958333333333332,
+        "iterations": 448.75208333333336,
+        "queries": 698.3298611111111,
+        "iterationsPerPair": 17.980050083472456
+      },
+      "upstream": {
+        "contacts": 34.02777777777778,
+        "pairs": 26.469444444444445,
+        "iterations": 484.23819444444445,
+        "queries": 748.8673611111111,
+        "iterationsPerPair": 18.294233392800923
+      },
+      "paper": {
+        "contacts": 42.3,
+        "iterations": 6506,
+        "queries": 6506
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.3361410299207796,
+        "upstream": 0.37801842883785514,
+        "paper": 3.8113649677797303
+      }
+    },
+    {
+      "name": "DISPLACE 0.10",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 5,
+      "warpK": "0.10",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 45.63055555555555,
+        "pairs": 33.641666666666666,
+        "iterations": 578.2361111111111,
+        "queries": 914.2791666666667,
+        "iterationsPerPair": 17.188093468747418
+      },
+      "upstream": {
+        "contacts": 33.66111111111111,
+        "pairs": 26.302777777777777,
+        "iterations": 401.5472222222222,
+        "queries": 664.4215277777778,
+        "iterationsPerPair": 15.26634280283029
+      },
+      "paper": {
+        "contacts": 41.6,
+        "iterations": 6734,
+        "queries": 6734
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.3147034800157179,
+        "upstream": 0.2857821359421608,
+        "paper": 3.618484685652875
+      }
+    },
+    {
+      "name": "DISPLACE 0.20",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 5,
+      "warpK": "0.20",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 30.52777777777778,
+        "pairs": 22.980555555555554,
+        "iterations": 346.4138888888889,
+        "queries": 576.2319444444445,
+        "iterationsPerPair": 15.0742173334945
+      },
+      "upstream": {
+        "contacts": 36.43888888888889,
+        "pairs": 36.61666666666667,
+        "iterations": 543.1319444444445,
+        "queries": 909.0881944444444,
+        "iterationsPerPair": 14.832916097708997
+      },
+      "paper": {
+        "contacts": 41.5,
+        "iterations": 7992,
+        "queries": 7992
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.24488097330386602,
+        "upstream": 0.23291514451995146,
+        "paper": 3.4300429184549355
+      }
+    },
+    {
+      "name": "TWIST 0.50",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 4,
+      "warpK": "0.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 50.5,
+        "pairs": 35.96388888888889,
+        "iterations": 715.0895833333333,
+        "queries": 1074.5229166666666,
+        "iterationsPerPair": 19.88354445045184
+      },
+      "upstream": {
+        "contacts": 46.82222222222222,
+        "pairs": 44.361111111111114,
+        "iterations": 1049.3479166666666,
+        "queries": 1492.6055555555556,
+        "iterationsPerPair": 23.654680651221035
+      },
+      "paper": {
+        "contacts": 47.8,
+        "iterations": 8635,
+        "queries": 8635
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.3867624826833177,
+        "upstream": 0.41469478016575273,
+        "paper": 2.731730465042708
+      }
+    },
+    {
+      "name": "TWIST 2.50",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 4,
+      "warpK": "2.50",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 52.325,
+        "pairs": 35.858333333333334,
+        "iterations": 1423.8479166666666,
+        "queries": 1778.8534722222223,
+        "iterationsPerPair": 39.70758772949105
+      },
+      "upstream": {
+        "contacts": 36.25277777777778,
+        "pairs": 43.43055555555556,
+        "iterations": 1839.7125,
+        "queries": 2267.9715277777777,
+        "iterationsPerPair": 42.35986568596098
+      },
+      "paper": {
+        "contacts": 52.8,
+        "iterations": 9636,
+        "queries": 9636
+      },
+      "ratioToNelderMead": {
+        "gpu": 0.6017117633679567,
+        "upstream": 0.6414315861232817,
+        "paper": 2.8729874776386404
+      }
+    },
+    {
+      "name": "TWIST 5.00",
+      "optimizer": 2,
+      "optimizerName": "gradient descent",
+      "scene": 4,
+      "warpK": "5.00",
+      "substeps": 4,
+      "gpu": {
+        "contacts": 46.958333333333336,
+        "pairs": 34.49722222222222,
+        "iterations": 3035.9270833333335,
+        "queries": 3356.007638888889,
+        "iterationsPerPair": 88.00497221998552
+      },
+      "upstream": {
+        "contacts": 40.06111111111111,
+        "pairs": 37.916666666666664,
+        "iterations": 3157.0597222222223,
+        "queries": 3514.425,
+        "iterationsPerPair": 83.26311355311356
+      },
+      "paper": {
+        "contacts": 50.6,
+        "iterations": 8526,
+        "queries": 8526
+      },
+      "ratioToNelderMead": {
+        "gpu": 1.178572166964374,
+        "upstream": 1.1530379040067227,
+        "paper": 3.1082756106452787
+      }
+    }
+  ],
+  "upstreamOracle": "upstream rows: tools/cpp-oracle-sdf/oracle.cpp `scene INDEX 360 [k]` built at the pinned revision with one scratch line setting solver.params.optimizer from $OPT after the scene is built (not committed; driver hash unchanged). The Nelder-Mead runs of that build reproduce the committed upstream captures."
+}

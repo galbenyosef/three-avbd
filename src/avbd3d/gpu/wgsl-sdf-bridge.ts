@@ -28,7 +28,7 @@ struct Config { info: vec4u, rotation: vec4f }
 /** sdfExportWGSL for a pass whose pair results hold `maxPoints` points. */
 export const sdfExportSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
 struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 struct BridgeParams { counts: vec4u, distances: vec4f }
 @group(0) @binding(0) var<uniform> params: Params;
@@ -132,7 +132,7 @@ ${IGNORE_PAIRS_WGSL}
 /** sdfEventsWGSL for a pass whose pair results hold `maxPoints` points. */
 export const sdfEventsSource = (maxPoints: number = SDF_MAX_POINTS) => /* wgsl */ `
 ${PRELUDE_3D}
-struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u }
+struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
 struct Result { identity: vec4u, stats: vec4u, points: array<Point,${maxPoints}> }
 struct BridgeParams { counts: vec4u, distances: vec4f }
 @group(0) @binding(0) var<uniform> bridge: BridgeParams;
