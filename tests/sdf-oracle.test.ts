@@ -25,7 +25,7 @@ test('SDF oracle provenance stays pinned to the upstream driver and fixture byte
 });
 
 test('SDF level 1 covers primitives, all Table 5 warps and four finite voxel fields', () => {
-  const names = readdirSync(directory).filter(n => n.endsWith('.json') && !['manifest.json', 'optimizer.json', 'manifolds.json'].includes(n) && !n.startsWith('seeds-') && !n.startsWith('scene-'));
+  const names = readdirSync(directory).filter(n => n.endsWith('.json') && !['manifest.json', 'optimizer.json', 'optimizers.json', 'manifolds.json', 'manifolds-optimizers.json'].includes(n) && !n.startsWith('seeds-') && !n.startsWith('scene-'));
   assert.equal(names.length, 24);
   for (const name of names) {
     const field = load(name);

@@ -2,6 +2,38 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-18 — Ellipsoid and gradient-descent optimizers ported to the CPU reference
+
+The audit found only Nelder–Mead ported, while the paper compares three optimizers (Tables 1, 3–5).
+The CPU reference now implements all three, ported line for line from `optimize.cpp` and
+`collide.cpp` with float32 emulation:
+- the analytic objective gradient: the softmax blend of the field gradients, minus repulsion;
+- the deep-cut ellipsoid method [LM24], with upstream's initial ellipsoid and 0.75/0.25 warm start;
+- stochastic projected gradient descent [RM51], with decaying step and noise from the manifold's
+  shared stream.
+
+SGD also keeps its samples under the convex skip, as upstream does.
+
+Upstream ground truth comes from new driver commands, run through the existing harness on a clean
+pinned checkout:
+- `optimizers.json`: 16 cases. Each records the objective and gradient at the seed, an ellipsoid
+  run, a warm-started ellipsoid run, and an SGD run.
+- `manifolds-optimizers.json`: 4-step warm ellipsoid and SGD boxes, and ellipsoid-on-torus and
+  SGD-on-bend seed cases.
+
+`verify` first confirmed every existing fixture reproduces exactly. After generation, only the
+manifest changed (driver hash plus the new entries); all other fixtures were byte-identical.
+On macOS the harness needs `SDKROOT=$(xcrun --show-sdk-path)`.
+
+The port matches on the first run:
+- iteration and query counts are exact;
+- positions are within τ and final ellipsoids within 1e-4;
+- manifold points, ranks, flags, stats and RNG consumption are exact across chained warm steps.
+
+The GPU narrowphase remains Nelder–Mead only, so the Ellipsoid and SGD rows of Tables 1, 3–5
+are still not reproduced on the production path.
+
+
 ## 2026-10-18 — Paper Fig. 6: cache size dominates penetration; curvature gain not reproduced
 
 `scripts/sdf-fig6.ts` drops the released bunny (scale 1) and cow (scale 1.3) onto the ground plane

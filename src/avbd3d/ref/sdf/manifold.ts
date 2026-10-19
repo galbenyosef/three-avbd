@@ -9,7 +9,7 @@
 import { f, add, sub, mul, div, plus, minus, scale, divide, dot, length, normalize, vmin, vmax, intersection, expand, size, contains, valid, Random, type Vec, type Aabb } from './math.ts';
 import { AnalyticField } from './shapes.ts';
 import { SdfBody } from './body.ts';
-import { objective, softmax, nelderMead, type Counters } from './optimize.ts';
+import { objective, objectiveGradient, softmax, nelderMead, ellipsoidMethod, gradientDescent, diagonal, blendEllipsoids, type Counters, type Mat3 } from './optimize.ts';
 export interface CollisionParams {
   /** Opt-in signed projection against static boxes for mixed inside/outside samples. */
   signedSeparation?: boolean;
@@ -19,7 +19,8 @@ export interface CollisionParams {
   meshVertexContacts?: boolean;
   /** Refresh sticking anchors when a relocated contact is deeper by more than tolerance. */
   refreshDeeperContacts?: boolean;
-  optimizer: 0; cacheSize: number; randomSamples: number; warmStart: boolean; curvatureSampling: boolean;
+  /** 0 Nelder–Mead (default), 1 deep-cut ellipsoid [LM24], 2 stochastic gradient descent [RM51]. */
+  optimizer: 0 | 1 | 2; cacheSize: number; randomSamples: number; warmStart: boolean; curvatureSampling: boolean;
   skipConvexSamples: boolean; epsilon: number; alpha: number; replacementThreshold: number;
   tolerance: number; maxIterations: number; stepSize: number; margin: number; allowedPenetration: number;
 }
@@ -51,7 +52,7 @@ export class SdfManifold {
   constructor(a: SdfBody, b: SdfBody) { this.bodyA = a; this.bodyB = b; }
   update(p: CollisionParams, dt: number, rng: Random, stats: Counters): void {
     if (p.meshVertexContacts) throw new Error('meshVertexContacts is a GPU-only collision extension');
-    if (p.optimizer !== 0) throw new Error('CPU SDF reference implements Nelder–Mead only');
+    if (p.optimizer !== 0 && p.optimizer !== 1 && p.optimizer !== 2) throw new Error('SDF optimizer must be 0 (Nelder–Mead), 1 (ellipsoid) or 2 (gradient descent)');
     this.volume = intersection(expand(this.bodyA.bounds, mul(0.5, p.margin)), expand(this.bodyB.bounds, mul(0.5, p.margin)));
     // Upstream broadphase guarantees this. Direct callers may present a separated pair.
     if (!valid(this.volume)) { this.points = []; return; }
@@ -61,12 +62,13 @@ export class SdfManifold {
       const point = { ...old, cached: true };
       const a = this.bodyA.pointVelocity(point.x), b = this.bodyB.pointVelocity(point.x);
       const v = this.bodyA.isStatic ? b : this.bodyB.isStatic ? a : scale(plus(a, b), 0.5);
-      this.addPoint(point, plus(point.x, scale(v, dt)), p, stats);
+      this.addPoint(point, plus(point.x, scale(v, dt)), p, stats, rng);
     }
     const contacts = cache.filter(c => c.active).length;
-    const skip = p.skipConvexSamples && contacts > 0 && contacts === p.cacheSize && this.bodyA.field.convex && this.bodyB.field.convex;
+    // Gradient descent stalls too easily and keeps its samples (collide.cpp).
+    const skip = p.skipConvexSamples && p.optimizer !== 2 && contacts > 0 && contacts === p.cacheSize && this.bodyA.field.convex && this.bodyB.field.convex;
     const samples = (skip ? 0 : p.randomSamples) + Math.max(0, p.cacheSize - cache.length);
-    for (let i = 0; i < samples; i++) this.addPoint(contact(), this.stochasticSample(p, rng), p, stats);
+    for (let i = 0; i < samples; i++) this.addPoint(contact(), this.stochasticSample(p, rng), p, stats, rng);
     const unique: SdfContact[] = [];
     for (const c of this.points) if (!unique.some(q => dot(minus(c.x, q.x), minus(c.x, q.x)) < mul(p.tolerance, p.tolerance))) unique.push(c);
     this.points = unique;
@@ -90,11 +92,28 @@ export class SdfManifold {
     }
     return sample;
   }
-  private addPoint(point: SdfContact, seed: Vec, p: CollisionParams, stats: Counters): void {
-    const g = objective(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
-    let step = vmax(scale(size(this.volume), f(0.1)), [mul(0.5, p.tolerance), mul(0.5, p.tolerance), mul(0.5, p.tolerance)]);
-    if (point.cached) { const extent = Math.max(length(minus(seed, point.x)), mul(5, p.tolerance)); step = vmin(step, [extent, extent, extent]); }
-    const result = nelderMead(g, seed, this.volume, step, p.tolerance, p.maxIterations); stats.iterations += result.iterations;
+  private addPoint(point: SdfContact, seed: Vec, p: CollisionParams, stats: Counters, rng: Random): void {
+    let result: { x: Vec; iterations: number };
+    if (p.optimizer === 1) {
+      // collide.cpp: an ellipsoid centred at the seed enclosing V; cached points blend their
+      // previous ellipsoid 0.75/0.25 with it (Sec. 3.7, [LM24]).
+      const g = objectiveGradient(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
+      const center = scale(plus(this.volume.min, this.volume.max), 0.5);
+      const extent = plus(scale(size(this.volume), 0.5), minus(seed, center).map(Math.abs) as Vec);
+      let E = diagonal(extent.map(e => mul(mul(e, e), 3)) as Vec);
+      if (point.cached) E = blendEllipsoids(point.ellipsoid as Mat3, E);
+      const out = ellipsoidMethod(g, seed, this.volume, E, p.tolerance, p.maxIterations);
+      point.ellipsoid = out.ellipsoid; result = out;
+    } else if (p.optimizer === 2) {
+      const g = objectiveGradient(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
+      result = gradientDescent(g, seed, this.volume, p.stepSize, p.tolerance, p.maxIterations, rng);
+    } else {
+      const g = objective(this.bodyA, this.bodyB, this.points, p.epsilon, p.alpha, stats);
+      let step = vmax(scale(size(this.volume), f(0.1)), [mul(0.5, p.tolerance), mul(0.5, p.tolerance), mul(0.5, p.tolerance)]);
+      if (point.cached) { const extent = Math.max(length(minus(seed, point.x)), mul(5, p.tolerance)); step = vmin(step, [extent, extent, extent]); }
+      result = nelderMead(g, seed, this.volume, step, p.tolerance, p.maxIterations);
+    }
+    stats.iterations += result.iterations;
     const a = this.bodyA.sample(result.x), b = this.bodyB.sample(result.x); stats.queries++;
     const na = normalize(a.gradient), nb = scale(normalize(b.gradient), -1), previous = point.normal;
     point.x = result.x; point.depth = Math.min(a.phi, b.phi); point.normal = a.phi < b.phi ? na : nb;
