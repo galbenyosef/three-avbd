@@ -20,7 +20,7 @@ export interface CollisionParams {
   /** Refresh sticking anchors when a relocated contact is deeper by more than tolerance. */
   refreshDeeperContacts?: boolean;
   /** Opt-in for optimizer 2: stop only on the gradient norm or the iteration limit, dropping the
-   * released ‖Δx‖ < τ test. Reproduces the paper's Table 5 SGD cost (see FINDINGS). */
+   * released ‖Δx‖ < τ test. Matches the paper's Table 5 SGD cost in aggregate (see FINDINGS). */
   sgdGradientStopOnly?: boolean;
   /** 0 Nelder–Mead (default), 1 deep-cut ellipsoid [LM24], 2 stochastic gradient descent [RM51]. */
   optimizer: 0 | 1 | 2; cacheSize: number; randomSamples: number; warmStart: boolean; curvatureSampling: boolean;
