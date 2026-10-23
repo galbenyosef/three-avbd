@@ -318,12 +318,34 @@ var<workgroup> partials: array<Acc, 32>;
  * One colour's bodies, lanesFor(colour size) threads per body: each lane accumulates every
  * lanes-th adjacency entry, the partial systems are summed in workgroup memory (halving the
  * lanes each round), and lane 0 solves. Bodies of one colour share no constraint, so writing
- * poses in place never races with a neighbour's read (bodies left clashing by the colouring
- * are the only, counted, exception).
+ * poses in place never races with a neighbour's read for a proper colouring. A clashing
+ * colour keeps the same buckets and lanes but runs its workgroup chunks in a defined order.
  */
+var<workgroup> serialColor: u32;
 @compute @workgroup_size(64)
 fn primal(@builtin(local_invocation_id) lid: vec3u, @builtin(workgroup_id) wid: vec3u) {
-  primalColor(pc.color, lid.x, wid.x);
+  if (lid.x == 0u) { serialColor = select(0u, 1u, clashingColor(pc.color)); }
+  let serial = workgroupUniformLoad(&serialColor);
+  if (serial != 0u) { primalChunks(pc.color, lid.x); }
+  else { primalColor(pc.color, lid.x, wid.x, 0u); }
+}
+
+fn clashingColor(c: u32) -> bool {
+  return (counters[C_CLASHING_COLORS + (c >> 5u)] & (1u << (c & 31u))) != 0u;
+}
+
+var<workgroup> serialThreads: u32;
+fn primalChunks(c: u32, local: u32) {
+  if (local == 0u) {
+    let count = color[params.colorStartOffset + c + 1u] - color[params.colorStartOffset + c];
+    serialThreads = count * lanesFor(count);
+  }
+  let threads = workgroupUniformLoad(&serialThreads);
+  for (var chunk = 0u; chunk < groupsFor(threads); chunk++) {
+    primalColor(c, local, chunk, 1u);
+    // Every pose write in this chunk is visible before the next chunk reads neighbours.
+    storageBarrier();
+  }
 }
 
 // All work stays in one workgroup, including buckets larger than one chunk. Colours
@@ -337,14 +359,17 @@ fn primalSparse(@builtin(local_invocation_id) lid: vec3u) {
       sparseThreads = count * lanesFor(count);
     }
     let threads = workgroupUniformLoad(&sparseThreads);
+    if (lid.x == 0u) { serialColor = select(0u, 1u, clashingColor(c)); }
+    let serial = workgroupUniformLoad(&serialColor);
     for (var chunk = 0u; chunk < groupsFor(threads); chunk++) {
-      primalColor(c, lid.x, chunk);
+      primalColor(c, lid.x, chunk, serial);
+      if (serial != 0u) { storageBarrier(); }
     }
     storageBarrier();
   }
 }
 
-fn primalColor(c: u32, local: u32, group: u32) {
+fn primalColor(c: u32, local: u32, group: u32, serial: u32) {
   let start = color[params.colorStartOffset + c];
   let count = color[params.colorStartOffset + c + 1u] - start;
   let lanes = lanesFor(count);
@@ -373,6 +398,8 @@ fn primalColor(c: u32, local: u32, group: u32) {
     }
     workgroupBarrier();
   }
+  // Workgroup-memory reduction barriers do not order the storage reads against pose writes.
+  if (serial != 0u) { storageBarrier(); }
   if (live && lane == 0u) { finishBody(i, acc); }
 }
 

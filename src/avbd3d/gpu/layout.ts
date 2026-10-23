@@ -98,6 +98,8 @@ export const SDF_ROLLING_BIT = 0x20000000;
 export const C_MANIFOLDS = 6;
 export const C_PREV_MANIFOLDS = 7;
 export const C_TAIL_BODIES = 8;
+/** Two u32 masks (colours 0-31, 32-63) populated after colour scatter. */
+export const C_CLASHING_COLORS = 9;
 
 /**
  * Shape codes in angVel.w (spheres: see ../shapes.ts; radius = size.x / 2). A sail collides
@@ -157,6 +159,7 @@ const SHAPE_HULL = ${SHAPE_HULL}.0;
 const STICK_BIT = ${STICK_BIT}u;
 const C_MANIFOLDS = ${C_MANIFOLDS}u;
 const C_PREV_MANIFOLDS = ${C_PREV_MANIFOLDS}u;
+const C_CLASHING_COLORS = ${C_CLASHING_COLORS}u;
 /** Feature key of every contact involving a sphere (one contact per pair). */
 const SPHERE_FEATURE = ${SPHERE_FEATURE}u;
 // SDF contact on a rolling analytic body (sphere..torus): evaluate lever arms at the step-start

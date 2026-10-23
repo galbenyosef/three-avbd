@@ -20,7 +20,7 @@ import { Manifold } from '../ref/manifold.ts';
 import { defaultParams, type Solver, type SolverParams } from '../ref/solver.ts';
 import {
   ARGS_ITEMS_3D, B_ANGVEL, B_INERTIAL_POS, B_INERTIAL_ROT, B_INITIAL_POS, B_INITIAL_ROT, B_MOMENT, B_POS, B_ROT, B_SIZE, B_VEL, BODY_FLOATS,
-  C_MANIFOLDS, C_TAIL_BODIES, CONTACT_WORDS, FLAG_FACE_BIAS, FLAG_SPARSE_COLORS, FLAG_MASS_PENALTY, FLAG_MATCH_NEAREST, FLAG_REUSE_CONTACTS, FLAG_REUSE_MANIFOLDS, FLAG_START_AT_REST, J_C0_ANG, J_C0_LIN, J_LAM_ANG, K_LAM, K_PEN, K_RA, K_RB, M_GEO, MANIFOLD_WORDS, SDF_ROLLING_BIT, SPARSE_COLOR_START, STICK_BIT,
+  C_CLASHING_COLORS, C_MANIFOLDS, C_TAIL_BODIES, CONTACT_WORDS, FLAG_FACE_BIAS, FLAG_SPARSE_COLORS, FLAG_MASS_PENALTY, FLAG_MATCH_NEAREST, FLAG_REUSE_CONTACTS, FLAG_REUSE_MANIFOLDS, FLAG_START_AT_REST, J_C0_ANG, J_C0_LIN, J_LAM_ANG, K_LAM, K_PEN, K_RA, K_RB, M_GEO, MANIFOLD_WORDS, SDF_ROLLING_BIT, SPARSE_COLOR_START, STICK_BIT,
   J_BREAK_BEND, J_LAM_LIN, J_PEN_ANG, J_PEN_LIN, J_RA, J_RB, J_REST, J_REST_START, J_YIELD, JOINT_FLOATS, PARAM_WORDS, PRELUDE_3D, SHAPE_BOX, SHAPE_HULL, SHAPE_SAIL, SHAPE_SPHERE, T_JOINT, T_SPRING,
   TOPOLOGY_ACCESSORS_3D,
 } from './layout.ts';
@@ -236,7 +236,13 @@ export interface GpuSolverOptions {
    * whose growth follows readbacks that land at different steps from run to run.
    */
   capacity?: { contacts?: number; pairs?: number; manifolds?: number; colors?: number; joints?: number };
-  /** A/B timing of kernel variants: replacement WGSL for a module. */
+  /**
+   * A/B timing of kernel variants: replacement WGSL for an entire module. Solve overrides
+   * must retain primalChunks and route clashing colours through it, including primalSparse
+   * when supplied. Derive variants from current solveWGSL to keep their own constraint math.
+   * Legacy modules without that helper are rejected before buffer allocation; the source
+   * check is a migration diagnostic, not a WGSL parser or proof of a custom module's safety.
+   */
   shaders?: { contacts?: string; solve?: string };
   /** Collide hull shapes as hulls (default: when the device can bind nine storage buffers per stage; see GpuSolver3D.hulls). */
   hulls?: boolean;
@@ -506,9 +512,8 @@ export class GpuSolver3D {
   /** Encode each phase as its own compute pass even when not profiling. */
   splitPasses = false;
   /**
-   * Experimental tail fusion; opt in only when replay equivalence is not required. On a step whose
-   * colouring clashes in a tail colour it solves differently from the per-colour dispatches
-   * (docs/FINDINGS.md, "STE-2538 fused tail").
+   * Experimental tail fusion, off by default. Both paths retain the same colour/chunk order
+   * for clashing colours; see docs/FINDINGS.md for the earlier scheduling race and validation.
    */
   fuseSparseColors = false;
   private useSparseColors = false;
@@ -620,6 +625,9 @@ export class GpuSolver3D {
   get isDestroyed(): boolean {return this.destroyed;}
 
   constructor(device: GPUDevice, ref: Solver, options: GpuSolverOptions = {}) {
+    if (options.shaders?.solve !== undefined && !/\bfn\s+primalChunks\s*\(/.test(options.shaders.solve)) {
+      throw new Error('GpuSolver3D shaders.solve must retain primalChunks and serialize clashing colours in primal/primalSparse; derive the module from the current solveWGSL.');
+    }
     this.device = device;
     const { dt, gravity, iterations, alpha, betaLin, betaAng, gamma } = ref;
     Object.assign(this.params, { dt, gravity, iterations, alpha, betaLin, betaAng, gamma, up: REF_UP });
@@ -756,7 +764,7 @@ export class GpuSolver3D {
     const contactEntries = ['hashInsert', 'narrowphase', ...(!shaders.contacts ? ['reuseManifolds'] : [])];
     make(shaders.contacts ?? contactsWGSL, [L.contacts], contactEntries);
     this.contactShaders = { make: (code) => make(code, [L.contacts], contactEntries), custom: !!shaders.contacts };
-    make(makeTopologyWGSL(PRELUDE_3D, TOPOLOGY_ACCESSORS_3D, `atomicStore(&counters[${C_TAIL_BODIES}u], atomicLoad(&color[params.colorHistOffset + MAX_COLORS * params.colorGroups]) - atomicLoad(&color[params.colorHistOffset + ${SPARSE_COLOR_START}u * params.colorGroups]));`), [L.topo], [
+    make(makeTopologyWGSL(PRELUDE_3D, TOPOLOGY_ACCESSORS_3D, `atomicStore(&counters[${C_TAIL_BODIES}u], atomicLoad(&color[params.colorHistOffset + MAX_COLORS * params.colorGroups]) - atomicLoad(&color[params.colorHistOffset + ${SPARSE_COLOR_START}u * params.colorGroups]));`, C_CLASHING_COLORS), [L.topo], [
       'degreeJoints', 'degreeContacts', 'fillJoints', 'fillContacts', 'sortAdjacency',
       'colorCompact', 'colorMark', 'colorRoundAB', 'colorRoundBA', 'colorCount', 'colorStarts', 'colorScatter',
     ]);
@@ -764,7 +772,8 @@ export class GpuSolver3D {
     make(makeArgsWGSL(PRELUDE_3D, { ...ARGS_ITEMS_3D, colors: `
       let sparse = (params.flags & FLAG_SPARSE_COLORS) != 0u;
       let n = colorThreads(color[params.colorStartOffset + c + 1u] - color[params.colorStartOffset + c]);
-      setArgs(IA_COLOR + 3u * c, n);
+      let clashing = (counters[C_CLASHING_COLORS + (c >> 5u)] & (1u << (c & 31u))) != 0u;
+      setArgs(IA_COLOR + 3u * c, select(n, 64u, clashing));
       if (c == 0u) {
         let total = color[params.colorStartOffset + max(params.colorCap, SPARSE_COLOR_START)] - color[params.colorStartOffset + SPARSE_COLOR_START];
         setArgs(${ARGS_WORDS}u, select(0u, 64u, sparse && total > 0u));
@@ -1639,8 +1648,8 @@ export class GpuSolver3D {
     this.run(pass, 'colorCount', G.topo[cur], this.colorGroups);
     this.colorHistScan.encode(pass);
     this.run(pass, 'colorStarts', G.topo[cur], 1);
-    this.run(pass, 'argsColors', G.args, 1);
     this.run(pass, 'colorScatter', G.topo[cur], this.colorGroups);
+    this.run(pass, 'argsColors', G.args, 1);
 
     // Solve
     beginPhase();
@@ -1788,10 +1797,9 @@ export class GpuSolver3D {
     this.tailBodies = counters.tailBodies ?? Infinity;
     if (this.fixedColors) return;
     // Colour cap: colours in use + COLOR_SPARE. Each colour below the cap costs a dispatch per
-    // iteration, but a body with no colour left below the cap shares the last one with a
-    // neighbour until a readback grows it, and landing bricks updated Jacobi-style push into
-    // each other for good (the demo pyramid collapsed in 13 of 40 runs from a cap of 2). Grow
-    // at once when a spare runs out or the colouring clashes, shrink after three quiet reads.
+    // iteration. Pending bodies share a colour, whose chunks must then run serially. Grow
+    // at once when a spare runs out or the colouring clashes to restore parallelism; shrink
+    // after three quiet reads.
     // Jones-Plassmann rounds: the colouring carries over between steps and rarely has much
     // left to do (16 -> 2 rounds saved ~3% with no clashes, docs/FINDINGS.md), so run few and
     // double them as soon as a readback reports clashes
