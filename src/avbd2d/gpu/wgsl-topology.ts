@@ -41,8 +41,10 @@ fn jointActive(j: u32) -> bool {
  * accessors defining TopoItem (the per-step constraint record after the joints: a contact in
  * 2D, a contact pair in 3D; ids.xy = bodies), topoCount(), topoSecondary(u32) (what tells
  * one pair's records apart), dynamicBody(i32) and jointActive(u32).
+ * clashingColors optionally reserves two counter words for a dimension's pending-colour mask;
+ * omitted, the 2D shader output is unchanged.
  */
-export const makeTopologyWGSL = (prelude: string, accessors: string, colorStats = ''): string => /* wgsl */ `
+export const makeTopologyWGSL = (prelude: string, accessors: string, colorStats = '', clashingColors?: number): string => /* wgsl */ `
 ${prelude}
 ${accessors}
 
@@ -188,7 +190,7 @@ fn smallestFree(b: u32, src: u32, skipPending: bool) -> u32 {
     if (col == NO_COLOR) { continue; }
     if (col < 32u) { lo |= 1u << col; } else { hi |= 1u << (col - 32u); }
   }
-  var free = MAX_COLORS - 1u;
+  var free = ${clashingColors === undefined ? 'MAX_COLORS - 1u' : 'MAX_COLORS'};
   if (~lo != 0u) { free = countTrailingZeros(~lo); }
   else if (~hi != 0u) { free = 32u + countTrailingZeros(~hi); }
   return free;
@@ -281,7 +283,7 @@ fn colorCount(@builtin(global_invocation_id) gid: vec3u, @builtin(local_invocati
     col = s & 0xffu;
     if ((s & PENDING) != 0u) { atomicAdd(&counters[C_CLASHES], 1u); }
     if (col == NO_COLOR) { col = params.colorCap - 1u; }
-    atomicStore(&color[b], col);
+    atomicStore(&color[b], col${clashingColors === undefined ? '' : ' | (s & PENDING)'});
     atomicMax(&counters[C_NUM_COLORS], col + 1u);
   }
   chunkColors[lid.x] = col;
@@ -308,7 +310,9 @@ fn colorStarts(@builtin(local_invocation_id) lid: vec3u) {
   atomicStore(&color[params.colorStartOffset + c], atomicLoad(&color[params.colorHistOffset + c * params.colorGroups]));
   if (c == 0u) {
     atomicStore(&color[params.colorStartOffset + MAX_COLORS], atomicLoad(&color[params.colorHistOffset + MAX_COLORS * params.colorGroups]));
-    ${colorStats}
+    ${colorStats}${clashingColors === undefined ? '' : `
+    atomicStore(&counters[${clashingColors}u], 0u);
+    atomicStore(&counters[${clashingColors + 1}u], 0u);`}
   }
 }
 
@@ -319,7 +323,8 @@ fn colorScatter(@builtin(global_invocation_id) gid: vec3u, @builtin(workgroup_id
   if (b >= params.bodyCount || !dynamicBody(i32(b))) { return; }
   let col = state(0u, b) & 0xffu;
   let slot = atomicLoad(&color[params.colorHistOffset + col * params.colorGroups + wid.x]) + state(params.stateBOffset, b);
-  atomicStore(&color[params.colorBodiesOffset + slot], b);
+  atomicStore(&color[params.colorBodiesOffset + slot], b);${clashingColors === undefined ? '' : `
+  if ((state(0u, b) & PENDING) != 0u) { atomicOr(&counters[${clashingColors}u + (col >> 5u)], 1u << (col & 31u)); }`}
 }
 `;
 

@@ -2813,3 +2813,97 @@ guaranteed. An exact
 fused path needs the clashing colour dispatched on its own without encoding the rest of the tail,
 or clashes given one defined order in both paths (which changes the default path's results on
 clash steps and makes them deterministic).
+
+### Defined order for clashing 3D colours (2026-10-22)
+
+This supersedes the scheduling limitation above. Identical-input destruction captures found
+both empirically stable within-workgroup clashes and unsafe cross-workgroup clashes. Six pending bodies
+in one workgroup first appeared at recorder frame64/substep0; a prototype solving pending
+bodies individually changed that captured chunk Jacobi result and was rejected.
+At frame 86/substep 0, active hard joint 207 joined bodies 835/836 in colour 17 at bucket
+ranks 7/8: the original eight-lane partition put them in different workgroups. All mapped
+body/joint snapshots before that boundary, CPU uploads and all 48 parameter words matched;
+the changed physical state first appeared in frame 87's readback. At frame 174/substep 0,
+361 pending bodies included 470 edges connecting same-colour bodies in different workgroups;
+physical body/joint words then varied between identical runs.
+
+The 3D solver now marks colours containing pending bodies in counter words9/10, retaining
+the existing16-word readback. Safe colours use the original workgroup count. A marked
+colour dispatches one workgroup, which visits the original chunks in order. A uniform storage
+barrier after the reduction and before any live lane writes a pose orders all storage reads
+within that chunk; a storage barrier after each chunk publishes its writes to the next chunk.
+Bucket order, per-body lane count, reduction and chunk Jacobi
+math are unchanged. Experimental sparse fusion uses the same barriers for marked colours
+and stays off by default. The 64-colour no-free sentinel also returns64 rather than63,
+so an impossible colouring cannot silently clear pending and hide a conflict.
+
+For the earlier chunk candidate without the within-chunk storage fence, targeted real-Dawn tests
+passed for a six-pending-body one-workgroup case and two independent
+pending workgroups against the old physical schedule; cross-workgroup repeatability,
+cap exhaustion, sparse equivalence, proper-colouring parity and custom modules pass too.
+The default2D generated shader and original accumulate/finishBody arithmetic are byte-identical.
+That pre-fence candidate's complete upstream gate passed 156 CPU tests and 178 real-Dawn GPU
+tests, zero skips, typecheck and both builds. A clash-to-quiet test checks that both mask
+words clear and ordinary multi-workgroup arguments return. Command-trace tests require
+scatter before argument generation and retain their original goldens for every other
+command, binding and upload.
+
+For the pre-fence candidate, two actual 600-frame heavy captures agree on every simulation/parts/camera hash, 3138 ordered
+events and 112 release/joint transaction cohorts. Two scalar-overlap candidate captures also
+match both controls exactly, including the 614-body/327-joint release. This proves repeatability
+for that fixture, not equivalence to the old undefined ordering after a cross-workgroup clash.
+Rendering assets and quality settings were unchanged; inspected frames are normal, but raw
+pixels differ between runs and are not claimed identical.
+
+No FPS gain is accepted. The live A/B released different workloads (622 versus 646 bodies);
+the identical-work charge benchmark stopped when load exceeded 8 before its B run. A separate
+six-fixture, ten-alternating-pair GPU cost study passed all correctness/reset guards but ran
+at load 16–18. Its inclusive spans include restores and host submission gaps, and its native
+four-pass phase samples differ from the default single-pass path. Those results are diagnostic,
+not an isolated overhead bound or a gameplay speedup. Safe colours add a uniform workgroup
+flag read; marked colours trade parallel chunks for a defined order. Zero-drop acceptance and
+cross-device performance measurements remain open.
+
+`shaders.solve` still replaces the entire module and retains its own math. Variants derived
+from current `solveWGSL` inherit `primalChunks` and the mask dispatch contract. Legacy
+modules without that helper fail before allocation with a migration message; the source
+check is not a WGSL parser or proof that an arbitrary custom module obeys the contract.
+
+#### Portable ordering within a clashing chunk
+
+The M4 results above do not establish portable storage-memory synchronization. WGSL 14.5.4
+gives `workgroupBarrier` WorkgroupMemory semantics, whereas body poses are storage memory.
+Vulkan's Inter-Thread-Happens-Before relation requires matching storage-class semantics;
+the six reduction barriers alone do not order a neighbour's storage read before a pose write.
+The post-chunk storage barrier cannot retroactively order that pair of earlier accesses.
+See [WGSL memory semantics](https://www.w3.org/TR/WGSL/#memory-semantics) and the
+[Vulkan memory model](https://docs.vulkan.org/spec/latest/appendices/memorymodel.html).
+
+The fence variant passes a uniform `serial` argument to `primalColor`: ordinary colours pass0,
+marked chunks pass1, and sparse colours pass the existing `workgroupUniformLoad` result.
+After the unchanged reduction, a marked colour executes `storageBarrier` outside the live/lane
+predicates before `finishBody`. Existing post-chunk barriers remain. No floating-point
+expression, bucket, lane count, colour order or chunk order changes; ordinary colours execute
+no additional storage barrier. The test-only old-schedule module passes literal0 to retain
+its unfenced reference behaviour. Its pending results remain an empirical M4 comparison,
+not a portable oracle.
+
+The fenced revision passes the full upstream `pnpm check`: 156 CPU tests and 178 real-Dawn
+GPU tests (334 total), zero skips, typecheck and both builds. Its targeted ten real-Dawn
+cases also pass. Four fresh 600-frame heavy captures pass fourteen strict comparisons on
+every ordered simulation/parts/camera hash, all 3138 events and all 112 release/joint
+transaction cohorts, including the 614-body/327-joint release. Both ordinary-overlap and
+scalar-overlap variants match; these are fixture-specific equality results, not pixel identity
+or a cross-device guarantee.
+
+The downstream unmodified `pnpm check` passes 1233 tests across 118 passing files, with
+six existing source-defined CPU exclusions and one CPU-only skipped file; typecheck, both
+builds and packed import smoke pass. A fresh consumer installed both packages from local
+tarballs and passes the development and production WebGPU browser workflows: exact hulls,
+prepared/generic fracture parity, finite step/readback/sync and worker/world teardown, with
+no GPU, worker or browser errors. Installed solver build bytes and the engine's actual peer
+resolution match the frozen solver. The default 2D generated shader remains exact, and
+current custom solve modules retain their own math and the uniform fenced chunk contract.
+
+Earlier pre-fence measurements remain historical evidence. Timing studies are diagnostic;
+no causal gameplay gain, accepted FPS improvement or zero-drop result is established.

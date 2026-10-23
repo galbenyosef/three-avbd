@@ -103,6 +103,25 @@ function record(steps: number, step: (k: number) => void): StepLog[] {
 
 const digest = (logs: StepLog[]) => createHash('sha256').update(logs.map((l) => l.trace.join('\n')).join('\n--\n')).digest('hex');
 
+/** 3D args now depend on the clashing-colour mask written by scatter. Require that exact
+ * adjacent block swap, then retain the original goldens for every other command and upload. */
+function originalOrder3D(logs: StepLog[]): StepLog[] {
+  return logs.map((log, k) => {
+    const trace = log.trace;
+    for (const name of ['colorScatter', 'argsColors']) {
+      assert.equal(trace.filter((s) => s === `pipeline ${name}`).length, 1, `step ${k}: one ${name}`);
+    }
+    const at = trace.indexOf('pipeline colorScatter');
+    assert.equal(trace[at + 3], 'pipeline argsColors', `step ${k}: scatter before adjacent args`);
+    for (const start of [at, at + 3]) {
+      assert.match(trace[start + 1], /^group 0 #\d+ \[\]$/, `step ${k}: colour block bind group`);
+      assert.match(trace[start + 2], /^dispatch [1-9]\d* 1 1$/, `step ${k}: colour block dispatch`);
+    }
+    assert.equal(trace[at + 5], 'dispatch 1 1 1', `step ${k}: args dispatch`);
+    return { ...log, trace: [...trace.slice(0, at), ...trace.slice(at + 3, at + 6), ...trace.slice(at, at + 3), ...trace.slice(at + 6)] };
+  });
+}
+
 /** The pass constants as the 0.2.2 solvers wrote them: (colour, alpha) at each entry's start, zero elsewhere. */
 function expectedPassBytes(entries: number, filled: number, perIteration: number, alphaFor: (it: number) => number): Uint8Array {
   const data = new ArrayBuffer(entries * PASS_STRIDE);
@@ -190,7 +209,8 @@ gpuTest('3D step: same uploads, offsets and dispatches, from re-used buffers', a
   assert.equal(sources.size, 2, 'the pass-constant upload memory is allocated once, and again only to grow');
   const args = new Set(logs.flatMap((l) => l.offsetArgs));
   assert.equal(args.size, 1, 'every dynamic offset is passed in the same array');
-  assert.equal(digest(logs), TRACE_3D, `3D trace ${digest(logs)}`);
+  const trace = digest(originalOrder3D(logs));
+  assert.equal(trace, TRACE_3D, `3D trace ${trace}`);
   gpu.destroy();
 });
 
@@ -220,7 +240,8 @@ gpuTest('3D step with sparse colours: same uploads, offsets and dispatches, from
   });
   checkParams(logs, 'params 3d');
   assert.equal(new Set(logs.flatMap((l) => l.offsetArgs)).size, 1, 'every dynamic offset is passed in the same array');
-  assert.equal(digest(logs), TRACE_3D_SPARSE, `3D sparse trace ${digest(logs)}`);
+  const trace = digest(originalOrder3D(logs));
+  assert.equal(trace, TRACE_3D_SPARSE, `3D sparse trace ${trace}`);
   gpu.destroy();
 });
 
