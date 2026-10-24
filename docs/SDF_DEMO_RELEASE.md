@@ -33,7 +33,9 @@ This source-build readiness record does not certify a published npm version or e
 
 **Measure 4s** explicitly resumes playback, excludes one second of warmup, records four seconds
 of render-submission intervals at requestAnimationFrame timestamps and pauses automatically.
-A 12-second watchdog cancels a capture without a complete visible sample. Scene/settings changes,
+A 12-second watchdog cancels a capture without a complete visible sample. Final GPU draining
+has a separate five-second deadline; a stalled/lost device produces a failed capture and restores
+the Measure control. Scene/settings changes,
 resize, hiding and manual playback changes cancel/reset the appropriate sample. Save JSON exports
 raw intervals, viewport/backing resolution, browser version, scene configuration and timing scope.
 No pose/contact readback is added to normal playback by this observer.
@@ -52,6 +54,10 @@ No fixed sleep/idle is inserted between frames inside a capture. Different captu
 headless GPU tests run sequentially; CPU/build gates run after browser captures, not alongside them.
 
 ## Production browser results
+
+The table records captures before the review correction that bounded final GPU draining. Its
+measurement-time source fingerprints are kept separately from the final reviewed assembly hashes.
+The correction leaves normal playback unchanged; a final-build capture smoke is recorded below.
 
 The clean main-based release branch was exercised through the Codex in-app browser after the
 Chrome extension connection failed. Both pages ran from Vite's production preview, not the dev
@@ -107,11 +113,22 @@ changes; those are retained separately and are not mixed into the consistent-res
   at 390×844. The read is explicit, cancels an active capture and blocks stepping during that read;
   it adds no per-frame pose readback to normal playback.
 
+## Review corrections
+
+Independent review found an unbounded final GPU-drain wait and an ambiguously labeled historical
+source block. Draining now has a five-second deadline, tested with stalled and rejected CPU mock
+queues; both return through capture cleanup without producing a successful report. Historical
+research, measurement-time source hashes and current release assembly hashes are labeled separately.
+A fresh production Spiky Wheel capture after the observer correction measured 119.87 FPS, p95
+8.8 ms, simulation/wall 1.000 and 9.1 ms final drain. It paused automatically, restored Measure
+and had no captured warning/error entries. No native GPU stall was injected. The earlier matrix
+remains its original observation, not a claim that every row was remeasured after the correction.
+
 ## Verification and release boundary
 
-All components of `pnpm check` pass on the final source: typecheck, **159 CPU tests**, **178 GPU
+All components of `pnpm check` pass on the final source: typecheck, **161 CPU tests**, **178 GPU
 tests**, Vite and library builds, with zero skips or failures. Components ran sequentially at nice
-15, with GPU file concurrency one; the final GPU suite took about 126 seconds. Browser playback
+15, with GPU file concurrency one; the final GPU suite took about 131 seconds. Browser playback
 was paused during the gate. Collision runtime, defaults, independent normals and warm starts are
 unchanged from main. The broader pre-isolation research gate is historical evidence, not this
 release branch's test count.

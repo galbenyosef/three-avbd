@@ -62,6 +62,16 @@ export interface BrowserFrameReport extends FrameReport {
   scope: string;
 }
 
+/** A stalled device must not leave an explicit capture disabled indefinitely. */
+export async function waitForGpuDrain(queue: Pick<GPUQueue, 'onSubmittedWorkDone'>, timeoutMs = 5000): Promise<void> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([queue.onSubmittedWorkDone(), new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => reject(new Error(`GPU queue did not finish within ${timeoutMs} ms`)), timeoutMs);
+    })]);
+  } finally { clearTimeout(timeout); }
+}
+
 /** Explicit opt-in capture; no background benchmark, automatic download or pose readback. */
 export function browserPerformance(options: {
   canvas: HTMLCanvasElement;
@@ -111,7 +121,7 @@ export function browserPerformance(options: {
     output.textContent = 'Finishing GPU work…';
     const began = performance.now();
     try {
-      await options.device.queue.onSubmittedWorkDone();
+      await waitForGpuDrain(options.device.queue);
       if (version !== revision) return;
       const gpuDrainMs = performance.now() - began;
       report = { ...sample, context, measuredAt: new Date().toISOString(), userAgent: navigator.userAgent, viewport,
@@ -121,7 +131,7 @@ export function browserPerformance(options: {
       output.textContent = `${report.fps.toFixed(1)} FPS · p95 ${report.p95Ms.toFixed(1)} ms · simulation ${report.simulationRate.toFixed(2)}×`;
       data.textContent = JSON.stringify(report, null, 2);
       save.disabled = false;
-    } catch (error) { output.textContent = `Capture failed: ${String(error)}`; }
+    } catch (error) { if (version === revision) output.textContent = `Capture failed: ${String(error)}`; }
     finally { finishing = false; button.disabled = false; button.textContent = 'Measure 4s'; }
   }
   return {

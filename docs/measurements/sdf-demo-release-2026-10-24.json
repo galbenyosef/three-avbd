@@ -20,7 +20,7 @@
       "package.json": "b2851c7dfa9223780f26d0848e37dd39eb8c17ea3c444801336dae422712ea5c",
       "pnpm-lock.yaml": "61efacc8442b0f6a2c6fb374924c3ebf44693b11fd070fc15fa4c2f4c5aa116c"
     },
-    "sourceHashScope": "Final assembly hashes, not observer-emitted measurement-time hashes. Capture computation was frozen during the matrix; a later showcase UI-only fix disables Save JSON after a scene reset. No collision runtime changes this demo pass.",
+    "sourceHashScope": "Historical research assembly hashes, not observer-emitted measurement-time hashes and not hashes of the final reviewed release branch. Capture computation was frozen for those historical samples; later fixes and clean-production captures have separate provenance under releaseIsolation.",
     "collisionRuntimeUnchanged": {
       "src/avbd3d/gpu/sdf-layout.ts": "710c05f228c7be7736880dbb4dba6c77403d30df05d6db075b3bef63b45f58d2",
       "src/avbd3d/gpu/sdf-pass.ts": "7c9a2554898558a6a87d2af56f7b529d15aea7fa209bee078dd0d07bf6f317fe",
@@ -34,7 +34,8 @@
     },
     "three": "0.186.1",
     "npmRegistryCheck": "three latest returned0.186.1; requested0.187.0 returned404 during this pass. No dependency version changes.",
-    "dependencies": "Replaced the task-owned node_modules symlink after its shared target lost TypeScript files. Original link preserved outside checkout; install used unchanged lockfile and ignore-scripts. Shared target untouched."
+    "dependencies": "Replaced the task-owned node_modules symlink after its shared target lost TypeScript files. Original link preserved outside checkout; install used unchanged lockfile and ignore-scripts. Shared target untouched.",
+    "scope": "Historical pre-isolation research-tree assembly for the top-level browserSamples and gate. head is the base of that uncommitted research overlay, not the current PR head. Clean-release and final reviewed assembly provenance is under releaseIsolation."
   },
   "scope": {
     "browser": "Foreground Google Chrome155, existing user profile, macOS, Apple M4 Max40-core GPU.",
@@ -5092,7 +5093,7 @@
   "readiness": {
     "desktopDevelopmentDemo": "Historical pre-isolation observations retained. See releaseIsolation.productionBrowserFinalChecks for production measurements on the clean main-based demo branch.",
     "allReleaseVerificationComplete": true,
-    "remaining": "Bounded production source-build acceptance complete. Independent review, commit/push, merge, deployment and publication are not performed.",
+    "remaining": "Bounded source-build acceptance complete. Git publication and independent-review status are tracked in PR #40. Deployment and npm publication are outside this verification record.",
     "bigPile60fps": "Separate, open.",
     "published": false,
     "scope": "Bounded small-demo source-build acceptance: full gate, installed consumer, production UI and sampled FPS; excludes publication, independent PR review, native hidden-tab event verification and other hardware.",
@@ -5106,15 +5107,15 @@
       "README.md": "f734724acda565fb6d2391a2753c7865be185ac26670980e3c7ada8f5028c6cc",
       "docs/SDF_WORLD.md": "01f8cdcde06e9b36cd1739c327b304096be67ef8e112bc1fa9cf3146835c7790",
       "docs/SDF_RELEASED_COMPARISON.md": "d88d54c8e6ce6d042b89d6a1fa33280ed39358835dff5799bfeb26d1d7dc659a",
-      "docs/SDF_DEMO_RELEASE.md": "8e13c1edb91a3c015fd835c60ae5f0ad5c00dee4a549c9d4b95efa517f939cba",
+      "docs/SDF_DEMO_RELEASE.md": "97f9f2798e68821c1fcc57db203ac6342ac7c2a7927f9fde350d184a3e7bda85",
       "sdf.html": "214d0dbaf7e575f161446ddb0293b99e51b386715b1b68124681445f1b2a8525",
       "sdf-released.html": "ce7d98bb6fcf5af646a565743a4987ee8780a6f09dc2da9dafd5692aec040703",
       "src/sdf-showcase/main.ts": "fbc5b5f20d9e9d19e6a82067923e19446e5ca9f4ed5b89475f4d4ccaf82e0117",
       "src/sdf-showcase/style.css": "7429d9f22cdc01af1cfa1dd234855774130c888b070f6bb22f70a62eca9d39f6",
-      "src/sdf-showcase/performance.ts": "cba7219e1693e22eae6650f6b4fb8afb4a83fe8571571aa0936a42f02b31b4bf",
+      "src/sdf-showcase/performance.ts": "99d7f8a13c0604623ea5b7aead49f8ae682bab5aa2885aa864c37758cc9bbe82",
       "src/sdf-released/main.ts": "4f88825644dbe727cca0f7b5f76b4ac8229ebfe49af5bd191f6e12f7851e2464",
       "src/sdf-released/style.css": "3c5f38e6a637580d9484403528e64af9bc44889103bea87fde4f6c130e33115d",
-      "tests/sdf-browser-performance.test.ts": "c4d20fa94b16170010c3fd233dfec5aa76d6ccdd7791d3e9923854e1abd56b35",
+      "tests/sdf-browser-performance.test.ts": "7b156659838dda3bf0f52b5d3572657f402f4c1a46f63f96aaabbc5a118ed793",
       "package.json": "b2851c7dfa9223780f26d0848e37dd39eb8c17ea3c444801336dae422712ea5c",
       "pnpm-lock.yaml": "61efacc8442b0f6a2c6fb374924c3ebf44693b11fd070fc15fa4c2f4c5aa116c"
     },
@@ -5128,9 +5129,9 @@
           "typecheck"
         ],
         "exitCode": 0,
-        "seconds": 2.158,
+        "seconds": 2.171,
         "log": {
-          "name": "sdf-production-final-gate-typecheck.log",
+          "name": "sdf-review-fix-gate-typecheck.log",
           "sha256": "fe7f093e0cfa7e258ba98a1acd9f85773c76c3eb172fd4bfe2327acbffd776cc"
         }
       },
@@ -5141,14 +5142,14 @@
           "test"
         ],
         "exitCode": 0,
-        "seconds": 8.362,
+        "seconds": 8.138,
         "log": {
-          "name": "sdf-production-final-gate-cpu.log",
-          "sha256": "297a0a06b008f96784431aedb5ff8532dda014ceac0806d15e4fd0539b8bb2f5"
+          "name": "sdf-review-fix-gate-cpu.log",
+          "sha256": "5d0d62f42d4f2e9de8536cc47a608478b91bad01a7efabbca0a4598017c055ec"
         },
         "counts": {
-          "tests": 159,
-          "pass": 159,
+          "tests": 161,
+          "pass": 161,
           "fail": 0,
           "skipped": 0
         }
@@ -5184,10 +5185,10 @@
           "tests-gpu/step-allocations.gpu.test.ts"
         ],
         "exitCode": 0,
-        "seconds": 125.542,
+        "seconds": 130.601,
         "log": {
-          "name": "sdf-production-final-gate-gpu.log",
-          "sha256": "d02481392d4067229214cebd4b9261726a9423892a0f470b89acd390e659427d"
+          "name": "sdf-review-fix-gate-gpu.log",
+          "sha256": "b9775cddc915ed2f55e05c9e3ae9129261b26c801d961aefb3258a979c70a364"
         },
         "counts": {
           "tests": 178,
@@ -5203,10 +5204,10 @@
           "build"
         ],
         "exitCode": 0,
-        "seconds": 0.468,
+        "seconds": 0.469,
         "log": {
-          "name": "sdf-production-final-gate-build.log",
-          "sha256": "6b85320f2c936a1237a3cf4088dbd347d860f57e7396fca2fbf4c0fedbab83c6"
+          "name": "sdf-review-fix-gate-build.log",
+          "sha256": "f065f4636e37c80d12aa3930b009662a1760df09c520a381eb25ee318c9ada1f"
         }
       },
       {
@@ -5216,9 +5217,9 @@
           "build:lib"
         ],
         "exitCode": 0,
-        "seconds": 1.135,
+        "seconds": 1.079,
         "log": {
-          "name": "sdf-production-final-gate-library.log",
+          "name": "sdf-review-fix-gate-library.log",
           "sha256": "5c51b8a0937fa1f9ff5a5319c674ffafe542fa57f6c1d04a0f83da97ec854a09"
         }
       }
@@ -5419,7 +5420,7 @@
       }
     ],
     "browserMeasurementsRepeatedOnReleaseTree": true,
-    "remaining": "Bounded production source-build acceptance complete. Independent review, commit/push, merge, deployment and publication are not performed.",
+    "remaining": "Bounded source-build acceptance complete. Git publication and independent-review status are tracked in PR #40. Deployment and npm publication are outside this verification record.",
     "productionFollowup": {
       "checkedAt": "2026-10-24T16:09:15.733159+00:00",
       "files": [
@@ -28846,6 +28847,1233 @@
         ],
         "allMatchBuiltFiles": true
       }
-    }
+    },
+    "measurementSourceFiles": {
+      "README.md": "f734724acda565fb6d2391a2753c7865be185ac26670980e3c7ada8f5028c6cc",
+      "docs/SDF_WORLD.md": "01f8cdcde06e9b36cd1739c327b304096be67ef8e112bc1fa9cf3146835c7790",
+      "docs/SDF_RELEASED_COMPARISON.md": "d88d54c8e6ce6d042b89d6a1fa33280ed39358835dff5799bfeb26d1d7dc659a",
+      "docs/SDF_DEMO_RELEASE.md": "8e13c1edb91a3c015fd835c60ae5f0ad5c00dee4a549c9d4b95efa517f939cba",
+      "sdf.html": "214d0dbaf7e575f161446ddb0293b99e51b386715b1b68124681445f1b2a8525",
+      "sdf-released.html": "ce7d98bb6fcf5af646a565743a4987ee8780a6f09dc2da9dafd5692aec040703",
+      "src/sdf-showcase/main.ts": "fbc5b5f20d9e9d19e6a82067923e19446e5ca9f4ed5b89475f4d4ccaf82e0117",
+      "src/sdf-showcase/style.css": "7429d9f22cdc01af1cfa1dd234855774130c888b070f6bb22f70a62eca9d39f6",
+      "src/sdf-showcase/performance.ts": "cba7219e1693e22eae6650f6b4fb8afb4a83fe8571571aa0936a42f02b31b4bf",
+      "src/sdf-released/main.ts": "4f88825644dbe727cca0f7b5f76b4ac8229ebfe49af5bd191f6e12f7851e2464",
+      "src/sdf-released/style.css": "3c5f38e6a637580d9484403528e64af9bc44889103bea87fde4f6c130e33115d",
+      "tests/sdf-browser-performance.test.ts": "c4d20fa94b16170010c3fd233dfec5aa76d6ccdd7791d3e9923854e1abd56b35",
+      "package.json": "b2851c7dfa9223780f26d0848e37dd39eb8c17ea3c444801336dae422712ea5c",
+      "pnpm-lock.yaml": "61efacc8442b0f6a2c6fb374924c3ebf44693b11fd070fc15fa4c2f4c5aa116c"
+    },
+    "measurementSourceScope": "Source assembly before PR review corrections to GPU-drain finalization and provenance labeling; the productionBrowserFinalChecks matrix was captured with this earlier observer. Not a claim that every matrix sample was repeated after those review corrections.",
+    "reviewCorrection": {
+      "gpuDrainDeadlineMs": 5000,
+      "failedDrainRecovery": "Timeout or rejection clears finalizing state and restores Measure without producing a success report; stale errors cannot replace a reset scene label.",
+      "stalledQueueAndDeviceErrorRegressionTests": true,
+      "browserSmoke": {
+        "report": {
+          "intervalsMs": [
+            8.400000000000091,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000091,
+            8.300000000000182,
+            8.199999999999818,
+            8.400000000000091,
+            8.300000000000182,
+            8.399999999999636,
+            7.800000000000182,
+            8.900000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000091,
+            8.300000000000182,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.299999999999727,
+            7.5,
+            9.300000000000182,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.099999999999909,
+            8.199999999999818,
+            8.600000000000364,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            7.400000000000091,
+            8.400000000000091,
+            9.299999999999727,
+            8.300000000000182,
+            7.599999999999909,
+            9.099999999999909,
+            8.200000000000273,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.5,
+            8.300000000000182,
+            8.299999999999727,
+            7.600000000000364,
+            9.099999999999909,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000273,
+            8.5,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            7.5,
+            9.300000000000182,
+            8.199999999999818,
+            8.300000000000182,
+            8.099999999999909,
+            8.599999999999909,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            7.699999999999818,
+            9,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            7.5,
+            8.300000000000182,
+            9.299999999999727,
+            8.300000000000182,
+            8.199999999999818,
+            8.5,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.200000000000273,
+            8.400000000000091,
+            8.399999999999636,
+            8.300000000000182,
+            8,
+            8.699999999999818,
+            7.600000000000364,
+            9.099999999999909,
+            8.299999999999727,
+            8.400000000000091,
+            8.300000000000182,
+            7.400000000000091,
+            9.299999999999727,
+            8.200000000000273,
+            8.299999999999727,
+            8.400000000000091,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            7.399999999999636,
+            9.400000000000091,
+            8.200000000000273,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.5,
+            8.300000000000182,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000091,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            8.200000000000273,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.400000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            7.900000000000091,
+            8.900000000000091,
+            8.199999999999818,
+            8.400000000000091,
+            8.299999999999727,
+            8.400000000000091,
+            8.300000000000182,
+            7.599999999999909,
+            9,
+            8.400000000000091,
+            8.299999999999727,
+            7.5,
+            8.800000000000182,
+            8.699999999999818,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.400000000000091,
+            8.200000000000273,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000091,
+            8.200000000000273,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000091,
+            8.299999999999727,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8,
+            8.700000000000273,
+            8.199999999999818,
+            8.400000000000091,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            8.099999999999909,
+            8.599999999999909,
+            8.300000000000182,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            8.300000000000182,
+            8.299999999999727,
+            8.400000000000091,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.300000000000182,
+            7.800000000000182,
+            9,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000546,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.300000000000182,
+            7.699999999999818,
+            9.100000000000364,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            7.800000000000182,
+            8.800000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.5,
+            8.299999999999272,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            7.400000000000546,
+            9.300000000000182,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            7.400000000000546,
+            9.300000000000182,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.399999999999636,
+            8.200000000000728,
+            7.699999999999818,
+            9.099999999999454,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            7.800000000000182,
+            8.899999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            10.599999999999454,
+            9.400000000000546,
+            8.799999999999272,
+            8.600000000000364,
+            8.399999999999636,
+            8.400000000000546,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.5,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.400000000000546,
+            8.199999999999818,
+            8.399999999999636,
+            8.200000000000728,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.400000000000546,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            7.600000000000364,
+            9.199999999999818,
+            8.199999999999818,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.400000000000546,
+            8.299999999999272,
+            8.300000000000182,
+            8.400000000000546,
+            8.199999999999818,
+            7.699999999999818,
+            9,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182,
+            8.399999999999636,
+            8.300000000000182,
+            8.300000000000182
+          ],
+          "durationMs": 3995.9,
+          "fps": 119.87286969143372,
+          "medianMs": 8.300000000000182,
+          "p95Ms": 8.800000000000182,
+          "over25Ms": 0,
+          "simulationSeconds": 3.9958335331250017,
+          "simulationRate": 0.9999833662316379,
+          "context": {
+            "demo": "released",
+            "scene": "Spiky Wheel",
+            "sceneId": 7,
+            "profile": "mesh-quality",
+            "comparison": false,
+            "frameStart": 0,
+            "dynamicBodies": 11,
+            "iterations": 20,
+            "fixedDt": 0.004166666875,
+            "maxSubsteps": 4,
+            "maxPairs": 66,
+            "pixelRatio": 1.5,
+            "shadows": true
+          },
+          "measuredAt": "2026-10-24T18:01:10.797Z",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 582,
+            "height": 939,
+            "devicePixelRatio": 2,
+            "drawingWidth": 873,
+            "drawingHeight": 1408
+          },
+          "warmupMs": 1000,
+          "requestedSampleMs": 4000,
+          "gpuDrainMs": 9.099999904632568,
+          "fpsIncludingDrain": 119.60049937862821,
+          "scope": "Visible browser render submissions at requestAnimationFrame timestamps. Includes simulation, rendering, UI and enabled overlays. Not GPU duration or verified compositor presentation. Simulation rate is fixed-step simulated seconds / sample wall seconds; GPU drain is recorded separately."
+        },
+        "measureEnabledAfterCompletion": true,
+        "playbackPaused": true,
+        "warningErrorLogEntriesObserved": 0,
+        "nativeGpuStallInjected": false
+      },
+      "http": {
+        "checkedAt": "2026-10-24T18:02:04.954912+00:00",
+        "files": [
+          {
+            "url": "/assets/bend-0.15-DwIe8OEH.json",
+            "status": 200,
+            "bytes": 32116,
+            "sha256": "79895dec1b7eb445dc3b80a9ea299a7092515393f10fae575b80f55b42ff3a54"
+          },
+          {
+            "url": "/assets/bend-0.55-Yh8TdVzk.json",
+            "status": 200,
+            "bytes": 32139,
+            "sha256": "49a4b9d1c2371fc27c64bac10fe2fe0787e3497c37238baedb26fc6cbba15008"
+          },
+          {
+            "url": "/assets/bend-0.95-BDsDsI5L.json",
+            "status": 200,
+            "bytes": 31661,
+            "sha256": "d86890fd4f038d228d068bc0dc7c2c8548eb3c01e2fc2928092c3b8768b64e72"
+          },
+          {
+            "url": "/assets/bend-DeBLHQYw.json",
+            "status": 200,
+            "bytes": 31656,
+            "sha256": "4564364ad7c439606a9612937aa1a8107fa81cfefab64faf6842e1a44cf742ce"
+          },
+          {
+            "url": "/assets/box-ndqD4hv3.json",
+            "status": 200,
+            "bytes": 28871,
+            "sha256": "b863385963e7277e5ac891951b95de4579ae6ff2ac39a7a67ea92fc7681e97bf"
+          },
+          {
+            "url": "/assets/bunny-DQ3wJWjQ.json",
+            "status": 200,
+            "bytes": 34330,
+            "sha256": "0809a4ed1f8ad3587928293f7352bbd157f1a77c9b5e33a023588e30bbda5a4e"
+          },
+          {
+            "url": "/assets/bunny.bin-BJMyllxL.gz",
+            "status": 200,
+            "bytes": 12211018,
+            "sha256": "eee5ef5f87883d57a1ad58aef54fbc00824b7815b509fd77d3c726a80b2e4360"
+          },
+          {
+            "url": "/assets/bunny.bin-TSo_QCXi.gz",
+            "status": 200,
+            "bytes": 10636,
+            "sha256": "463d4cbb3203fa8caedacec09b85f7cd6474f560cd71494279de2d5d96074d15"
+          },
+          {
+            "url": "/assets/capsule-DvyWiyFc.json",
+            "status": 200,
+            "bytes": 33016,
+            "sha256": "cedb129753f98bf7461adaab1d463dada575e52377372a602d561d36c452224d"
+          },
+          {
+            "url": "/assets/chair-BMgE8peK.json",
+            "status": 200,
+            "bytes": 34384,
+            "sha256": "ed54eaf9ab9064e2321005d59725428d0b4b11e68e3d0ca0bbb25b10073c2bc8"
+          },
+          {
+            "url": "/assets/chair.bin-D0vbX2xF.gz",
+            "status": 200,
+            "bytes": 3258075,
+            "sha256": "303d2a5b0109fdfc0250545ab2656bdd16ef4f40763cb57af7d231efa0d28aae"
+          },
+          {
+            "url": "/assets/cone-wFNKOzmd.json",
+            "status": 200,
+            "bytes": 32609,
+            "sha256": "3e2a2ed964d95482f73ec048ffdc38a27f101c15b45834b7b8c4554bddd13e0b"
+          },
+          {
+            "url": "/assets/cow-Z-mCE79F.json",
+            "status": 200,
+            "bytes": 34384,
+            "sha256": "3311c44e6443f78ae8129a00a67704952a15889b62fd2f8904d5390f21498ab6"
+          },
+          {
+            "url": "/assets/cow.bin-CFsE9DwT.gz",
+            "status": 200,
+            "bytes": 7747,
+            "sha256": "0407b9fa8b631bbe62a7b43ed9ac2f5c193edd6cbffa160f9f499de5e1b31dd7"
+          },
+          {
+            "url": "/assets/cow.bin-oZId0Tto.gz",
+            "status": 200,
+            "bytes": 3685840,
+            "sha256": "fd3b5e183d0912413a33d99e3ce90ead1a1bcf80656983666b5cc043e83cbdfe"
+          },
+          {
+            "url": "/assets/cylinder-B-P057iO.json",
+            "status": 200,
+            "bytes": 32822,
+            "sha256": "1771e42fb268a9f9d73aca0d5ae95638610356f1cdab41825659e82ddb6d2c11"
+          },
+          {
+            "url": "/assets/displace-0.05-Dtaeks53.json",
+            "status": 200,
+            "bytes": 32775,
+            "sha256": "178125f9a2baa512ed456d17f4e64ab32316ab819d874aaee1fd67594a937bf1"
+          },
+          {
+            "url": "/assets/displace-0.10-C2k6Cmzx.json",
+            "status": 200,
+            "bytes": 32696,
+            "sha256": "14ce1fab106acb9f0884f8008cf8966599af648f097194ac5a86f0c353ec09d4"
+          },
+          {
+            "url": "/assets/displace-0.20-D_hzzYCQ.json",
+            "status": 200,
+            "bytes": 32560,
+            "sha256": "c326ef7dc0c63a5bfb29ae72bf90ed77dcc56ea95ea7e74294f87253db208c7e"
+          },
+          {
+            "url": "/assets/displace-CMcVgcdB.json",
+            "status": 200,
+            "bytes": 32691,
+            "sha256": "b6ba5c373ae501348699a330c071c5a947af6712e97112f782378f5fa2d2678a"
+          },
+          {
+            "url": "/assets/gear-BgA8v_5E.json",
+            "status": 200,
+            "bytes": 33304,
+            "sha256": "747388f11aafe40ef65ac2f729ba3ffa30f93a69d21376d077c9968c351138d6"
+          },
+          {
+            "url": "/assets/gear.bin-8TgMypQJ.gz",
+            "status": 200,
+            "bytes": 1637835,
+            "sha256": "1a894e0f9ca8764a376c2b6a650091ca2cafcfe2006c45b7d4f4355083db778b"
+          },
+          {
+            "url": "/assets/joints-CsLec9vn.js",
+            "status": 200,
+            "bytes": 20240,
+            "sha256": "9db141a8047b63bea3abdf565b94d80fcf798fec86fc248fd8101ac04f123402"
+          },
+          {
+            "url": "/assets/layout-BoIes6Pa.js",
+            "status": 200,
+            "bytes": 5469,
+            "sha256": "8c1f1de085af32a3ad7edaaa7ad41f9b9a60316efae2741841d78842a3627a79"
+          },
+          {
+            "url": "/assets/manifest-D7c9lTbE.json",
+            "status": 200,
+            "bytes": 8977,
+            "sha256": "0f04c3328e2b61a0d185b2966c0cba6117ce832e02645a4328865b4dfc3c46d5"
+          },
+          {
+            "url": "/assets/manifolds-BwcTSGK9.json",
+            "status": 200,
+            "bytes": 263905,
+            "sha256": "c23c8da175b2ba3a7acc38b4a6f978fbf1759b3d12ccf0b39127c3469a91da1c"
+          },
+          {
+            "url": "/assets/manifolds-optimizers-CypzRnc4.json",
+            "status": 200,
+            "bytes": 151894,
+            "sha256": "42248f5c6a8206c05211300ace8c34badee22d650cd63707cd4ab7b9a3e85dfb"
+          },
+          {
+            "url": "/assets/optimizer-CLnKdcwt.json",
+            "status": 200,
+            "bytes": 14392,
+            "sha256": "b0125e1c43076c99c465984115c2321f42cb024949f33704e6d20f403b6e6b88"
+          },
+          {
+            "url": "/assets/optimizers-CEz_nKoI.json",
+            "status": 200,
+            "bytes": 41780,
+            "sha256": "746e1a894a5749463c63c21c4e97679082329184982c94bd547de2c47ebc225c"
+          },
+          {
+            "url": "/assets/raycast-DW25aQnX.js",
+            "status": 200,
+            "bytes": 6883,
+            "sha256": "5df119cb7dfb549b3302bb92a0e9438c1b46c64d8cddf1aa70a23eed40a83614"
+          },
+          {
+            "url": "/assets/scene-0-C7_zc7kW.json",
+            "status": 200,
+            "bytes": 137263,
+            "sha256": "699741bf3b9260fc117929f27b15e0385aac7e0f6b1e542d67f8b4477e6173cc"
+          },
+          {
+            "url": "/assets/scene-1-DnEU_EHp.json",
+            "status": 200,
+            "bytes": 111248,
+            "sha256": "468847176f9564df0a9865d8ea4c40a14fed764219ea9de7cc01aa226e815ea6"
+          },
+          {
+            "url": "/assets/scene-10-Cf5DEw6o.json",
+            "status": 200,
+            "bytes": 169499,
+            "sha256": "e5078e19090336347f6301a4415dedfb3902c1c1277c530ff0949d4428629869"
+          },
+          {
+            "url": "/assets/scene-2-D5JPAAZ2.json",
+            "status": 200,
+            "bytes": 114835,
+            "sha256": "31d156459bbc885759ab25978009482becf3d605f0f70d3046bcb101b0c03e77"
+          },
+          {
+            "url": "/assets/scene-3-QaIy9qKK.json",
+            "status": 200,
+            "bytes": 116414,
+            "sha256": "9d94890da80175b5c180f27900f9ae51ce4353ce5c63979c8ba815401dd62599"
+          },
+          {
+            "url": "/assets/scene-3-k0.15-C18rCRZY.json",
+            "status": 200,
+            "bytes": 116000,
+            "sha256": "f8e350ed0a9eb6b60e254d639d5b6b0259c6257850723620edbaae5b88599108"
+          },
+          {
+            "url": "/assets/scene-3-k0.55-BYjld9W-.json",
+            "status": 200,
+            "bytes": 115610,
+            "sha256": "304e25f5249664a3868d72b322dd7cd38b506d548d7d9518986d0debc8b8b1a1"
+          },
+          {
+            "url": "/assets/scene-3-k0.95-Cb_k2CQu.json",
+            "status": 200,
+            "bytes": 116418,
+            "sha256": "a840269f8cc8ab787c5aaec851abcdfd97ed2f023a176df44b024a6e7df25ac2"
+          },
+          {
+            "url": "/assets/scene-4-CDxe-9Aj.json",
+            "status": 200,
+            "bytes": 116280,
+            "sha256": "9d4612bb600bf916f1151946d395074577ca0f63e617aa7937b75a6441bb8499"
+          },
+          {
+            "url": "/assets/scene-4-k0.50-k5TeMhFn.json",
+            "status": 200,
+            "bytes": 115903,
+            "sha256": "56003acc87c9f2036a5e029268bc879320aa1910f005756a4d35bd4ee2fb5482"
+          },
+          {
+            "url": "/assets/scene-4-k2.50-0kCHvtDw.json",
+            "status": 200,
+            "bytes": 116810,
+            "sha256": "0e3ed8fedc2bdbed8e4cec92ffd055ebece2941fd78e19e90cffc28c8fe16fd3"
+          },
+          {
+            "url": "/assets/scene-4-k5.00-7SeHtHCI.json",
+            "status": 200,
+            "bytes": 116574,
+            "sha256": "3a73d9e0136a049b479a2d02e401c130a6a14934527864f2e696d52717a93c47"
+          },
+          {
+            "url": "/assets/scene-5-Bf_CS1Da.json",
+            "status": 200,
+            "bytes": 115903,
+            "sha256": "5abf772b27efe1335c282a743403493884310e4c91c967f931a7cc713e7e761b"
+          },
+          {
+            "url": "/assets/scene-5-k0.05-DyUZ9X6_.json",
+            "status": 200,
+            "bytes": 115590,
+            "sha256": "46ef3e8595566056be63c2146003c1077d4e71cac66de09abd92acdb5021acc5"
+          },
+          {
+            "url": "/assets/scene-5-k0.10-D5UxP8IQ.json",
+            "status": 200,
+            "bytes": 115907,
+            "sha256": "1da7aa72e058f46397209396b94018a715d1656db77d2d6f6c8ef458f120a6ef"
+          },
+          {
+            "url": "/assets/scene-5-k0.20-C8d3fb1z.json",
+            "status": 200,
+            "bytes": 116369,
+            "sha256": "01c37e286b7775d86517d3e83568d7497b081de1d1b5a493a9b18dfba33d9a5a"
+          },
+          {
+            "url": "/assets/scene-6-CCu49Uxv.json",
+            "status": 200,
+            "bytes": 138794,
+            "sha256": "23eb849a7aebc9beb10fc571c620bf6b0ad5a3a4901dba32c001e2c94c844374"
+          },
+          {
+            "url": "/assets/scene-7-B4CbT39e.json",
+            "status": 200,
+            "bytes": 111785,
+            "sha256": "a5192f0a6f68a5dc8858069a7e94c90c81ad26b7719eda8478de9f549e852e9a"
+          },
+          {
+            "url": "/assets/scene-8-D__ywHDP.json",
+            "status": 200,
+            "bytes": 126189,
+            "sha256": "2888efc6861b06d6dd8120d7d50306a4a92b3f978100d3f0be0b0f1dd4b3251c"
+          },
+          {
+            "url": "/assets/scene-9-C8qmgjrS.json",
+            "status": 200,
+            "bytes": 137313,
+            "sha256": "d9e1fe9f4fb765f9dc23530ffc0c672badd4a80f07f468ba9745435906b9e865"
+          },
+          {
+            "url": "/assets/sdf-DRWlEccZ.js",
+            "status": 200,
+            "bytes": 14093,
+            "sha256": "de1d7e5160570fc727102360e6bd2cdae674bda2d15678d91ff4567db6d3f5f2"
+          },
+          {
+            "url": "/assets/sdfReleased-C3Cz_FXu.js",
+            "status": 200,
+            "bytes": 35147,
+            "sha256": "9f93627b4e2d74479fdfe205309d8d3ece28e7cf676986cd340bdd1622134bd2"
+          },
+          {
+            "url": "/assets/sdfReleased-CU_94pEn.css",
+            "status": 200,
+            "bytes": 369,
+            "sha256": "09889ecf0d52f1de9f6558715bc4998244d247e8fd11b3079b7c6471481af7f4"
+          },
+          {
+            "url": "/assets/seeds-bend-0.15-D6N9-grN.json",
+            "status": 200,
+            "bytes": 8675,
+            "sha256": "5f881509a6249f0975e70fee8d13a9e696f4260948bfc368205c798792cbac5e"
+          },
+          {
+            "url": "/assets/seeds-bend-0.55-16xxCIci.json",
+            "status": 200,
+            "bytes": 8181,
+            "sha256": "421821d5ddfb3d9e4163f3be02bf0db5ee025b5300ce37497f80dc38b3730d67"
+          },
+          {
+            "url": "/assets/seeds-bend-0.95-B-MObBKa.json",
+            "status": 200,
+            "bytes": 12891,
+            "sha256": "4025d5d667edebe8a4b66fb34dde98bac06d762b8d983a578b5db393adc30614"
+          },
+          {
+            "url": "/assets/seeds-bend-D8eAuRqr.json",
+            "status": 200,
+            "bytes": 12886,
+            "sha256": "3c3a4395e0150ef7f7b970cfc16701a027029454b81dfe753466acef11861d70"
+          },
+          {
+            "url": "/assets/seeds-box-DdIhZ1HP.json",
+            "status": 200,
+            "bytes": 12450,
+            "sha256": "07fc8cf58ea040e6e0fa7276351ac67f2d457d0ab87ec319c173e4c3c6c600a0"
+          },
+          {
+            "url": "/assets/seeds-bunny-DTgE10mB.json",
+            "status": 200,
+            "bytes": 33305,
+            "sha256": "febd82223ee6d0681cf0fcecf011ec83c3857791ddc77ebba6fab1d21394b2d4"
+          },
+          {
+            "url": "/assets/seeds-capsule-DYjFFb3h.json",
+            "status": 200,
+            "bytes": 20650,
+            "sha256": "4dfea236b0eaa56d5dbbe8cafafe739a8c1061b89df9d03b6878197107efd24a"
+          },
+          {
+            "url": "/assets/seeds-chair-BnKtSXqa.json",
+            "status": 200,
+            "bytes": 11754,
+            "sha256": "65872aa7b95e5785afe223e0032e0bbef55e9904a1b98578ef7a3de14025cf20"
+          },
+          {
+            "url": "/assets/seeds-cone-D7JNNkHO.json",
+            "status": 200,
+            "bytes": 10114,
+            "sha256": "a3d758fe90454bf0a0a27d35dd68e0809c5be6b57fd0a8bdeeb4aa8626aa5fa7"
+          },
+          {
+            "url": "/assets/seeds-cow-BCJcJ7in.json",
+            "status": 200,
+            "bytes": 16385,
+            "sha256": "1be0fda4763ab1df0dc8236ee7b647a51e491072ecd3c8f7d6f7e6804b7260f9"
+          },
+          {
+            "url": "/assets/seeds-cylinder-CMupnuLn.json",
+            "status": 200,
+            "bytes": 8834,
+            "sha256": "5bc9552f39350de72601d62763775cbf31cc1376bb83913e99f7b0c82e0a4d29"
+          },
+          {
+            "url": "/assets/seeds-displace-0.05-Dn0vp69K.json",
+            "status": 200,
+            "bytes": 22443,
+            "sha256": "487f35857a72b33ae852d7cadffe34d6639f9890842cf25c04bbf343b9702d9b"
+          },
+          {
+            "url": "/assets/seeds-displace-0.10-B48J8HZ2.json",
+            "status": 200,
+            "bytes": 23360,
+            "sha256": "eaa01afd62a564d0f43f9d5dc2cc56c0da8930bab5fdb17cc0407bed20b476e4"
+          },
+          {
+            "url": "/assets/seeds-displace-0.20-CE6Nquf2.json",
+            "status": 200,
+            "bytes": 22690,
+            "sha256": "58c8d844e35f431aca4b1a46b1c984d8b5f685e6981494401cc9c40cbc00e924"
+          },
+          {
+            "url": "/assets/seeds-displace-BmmfUQO9.json",
+            "status": 200,
+            "bytes": 23355,
+            "sha256": "c5c41d9468160704e37d891b48cccf8a628c4726be4e499fc9c76fb251b5d99d"
+          },
+          {
+            "url": "/assets/seeds-gear-Cd4MSWWg.json",
+            "status": 200,
+            "bytes": 24198,
+            "sha256": "7e2a28a69c8ca6932b5b07d392e05268c20aade371822b00017b793ccf0c16ff"
+          },
+          {
+            "url": "/assets/seeds-sphere-BxHB7vU4.json",
+            "status": 200,
+            "bytes": 40563,
+            "sha256": "00fc87271182464bb33e1c997eafd994c1c6cde56f37d8aa343c66b192996b06"
+          },
+          {
+            "url": "/assets/seeds-spike-plate-DgjuDjac.json",
+            "status": 200,
+            "bytes": 38266,
+            "sha256": "5e5411b897f37c9f5b4396508633fc6698c05ad42ae1ed961677482e6dda7947"
+          },
+          {
+            "url": "/assets/seeds-spiky-wheel-ZM0eLpAH.json",
+            "status": 200,
+            "bytes": 21644,
+            "sha256": "1ad9dae4dcbeba5ea387e64a70b75c46747edf41255139c1d55e2884f581873b"
+          },
+          {
+            "url": "/assets/seeds-torus-ziYxO0iq.json",
+            "status": 200,
+            "bytes": 26236,
+            "sha256": "976e974760469704bf2ac74e4377dc92e7f6d0bfadf34c409e084b440f4b0bbb"
+          },
+          {
+            "url": "/assets/seeds-twist-0.50-Dh1qyjxi.json",
+            "status": 200,
+            "bytes": 7654,
+            "sha256": "4c004b67a2be08ce867b1bbb481bce614195c6fb67f07096d12a8480763d8d72"
+          },
+          {
+            "url": "/assets/seeds-twist-2.50-3UYY81l9.json",
+            "status": 200,
+            "bytes": 16586,
+            "sha256": "b263d40a25790e8250530c67fb97865101596cf9b88736407975da2d73ec4b98"
+          },
+          {
+            "url": "/assets/seeds-twist-5.00-C2N715xH.json",
+            "status": 200,
+            "bytes": 21454,
+            "sha256": "ffe06df4388ad57d587bbd74097485faf65360f33b0cc035e049d327973691f9"
+          },
+          {
+            "url": "/assets/seeds-twist-BOSTjogJ.json",
+            "status": 200,
+            "bytes": 8546,
+            "sha256": "7985e93dd0c47d2b89ee77d0d627a818cd34d63ecadd70b50cd79c12a9abf89b"
+          },
+          {
+            "url": "/assets/shapes-Dol320Bz.js",
+            "status": 200,
+            "bytes": 27880,
+            "sha256": "d1bfaca63b21d2f4ca9ae0b034d540145ca8939d6dd141d5c8b568b194e8c2c7"
+          },
+          {
+            "url": "/assets/solver-T-zHzjoE.js",
+            "status": 200,
+            "bytes": 65282,
+            "sha256": "abf96c03f2016bdeda26a74d79051027fae5943a4ae9c5834ff08b005efd733a"
+          },
+          {
+            "url": "/assets/sphere-c8eQx1_M.json",
+            "status": 200,
+            "bytes": 32868,
+            "sha256": "074d7d2de19a14923b071259cb4229613d57e8ee8694640ab81a14431797b4ac"
+          },
+          {
+            "url": "/assets/spike-plate-BfvF-nrH.json",
+            "status": 200,
+            "bytes": 31985,
+            "sha256": "72338d8caf117b816846b1d9902e51ebd7a096f7ae4ef08cef5cc9e5e818cd3d"
+          },
+          {
+            "url": "/assets/spiky-wheel-Cmhrw2hn.json",
+            "status": 200,
+            "bytes": 33614,
+            "sha256": "2af214650128e9dbbd6ad20932b319044fef94a9d2b0dcbe365c198c1b295b53"
+          },
+          {
+            "url": "/assets/style-BWf5DvEw.js",
+            "status": 200,
+            "bytes": 42956,
+            "sha256": "4a88af12d75e8b2dcddd0b6c1dee1b3cca72a39b5a84a4fbe85f70814183dcbb"
+          },
+          {
+            "url": "/assets/style-DsJ9CnqP.css",
+            "status": 200,
+            "bytes": 3222,
+            "sha256": "be0466606b9bf00a5d64eece861bf8e71f000dcf0d46b124bb2ce5caf40c83f9"
+          },
+          {
+            "url": "/assets/three.tsl-CugZ8aUB.js",
+            "status": 200,
+            "bytes": 932110,
+            "sha256": "215764d3c0e297cc2d559ce5e3182e6a39a149d38a6ee4d37673e1a77a382f3e"
+          },
+          {
+            "url": "/assets/torus-Dp6EuyJV.json",
+            "status": 200,
+            "bytes": 32784,
+            "sha256": "a80640dc75fbf0a1a8d6fc323ffefaf1a1123027154f2133484d58fd069e9b3f"
+          },
+          {
+            "url": "/assets/twist-0.50-DBIbPRo-.json",
+            "status": 200,
+            "bytes": 30873,
+            "sha256": "e09038ee66a4a78bf15de602c15d321dbec62b38d532b393bfd1febfca04ec0f"
+          },
+          {
+            "url": "/assets/twist-2.50--jKbVjB2.json",
+            "status": 200,
+            "bytes": 30539,
+            "sha256": "c6f9fa42667d6c221d52bab3ee037abbfe4639f1eafcc60b92f8fc12f6ffd23f"
+          },
+          {
+            "url": "/assets/twist-5.00-DtKQPJkS.json",
+            "status": 200,
+            "bytes": 30475,
+            "sha256": "654e4799360874e6942430af477c87a811e0b8345282df7d74eae9d341ac7623"
+          },
+          {
+            "url": "/assets/twist-Cdl0asWO.json",
+            "status": 200,
+            "bytes": 30458,
+            "sha256": "3ca5a0eb1ee9e0273d7899c7bda0a9e3d46d01281dc4e70b80d507cdbce57fb0"
+          },
+          {
+            "url": "/assets/voxel-B7Gpu_Ew.js",
+            "status": 200,
+            "bytes": 9370,
+            "sha256": "960bd5fee009c8370eac895ae4db43434be87c292326564e94366f0ddd486c28"
+          },
+          {
+            "url": "/assets/wgsl-collision-ydHRJOTN.js",
+            "status": 200,
+            "bytes": 51861,
+            "sha256": "2f99684bb69c4a75efa8e762abc81fb3433887de8ebb9460ffa7e512b08c0115"
+          },
+          {
+            "url": "/assets/wgsl-topology-ucEOG0T4.js",
+            "status": 200,
+            "bytes": 15522,
+            "sha256": "a74aeb722357a9897fc59d35c098343b019fa7b9b419aaed31668e3028384694"
+          },
+          {
+            "url": "/sdf-released.html",
+            "status": 200,
+            "bytes": 4619,
+            "sha256": "d6816a87fb0f3cf15673abb5d04fa562ac3cff807fa52e6e0859dfba544d0019"
+          },
+          {
+            "url": "/sdf.html",
+            "status": 200,
+            "bytes": 3692,
+            "sha256": "aec4e30c3cd70a80bcb96aacd0bbd36bff916e877600b1fc1fc77d82b507acc0"
+          }
+        ],
+        "allMatchBuiltFiles": true
+      }
+    },
+    "fileHashScope": "Current release assembly. Measurement-time assemblies and historical research hashes are labeled separately; the final observer correction has its own successful browser smoke.",
+    "preReviewGate": [
+      {
+        "step": "typecheck",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "seconds": 2.158,
+        "log": {
+          "name": "sdf-production-final-gate-typecheck.log",
+          "sha256": "fe7f093e0cfa7e258ba98a1acd9f85773c76c3eb172fd4bfe2327acbffd776cc"
+        }
+      },
+      {
+        "step": "cpu",
+        "command": [
+          "pnpm",
+          "test"
+        ],
+        "exitCode": 0,
+        "seconds": 8.362,
+        "log": {
+          "name": "sdf-production-final-gate-cpu.log",
+          "sha256": "297a0a06b008f96784431aedb5ff8532dda014ceac0806d15e4fd0539b8bb2f5"
+        },
+        "counts": {
+          "tests": 159,
+          "pass": 159,
+          "fail": 0,
+          "skipped": 0
+        }
+      },
+      {
+        "step": "gpu",
+        "command": [
+          "node",
+          "--experimental-transform-types",
+          "--test",
+          "--test-concurrency=1",
+          "tests-gpu/avbd2d-gpu.gpu.test.ts",
+          "tests-gpu/avbd3d-gpu.gpu.test.ts",
+          "tests-gpu/dynamic-probes.gpu.test.ts",
+          "tests-gpu/grid-levels.gpu.test.ts",
+          "tests-gpu/hulls.gpu.test.ts",
+          "tests-gpu/lib.gpu.test.ts",
+          "tests-gpu/manifold-substeps.gpu.test.ts",
+          "tests-gpu/pending-colors.gpu.test.ts",
+          "tests-gpu/pivot.gpu.test.ts",
+          "tests-gpu/sdf-bridge.gpu.test.ts",
+          "tests-gpu/sdf-broadphase.gpu.test.ts",
+          "tests-gpu/sdf-lifecycle.gpu.test.ts",
+          "tests-gpu/sdf-nonconvex.gpu.test.ts",
+          "tests-gpu/sdf-principal.gpu.test.ts",
+          "tests-gpu/sdf-released.gpu.test.ts",
+          "tests-gpu/sdf-showcase.gpu.test.ts",
+          "tests-gpu/sdf-supports.gpu.test.ts",
+          "tests-gpu/sdf-world.gpu.test.ts",
+          "tests-gpu/sdf.gpu.test.ts",
+          "tests-gpu/sparse-colors-contacts.gpu.test.ts",
+          "tests-gpu/sparse-colors.gpu.test.ts",
+          "tests-gpu/step-allocations.gpu.test.ts"
+        ],
+        "exitCode": 0,
+        "seconds": 125.542,
+        "log": {
+          "name": "sdf-production-final-gate-gpu.log",
+          "sha256": "d02481392d4067229214cebd4b9261726a9423892a0f470b89acd390e659427d"
+        },
+        "counts": {
+          "tests": 178,
+          "pass": 178,
+          "fail": 0,
+          "skipped": 0
+        }
+      },
+      {
+        "step": "build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "seconds": 0.468,
+        "log": {
+          "name": "sdf-production-final-gate-build.log",
+          "sha256": "6b85320f2c936a1237a3cf4088dbd347d860f57e7396fca2fbf4c0fedbab83c6"
+        }
+      },
+      {
+        "step": "library",
+        "command": [
+          "pnpm",
+          "build:lib"
+        ],
+        "exitCode": 0,
+        "seconds": 1.135,
+        "log": {
+          "name": "sdf-production-final-gate-library.log",
+          "sha256": "5c51b8a0937fa1f9ff5a5319c674ffafe542fa57f6c1d04a0f83da97ec854a09"
+        }
+      }
+    ]
   }
 }

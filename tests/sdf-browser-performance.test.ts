@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { FrameCapture, frameReport } from '../src/sdf-showcase/performance.ts';
+import { FrameCapture, frameReport, waitForGpuDrain } from '../src/sdf-showcase/performance.ts';
 
 test('browser frame metrics use elapsed time, retain long frames and separate simulation speed', () => {
   const sample = frameReport([10, 10, 10, 70], .05);
@@ -33,4 +33,21 @@ test('browser measurements reject missing, nonfinite or nonmonotonic samples', (
   capture.record(1000, 0);
   assert.throws(() => capture.record(1000, 0), /increase/);
   assert.throws(() => capture.record(1200, NaN), /Invalid/);
+});
+
+test('GPU drain handles completion and device errors without leaving a deadline behind', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  await waitForGpuDrain({ onSubmittedWorkDone: () => Promise.resolve(undefined) });
+  const error = new Error('Device lost');
+  await assert.rejects(waitForGpuDrain({ onSubmittedWorkDone: () => Promise.reject(error) }), error);
+  t.mock.timers.tick(5000);
+});
+
+test('GPU drain times out a stalled queue and a subsequent drain can succeed', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const pending = waitForGpuDrain({ onSubmittedWorkDone: () => new Promise<undefined>(() => {}) });
+  const failed = assert.rejects(pending, /did not finish within 5000 ms/);
+  t.mock.timers.tick(5000);
+  await failed;
+  await waitForGpuDrain({ onSubmittedWorkDone: () => Promise.resolve(undefined) });
 });
