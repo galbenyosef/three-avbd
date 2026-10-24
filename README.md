@@ -39,6 +39,13 @@ paused views stop rendering once camera motion settles. Contact points/normals a
 an optional throttled readback; body drawing reads the GPU buffer directly.
 Mass/inertia use box proxies, so this is a collision playground, not a paper benchmark.
 
+Open `/sdf-gears.html` for a contact-driven gear train. One motorized input drives
+20/12/28-tooth gears through baked SDF collisions; follower rotations are not scripted.
+Drag the gold gear or handwheel, reverse the motor, and toggle the contact-load overlay.
+Disabling tooth collisions resets the train with stationary followers as a negative control.
+The gears use polygon-integrated mass/inertia and two ball joints per follower axle.
+See [gear-demo validation and limitations](docs/SDF_GEARS.md).
+
 Open `/sdf-released.html` for eleven scenes using the released resolution-100 fields,
 original geometry, poses, mass and full inertia: box/gear stacks, plain and distorted
 planks, chairs, cows on spikes, bunnies, a spiky wheel and analytic primitives.
@@ -46,7 +53,7 @@ Default **smooth playback** runs without per-substep reference readbacks. Expand
 **Reference comparison** to reset into the bounded six-second diagnostic mode with
 CPU-reference metrics; that mode is for numerical inspection, not FPS measurement.
 
-Both pages offer **Measure 4s**: one second of warmup, four seconds of visible browser
+The playground and reference-scene pages offer **Measure 4s**: one second of warmup, four seconds of visible browser
 frame intervals, then automatic pause. The report separates frame cadence from simulation
 speed and records final GPU drain time; **Save JSON** exports the raw intervals and context.
 Package scope and release instructions are in [the 0.4 release notes](docs/SDF_RELEASE_0.4.md).

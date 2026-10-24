@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         sdf: 'sdf.html',
+        sdfGears: 'sdf-gears.html',
         sdfReleased: 'sdf-released.html',
         demo2d: '2d.html',
         bench: 'bench.html',
