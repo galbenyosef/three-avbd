@@ -1,13 +1,14 @@
 # three-avbd: library API
 
-Status: v0.3 (npm `three-avbd`; see `PLAN.md` stages 9 to 11).
+Status: v0.4 release candidate; npm 0.3.0 does not include the SDF entry point.
+See [release scope and verification](SDF_RELEASE_0.4.md).
 
 ## Goal
 
 Let a Three.js WebGPU project add GPU rigid-body physics in a few lines: boxes and spheres,
 joints that can break, tens of thousands of bodies drawn straight from the solver's buffer. 3D
-only. 2D and the reference solvers stay in the repo as the oracle and demos; they aren't
-published.
+only. The 2D solvers and reference demos stay in the repo. The advanced entry point and SDF
+preparation API also include the reference utilities they depend on.
 
 ## Package
 
@@ -22,8 +23,11 @@ published.
   rotation, `J_REST`, the rest it started with, `J_REST_START`, a yield word, `J_YIELD`, and a bend
   limit, `J_BREAK_BEND`): code reading the raw joint buffer (`readJoints`) must stride by the
   exported constant.
-- Built by `tsc` from `src/lib/` into `build/` (the site builds to `dist/`). The package `files` list is `build` only,
-  so demos, benchmarks, fixtures and the reference ports stay out of the tarball.
+- **`three-avbd/sdf`**: experimental analytic/voxel fields, baking, curvature seeds, mass/inertia
+  preparation and collision parameters; see [baking](SDF_BAKING.md) and [World integration](SDF_WORLD.md).
+- Built by `tsc` from the three public entry points and their transitive dependencies into `build/`
+  (the site builds to `dist/`). The tarball includes that runtime, declarations, README, license
+  and third-party notices. Demo assets, benchmarks and test fixtures are excluded.
 
 ## Core API
 
@@ -71,7 +75,7 @@ renderer.setAnimationLoop(() => {
   terms (`alpha`, `betaLin`, `betaAng`, `gamma`), with the paper's defaults.
 - `destroy()` releases the GPU buffers.
 
-### Experimental SDF mode (unreleased; API may change)
+### Experimental SDF mode (0.4 release candidate; API may change)
 
 `await world.enableSdfCollisions([{ body, field, scale?, rotation? }], params?, broadphase?)` installs SDF
 collisions for allocated body slots. Unassigned boxes/spheres use
