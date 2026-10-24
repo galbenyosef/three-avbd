@@ -68,3 +68,17 @@ test('the finalization deadline covers stalled timestamp maps and inspection aft
   t.mock.timers.tick(5000); await failed;
   assert.equal(await captureDeadline(Promise.resolve('retry')), 'retry');
 });
+
+
+test('a queued pre-click animation frame does not cancel or shorten a capture', () => {
+  const capture = new FrameCapture(505, 0, 30000);
+  assert.equal(capture.record(500, .01), null);
+  assert.equal(capture.snapshot(), null);
+  assert.equal(capture.record(510, .01), null);
+  assert.throws(() => capture.record(500, .01), /increase/);
+  assert.equal(capture.record(30500, 29.99), null);
+  const sample = capture.record(30510, .01)!;
+  assert.equal(sample.durationMs, 30000);
+  assert.equal(sample.simulationSeconds, 30);
+  assert.throws(() => new FrameCapture(505).record(-1, 0), /Invalid/);
+});

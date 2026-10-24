@@ -39,8 +39,14 @@ export class FrameCapture {
   }
   record(time: number, simulatedSeconds: number): FrameReport | null {
     if (this.done) throw new Error('Browser capture already finished');
-    if (!Number.isFinite(time) || time < this.startedAt || !Number.isFinite(simulatedSeconds) || simulatedSeconds < 0)
+    if (!Number.isFinite(time) || time < 0 || !Number.isFinite(simulatedSeconds) || simulatedSeconds < 0)
       throw new Error('Invalid browser capture frame');
+    // A queued rAF can predate the click's performance.now() even though it runs after it.
+    // Ignore it before the capture baseline, while keeping later backwards timestamps invalid.
+    if (time < this.startedAt) {
+      if (this.previous !== null) throw new Error('Browser capture timestamps must increase');
+      return null;
+    }
     if (time < this.startedAt + this.warmupMs) return null;
     if (this.previous !== null) {
       const interval = time - this.previous;
