@@ -2,6 +2,198 @@
 
 Measured results that drive design decisions. Newest first. Each entry says how it was measured.
 
+## 2026-10-24 — R3: isolate #37/#38 after the contact-filter regression
+
+The full fresh matched ensemble rejects the narrowed #36 rule: chair failures increase
+0 → 1 and probes ≥5 mm increase 37 → 63, despite a lower median peak. Bunny failures improve
+1 → 0, but that does not compensate for the chair regression. All 11 seeds and the fixed
+360-frame window are retained. The filter is quarantined, not imported into the runtime.
+
+A separate candidate reconciles #37/#38 on main `005c16b` without #36. Its second full matched
+ensemble has identical recorded frame metrics to main for all 11 seeds and both scenes.
+Chairs have zero failed seeds; bunnies retain the existing seed 3 energy failure (0.05799 J
+at frame 360, limit 0.01 J). This passes the unchanged non-regression rule, not a zero-failure
+or global penetration guarantee. Independent normals, identities and warm-start semantics
+remain covered by the regression suite; no speculative direction-culling replacement is used.
+
+Both raw ensembles, their full source manifests, and a patch reconstructing the rejected
+filter are retained in `docs/measurements/sdf-r3-*-2026-10-24.*`. See
+`SDF_RECONCILIATION.md` for commands, exact hashes, review/gate results and PR dispositions.
+These bounded sequential M4 Max/Dawn runs are settling evidence, not performance benchmarks.
+The final sequential `pnpm check` passes 166 CPU / 185 real-Dawn GPU tests with zero
+failures/skips, typecheck and both builds. Independent code/data review is clean. The local
+#37/#38 candidate is validated; research PR heads remain unmodified and #36 remains blocked.
+
+## 2026-10-24 — R3: preserve opposing gap contacts in one mesh pair
+
+Independent review of PR #36 on main `005c16b` identified that the outside-both rejection
+also removes genuine near contacts. A bounded real-Dawn regression reproduces it: one mesh
+has two parallel flanks, and a box penetrates the right flank by 2.5 mm while its left flank
+has a 12.5 mm gap (inside the 20 mm contact margin). The right witness disabled valid,
+gap-derived +X constraints on the left. The regression fails with the October 18 rule.
+
+The first candidate rejected only inside-both, aligned-gradient optimizer contacts opposing a
+witness. The new same-pair test passes, and the original 48-pose test now also compares an
+unrelated pair against an isolated pass with matched step-index RNG seeds and alternating
+pair order. That comparison preserves exact contact records and per-pair query counts.
+
+The prior October 18 ensemble below measures the broader historical rule. It must not be
+reused as acceptance evidence for this revision. A fresh matched ensemble then exposed a
+chair seed 5 regression: 0.02848 J final energy versus 0.00170 J on main, exceeding the
+unchanged 0.01 J limit. The narrowed #36 rule is rejected and quarantined. The #37/#38
+candidate retains main's supplemental contacts and the valid opposing-gap regression;
+see `SDF_RECONCILIATION.md`. No production deployment or research PR merge includes #36.
+
+## 2026-10-19 — Contact-search experiments: no accepted speedup
+
+The next performance screen tested ten prototypes sequentially on 4,314 bunnies, 90 frames, 16+4 samples, with 50 ms idle/frame. No runtime change was retained. All production source and scripts were restored to `58a6a12`; correctness/settling acceptance was not claimed for the rejected prototypes.
+
+The same-session restored-source controls measured 108.82 ms collision with diagnostic pass splitting and 107.21 ms without it. Split-pass variants: fixed-local simplex 112.00 ms; workgroup scratch 352.77; unrolled repulsion 154.22; full-precision texture loads 165.75; NM specialization 108.22; 256-lane workgroups 128.59; last-cell corner cache 201.55. Normal unsplit variants: staged candidate passes 129.59 ms; hardware float32 interpolation 131.64; voxel empty-region block rejection 107.34. Compare only within each timing scope. These are single exploratory runs, not statistical trials; the 90-frame controls do not replace the prior 360-frame measurement.
+
+The specialization difference is too small to claim improvement; empty-region rejection did not reduce time and changed the later contact history. The others were slower. Experimental shader variants were discarded, not turned into public APIs or fallback requirements. Raw records: `measurements/sdf-search-experiments-2026-10-19.json`. The requested <33 ms / ideally <16 ms high-budget goal remains unmet. Further work needs hardware-level bottleneck evidence and a larger architectural improvement; these results do not establish that the target is impossible. A bounded native Metal System Trace of the restored source completed, but its shader-profiler sample table was empty and the counter metadata exposed only RT Unit Active; it does not establish an ALU, bandwidth or register-spill bottleneck. The local trace is not committed (large and contains system metadata). A correctly configured compute-counter/shader-profiler capture is the next diagnostic checkpoint.
+
+## 2026-10-19 — Full-pile profiling: preserve the trajectory before accepting speedups
+
+Split-dispatch profiling of 4,314 bunnies identifies contact search as the dominant cost. Reading individual history members avoids copying the entire contact array; a bounded per-body cache transforms curvature seeds once per substep instead of once per candidate pair. Cache allocation falls back to direct sampling for small scenes, insufficient binding/workgroup limits, or allocations over 128 MiB/device limits. Contact order, independent normals and warm-start semantics remain unchanged.
+
+The retained cache/history changes reproduce every recorded physics metric of the previous 600-frame mesh-quality baseline exactly at all 20 samples: pair/contact counts, energy, overflow, ground penetration and sampled mesh penetration. The sampled mesh maximum remains 2.749 mm; this is a reservoir of 300 nearby pairs, not a global penetration bound. A populated-seed regression compares direct and cached results through pose changes, curvature mode switches, key reset and capacity growth.
+
+A scalar-only voxel distance shortcut was rejected despite a faster diagnostic timing: its 600-frame run reached 7.731 mm sampled penetration and 16.412 J final energy. Local distance agreement did not preserve the long-pile trajectory. Workgroup-size, global workspace, compact repulsion, field specialization and eligibility-mask experiments were also discarded. The diagnostic records distinguish rejected variants and null unavailable total timestamps. Split-pass timings are not normal frame timings.
+
+Raw records: `measurements/sdf-dispatch-profile-2026-10-19.json`, `sdf-performance-cache-settling-2026-10-19.json`, and `sdf-performance-rejected-scalar-2026-10-19.json`. Normal 360-frame endpoint remeasurement gives collision 20.34 / 110.20 ms at 4+1 / 16+4, versus 20.28 / 130.61 ms previously; total GPU means are 28.09 / 124.65 ms versus 28.09 / 145.56 ms. This is about 16% faster high-budget collision with no low-budget improvement, from single sequential runs, not statistical trials. See `measurements/sdf-performance-endpoints-2026-10-19.json`. The full-pile performance gap remains open.
+
+## 2026-10-19 — Full-pile budget timings and five-rollout dense pile comparison
+
+The Table 2 analogue completed twelve sample budgets on 4,314 dynamic bunnies plus floor, 360 frames each, sequentially with 50 ms idle/frame. M4 Max mean collision timestamps range from 20.28 to 130.61 ms/frame (four substeps), including preparation, spatial broadphase, search and export. These are substantially slower than the paper values; the reconstructed layout and timing scope prevent equivalence claims. No overflow/non-finite state occurred.
+
+The Figure 7 analogue completed 30 runs (released chairs/bunnies × uniform/curvature/dense × five matched jitter seeds), 500 frames each with 10 ms idle/frame. Mean last-100-frame energy in joules: chairs 0.019345 / 0.262713 / 0.000001280; bunnies 0.180283 / 0.032203 / 0.000001916. The fixed-surface dense backend settles tightly but creates more constraints; curvature is not consistently better. The released bunny pile is not Iron Maiden, and fixed surface samples are not the paper's 1,000 optimized seeds. No production solver behavior changed for these measurements.
+
+See `SDF_REPRODUCTION_STATUS.md` and the raw `measurements/sdf-table2-full-2026-10-19.json` / `sdf-fig7-piles-2026-10-19.json`. New GPU regressions cover released-mesh support, directed mesh contacts and multiplier transport. Runtime testing caught and fixed a WGSL reserved identifier; review corrected upper-median/body-count/timestamp-wait labels. Measurements retain the original values.
+
+## 2026-10-19 — Corrected paper-scale bunny measurements (PR #37 review follow-up)
+
+The version-2 harness checks overflow after **every substep**, times those readbacks, and
+reservoir-samples up to 300 conservative bounding-sphere candidate pairs across all bodies,
+checking source vertices in both directions. These remain sampled penetration observations,
+not whole-pile bounds. The deterministic reservoir samples do not affect initial poses.
+
+Sequential runs on the M4 Max used 4,314 dynamic bunnies, 600 frames, 64,000 reserved pairs,
+and `SDF_FRAME_PAUSE_MS=100` (100 ms idle after every frame, excluded from timing).
+The source was frozen per run. Baseline: PR #37 `d6422fc`; witness: the same source plus
+PR #36's production change at `e675345`. No hardware equivalence or t_coll claim is made.
+
+| measurement | baseline | with witness fix |
+|---|---:|---:|
+| overflow at any substep | none | none |
+| energy, sampled frames 300–600 | 2.33–12.79 J | 0.67–2.20 J |
+| sampled mesh penetration, frames 300–600 | ≤2.75 mm | ≤2.33 mm |
+| ground penetration, sampled frames | 0 | 0 |
+| wall-clock step+readback median | 53.86 ms | 54.03 ms |
+
+No GPU validation errors or capacity-growth errors occurred. This is one run per configuration;
+no statistical or worst-case claim follows. The sampled mesh maximum differs from the old biased
+subset; this does not establish that previously observed deeper contacts no longer exist.
+
+A separate 12-frame witness run with default capacity reproduces startup overflow and growth;
+see the exact frames/capacities in `sdf-scale-v2-default-2026-10-19.json`. Reserve capacity for
+large dense scenes: automatic growth does not replay dropped contacts. This short run does not
+establish later settling. Raw records retain source provenance and timing scope.
+
+Run the current candidate without the #36 filter, one run at a time:
+`SDF_FRAME_PAUSE_MS=100 nice -n 15 node --experimental-transform-types scripts/sdf-scale.ts OUT.json 4314 600 64000`
+
+This command on current source does not reproduce the historical witness column. That record
+requires the baseline source `d6422fc` plus the #36 production change at `e675345`, as noted
+above. Current-main solver changes also prevent treating a new run as the old baseline timing.
+
+Measurements: `measurements/sdf-scale-v2-{baseline,witness,default}-2026-10-19.json`.
+
+## 2026-10-18 — Paper-scale pile: 4314-bunny exploratory measurements (capacity validation pending)
+
+**Review correction (2026-10-19):** the historical measurements below are not sufficient to
+establish zero dropped substeps: the old harness read overflow only after the final substep.
+Its recorded frame times exclude the explicit counter readback, despite the original label.
+Mesh penetration scanned the first 300 qualifying directed pairs, biased toward early body IDs;
+the reported depths are observations of that subset, not bounds on the entire pile. These raw
+records are retained unchanged for provenance. Harness version 2 checks every substep, times
+those readbacks, and reservoir-samples nearby pairs across all bodies in both directions.
+Version 2 results must be measured before making corrected capacity or pile-wide quality claims.
+
+Paper Table 1 times a 4314-body Bunnies scene, but the layout is not published.
+`scripts/sdf-scale.ts` builds an analogue:
+- the released voxel bunny and the released ground;
+- a 33×33 lattice, 4 layers high, spaced 1.2 m, with random orientations;
+- mesh-quality settings, the World spatial broadphase, and 600 frames (10 s).
+
+One run per configuration on the dev machine (M4 Max). Frame times are wall clock, including
+submission but excluding the explicit per-frame counter readback. **They are not target-hardware numbers and not the
+paper's t_coll.**
+
+- **Capacity:**
+  - World's default reservation is 8 candidate pairs per body (34,520). It overflowed on frames
+    1–2, because the lattice packs more AABB neighbours than that, so those pairs were dropped for
+    those steps. Auto-grow then doubled capacity to 69,040, with no further overflow observed in the final-substep samples.
+  - Reserving 64,000 pairs up front (`maxPairs`) recorded zero overflow in final-substep samples; earlier substeps were not checked.
+  - The settled pile uses about 44.5k candidate pairs and 41–43k contacts.
+  - Recommendation for large scenes: reserve `maxPairs` rather than rely on growth.
+- **Cost:** median 46 ms per frame (p95 51 ms, max 74–86 ms), with 4 substeps and 20 AVBD
+  iterations. That is 2.8× the 16.7 ms frame budget at 60 Hz on this machine. It is not comparable
+  with the paper's 1.8 ms t_coll on an RTX 4090, which times collision only.
+- **Stability and penetration** (64k reserved; ground penetration is exact over all vertices;
+  mesh-mesh penetration is sampled over 300 nearby pairs every 60 frames):
+
+  | frames 300–600 | `main` 33d34f6 | with the witness rule (PR #36) |
+  |---|---|---|
+  | kinetic energy | 2.33–12.8 J, spike at frame 360 | 0.67–2.21 J |
+  | biased-subset mesh penetration (not pile-wide bounds) | up to 12.8 mm (frame 480) | ≤ 3.7 mm in that subset |
+  | ground penetration | 0 | 0 |
+
+  Without the rule, the pile does not settle within 10 s. With it, about 1 J remains. That is
+  about 0.3 mJ per body, comparable to the small pile's 0.01 J / 27-body limit. This is one run each
+  and is indicative, not an ensemble.
+
+Measurements: `measurements/sdf-scale-bunnies-{default,reserved,witness}-2026-10-18.json`.
+
+## 2026-10-18 — SDF interlocks: the pair's vertex witness resolves opposed ambiguous contacts
+
+This follows the plan in the interlock entry below: resolve the conflict per pair rather than per
+sample. When a pair has an exact vertex witness (the floor-box support or the mesh-mesh deepest
+vertex, both under `meshVertexContacts`), the narrowphase deactivates that pair's optimizer
+contacts that meet both of these conditions:
+- the contact's normal opposes the witness normal;
+- the contact's own normal is ambiguous: inside both fields with aligned gradients (bunny point
+  179), or outside both, where the gap normal can flip (chair point 719).
+
+Clearly opposed contacts are kept, and pairs without a witness are unchanged. This touches only
+the `meshVertexContacts` path, so released settings are not affected.
+
+**Ensemble:** chairs and bunnies, jitter seeds 0–10, 360 frames, mesh-quality, probes every 5
+frames. Baseline is `main` 33d34f6, which reproduces the earlier record exactly. The decision rule
+was fixed before the run: failures must not increase in either scene, and both probes ≥5 mm and
+median peak must be no worse in each scene.
+
+| | failures | probes ≥5 mm | median peak | max peak |
+|---|---|---|---|---|
+| Chairs, baseline → witness rule | 0 → 0 | 37 → 20 | 12.0 → 9.1 mm | 15.9 → 12.9 mm |
+| Bunnies, baseline → witness rule | 1 → 1 | 14 → 1 | 0.8 → 0.2 mm | 15.4 → 6.9 mm |
+
+**Accepted.**
+- Chair seed 3, which regressed under the earlier per-sample rule (0.0377 J), does not regress
+  here: its peak stays at 12.5 mm and its final energy at 0.0000 J.
+- Bunny seed 3 still fails the energy limit, but for a different reason:
+  - Its peak drops from 9.1 to 0.2 mm, and its final energy from 0.058 to 0.0169 J.
+  - The baseline's interlock pump (1.06 J at frame 300) is gone.
+  - At frame 360, bunny 21 is still toppling and rolling across the open floor. It descends from
+    0.42 to 0.35 m and is not penetrating anything.
+  - Extended to 720 frames, it rests by frame 390 (about 1e-4 J). So this is a late settle just
+    past the window, not an interlock.
+
+A new GPU test sweeps 48 deep, tilted box-box overlaps. It asserts that no active optimizer
+contact both opposes the witness and has an ambiguous normal, that the drop fires, and that
+nothing is dropped without the option or without a witness. Disabling the drop makes it fail.
+
+Measurements: `measurements/sdf-interlock-witness-2026-10-18.json`.
+
 ## 2026-10-18 — Paper Table 5 SGD row matches SGD without its ‖Δx‖ < τ stop (opt-in added)
 
 The entry below found that the released SGD costs about 0.48× Nelder–Mead per pair, against the

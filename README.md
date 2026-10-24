@@ -62,6 +62,8 @@ Current local desktop results, verification and release boundaries are in
 not a promise of 60 FPS across browsers or a reproduction of paper GPU performance.
 See [API & limitations](docs/SDF_WORLD.md) and
 [released-scene comparisons](docs/SDF_RELEASED_COMPARISON.md).
+See [paper reproduction status](docs/SDF_REPRODUCTION_STATUS.md) and
+[research reconciliation](docs/SDF_RECONCILIATION.md) for historical evidence and acceptance limits.
 
 ## Use it in your project
 
