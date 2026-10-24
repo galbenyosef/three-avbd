@@ -6,6 +6,7 @@ import { browserPerformance } from '../sdf-showcase/performance.ts';
 import { instantiateReleased, loadReleasedScene, type ReleasedProfile, type ReleasedScene, type Sample } from './scenes.ts';
 import { readBrowserAsset } from './assets.ts';
 import { measuredFrame } from './metrics.ts';
+import { FrameQueue } from './frame-queue.ts';
 import '../sdf-showcase/style.css';
 import './style.css';
 
@@ -32,6 +33,7 @@ async function main() {
   const sun = new THREE.DirectionalLight(0xffe3bd, 3); sun.position.set(4, 14, 8); sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024); sun.shadow.normalBias = .015;
   Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, far: 45 }); scene.add(sun);
+  const frameQueue = new FrameQueue();
   let prepared: ReleasedScene | null = null, simulation: Awaited<ReturnType<typeof instantiateReleased>> | null = null;
   const group = new THREE.Group(); scene.add(group);
   let paused = true, loading = false, inFlight = false, dirty = true, frame = 0, last = 0, lastMeasured = 0;
@@ -47,7 +49,7 @@ async function main() {
     status.textContent = `${prepared?.capture.scene ?? ''} · ${seconds.toFixed(2)}${comparison.checked ? ' / 6.00' : ''} s · ${paused ? 'paused' : 'live'}`;
     run.textContent = comparison.checked && frame >= 360 ? 'Restart' : paused ? 'Play' : 'Pause';
   }
-  function setPaused(value: boolean) { paused = value; last = performance.now(); summary(); }
+  function setPaused(value: boolean) { frameQueue.resetTime(); paused = value; last = performance.now(); summary(); }
   const perf = browserPerformance({ canvas: renderer.domElement,
     // This adapter exists across scene reloads; only the current world's queue is used at capture end.
     get device() { return simulation!.world.device; },
@@ -55,7 +57,7 @@ async function main() {
       profile: profile.value, comparison: comparison.checked, frameStart: frame,
       dynamicBodies: prepared!.bodies.filter(body => !body.original.static).length,
       iterations: prepared!.capture.solver.iterations, fixedDt: simulation!.world.dt,
-      maxSubsteps: simulation!.world.maxSubsteps, maxPairs: simulation!.world.sdfCollisionCapacity,
+      maxSubsteps: simulation!.world.maxSubsteps, maxPairs: simulation!.world.sdfCollisionCapacity, maxFramesInFlight: 2,
       pixelRatio: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled }),
     start: () => { if (loading || inFlight || !simulation || comparison.checked) return false; setPaused(false); return true; },
     inspect: () => inspectQualificationWorld(simulation!.world),
@@ -96,7 +98,7 @@ async function main() {
   async function load() {
     if (loading) return;
     perf.reset('Press Play or measure this scene.');
-    loading = true; paused = true; run.disabled = reset.disabled = select.disabled = profile.disabled = comparison.disabled = measure.disabled = true;
+    loading = true; paused = true; frameQueue.resetTime(); run.disabled = reset.disabled = select.disabled = profile.disabled = comparison.disabled = measure.disabled = true;
     while (inFlight) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     status.textContent = 'Loading verified reference assets…';
     try {
@@ -148,6 +150,8 @@ async function main() {
   await load();
   renderer.setAnimationLoop((time: number) => {
     if (document.hidden) return;
+    // Preserve last: the next submitted frame consumes the deferred wall time.
+    if (!paused && !comparison.checked && !frameQueue.available) return;
     perf.beginFrame(time);
     const dt = Math.max(0, (time - last) / 1000); last = time; controls.update();
     let simulatedSeconds = 0;
@@ -161,7 +165,7 @@ async function main() {
         }
       } else {
         try {
-          simulatedSeconds = simulation.world.update(dt) * simulation.world.dt;
+          simulatedSeconds = simulation.world.update(frameQueue.takeTime(dt, simulation.world.maxSubsteps * simulation.world.dt)) * simulation.world.dt;
           frame = Math.floor(simulation.world.stepCount / prepared.capture.solver.substeps);
           dirty = true;
           if (time - lastMeasured > 250) { lastMeasured = time; summary(); }
@@ -171,6 +175,9 @@ async function main() {
     perf.afterPhysics(simulation ? Math.round(simulatedSeconds / simulation.world.dt) : 0);
     if (dirty && !loading) {
       renderer.render(scene, camera); perf.afterRender(); dirty = false;
+      if (!paused && !comparison.checked && simulation) frameQueue.submitted(simulation.world.device.queue, error => {
+        perf.cancel('Capture stopped by a GPU queue error.'); setPaused(true); status.textContent = String(error); console.error(error);
+      });
       if (!paused && !comparison.checked) perf.frame(time, simulatedSeconds); else perf.idle();
     }
   });

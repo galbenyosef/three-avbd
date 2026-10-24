@@ -7,7 +7,9 @@ import { sdfNarrowphaseSource } from './wgsl-sdf.ts';
 import { packSdfAtlas, packSdfBodies, packSdfPairs, packSdfParams, decodeSdfResults, checkSdfPointCapacity, sdfResultWords, SDF_BODY_WORDS, SDF_MAX_POINTS, type SdfAtlas, type SdfPair, type GpuSdfResult } from './sdf-layout.ts';
 export interface SdfPassOptions { maxBodies: number; maxPairs: number; maxAtlasBytes?: number; meshVertexContacts?: boolean;
   /** Points per pair result (default 5): bounds cacheSize ≤ maxPoints−1 and cache + samples ≤ maxPoints. */
-  maxPoints?: number }
+  maxPoints?: number;
+  /** Diagnostic fallback for exact serial/parallel witness comparison. */
+  parallelMeshWitnesses?: boolean }
 /** Standalone pass, also used by the internal production collision bridge.
  * Pairs are supplied by the caller; previous slots explicitly remap cache across
  * pair reorderings. Change pair keys when body slots are recycled or fields change.
@@ -17,6 +19,9 @@ export class SdfNarrowphasePass {
   readonly atlas: SdfAtlas;
   readonly options: SdfPassOptions;
   readonly pipeline: GPUComputePipeline;
+  private readonly witnessBuffer: GPUBuffer | null;
+  private readonly supportPipeline: GPUComputePipeline | null;
+  private readonly supportGroup: GPUBindGroup | null;
   private readonly seedPipeline: GPUComputePipeline | null;
   private readonly seedBuffer: GPUBuffer | null;
   private readonly seedGroup: GPUBindGroup | null;
@@ -46,17 +51,19 @@ export class SdfNarrowphasePass {
     // Bound the optional per-body seed cache; small scenes and large allocations keep the direct path.
     const stride=fields.reduce((n,f)=>Math.max(n,f.seeds.length),0);
     const seedStride=device.limits.maxStorageBuffersPerShaderStage>=6 && options.maxBodies>=256 && options.maxBodies<=device.limits.maxComputeWorkgroupsPerDimension && Math.ceil(stride/64)<=device.limits.maxComputeWorkgroupsPerDimension && stride*options.maxBodies*16<=Math.min(limit,128*1024*1024)?stride:0;
-    const module=device.createShaderModule({ label: 'experimental sdf narrowphase', code: sdfNarrowphaseSource(maxPoints,seedStride) });
+    const parallelSupports=!!options.meshVertexContacts && options.parallelMeshWitnesses!==false && !seedStride && device.limits.maxStorageBuffersPerShaderStage>=6 && options.maxPairs*32<=Math.min(limit,64*1024*1024);
+    const module=device.createShaderModule({ label: 'experimental sdf narrowphase', code: sdfNarrowphaseSource(maxPoints,seedStride,parallelSupports,device.limits.maxComputeWorkgroupsPerDimension) });
     const info=await module.getCompilationInfo(); const errors=info.messages.filter(m=>m.type==='error');
     if(errors.length) throw new Error(errors.map(m=>`${m.lineNum}:${m.linePos} ${m.message}`).join('\n'));
     const pipeline=await device.createComputePipelineAsync({ label:'experimental sdf narrowphase', layout:'auto', compute:{module,entryPoint:'narrowphase'} });
+    const supportPipeline=parallelSupports?await device.createComputePipelineAsync({label:'sdf mesh witnesses',layout:'auto',compute:{module,entryPoint:'supplementContacts'}}):null;
     const seedPipeline=seedStride?await device.createComputePipelineAsync({label:'sdf transform seeds',layout:'auto',compute:{module,entryPoint:'transformSeeds'}}):null;
     const historyModule=device.createShaderModule({label:'sdf history transfer',code:sdfHistorySource(maxPoints)});
     const historyPipeline=await device.createComputePipelineAsync({layout:'auto',compute:{module:historyModule,entryPoint:'copyHistory'}});
-    return new SdfNarrowphasePass(device,atlas,{...options,maxPoints},pipeline,historyPipeline,seedPipeline,seedStride);
+    return new SdfNarrowphasePass(device,atlas,{...options,maxPoints},pipeline,historyPipeline,seedPipeline,seedStride,supportPipeline);
   }
-  private constructor(device: GPUDevice, atlas: SdfAtlas, options: SdfPassOptions, pipeline: GPUComputePipeline, historyPipeline: GPUComputePipeline, seedPipeline: GPUComputePipeline | null, seedStride: number) {
-    this.device=device; this.atlas=atlas; this.options={...options}; this.pipeline=pipeline;this.historyPipeline=historyPipeline;this.seedPipeline=seedPipeline;this.seedStride=seedStride;
+  private constructor(device: GPUDevice, atlas: SdfAtlas, options: SdfPassOptions, pipeline: GPUComputePipeline, historyPipeline: GPUComputePipeline, seedPipeline: GPUComputePipeline | null, seedStride: number, supportPipeline: GPUComputePipeline | null) {
+    this.device=device; this.atlas=atlas; this.options={...options}; this.pipeline=pipeline;this.historyPipeline=historyPipeline;this.seedPipeline=seedPipeline;this.seedStride=seedStride;this.supportPipeline=supportPipeline;
     const storage=GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST|GPUBufferUsage.COPY_SRC;
     const allocated: GPUBuffer[] = [];
     const make=(label:string,size:number,usage=storage)=>{
@@ -69,9 +76,12 @@ export class SdfNarrowphasePass {
       this.seedGroup=seedPipeline?device.createBindGroup({layout:seedPipeline.getBindGroupLayout(0),entries:[{binding:1,resource:{buffer:this.shapeBuffer}},{binding:2,resource:{buffer:this.bodyBuffer}},{binding:6,resource:{buffer:this.seedBuffer!}}]}):null;
       this.pairBuffer=make('sdf pairs',options.maxPairs*16);
       this.paramsBuffer=make('sdf params',80,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);
+      this.witnessBuffer=supportPipeline?make('sdf mesh witnesses',options.maxPairs*32):null;
       this.output=[make('sdf results 0',options.maxPairs*this.resultWords*4),make('sdf results 1',options.maxPairs*this.resultWords*4)];
-      const group=(index:number)=>device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[this.paramsBuffer,this.shapeBuffer,this.bodyBuffer,this.pairBuffer,this.output[index^1],this.output[index],...(this.seedBuffer?[this.seedBuffer]:[])].map((buffer,binding)=>({binding,resource:{buffer}}))});
+      const group=(index:number)=>device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[this.paramsBuffer,this.shapeBuffer,this.bodyBuffer,this.pairBuffer,this.output[index^1],this.output[index],...(this.seedBuffer?[this.seedBuffer]:this.witnessBuffer?[this.witnessBuffer]:[])].map((buffer,binding)=>({binding,resource:{buffer}}))});
       this.groups=[group(0),group(1)];
+      const supportGroup=()=>device.createBindGroup({layout:supportPipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.paramsBuffer}},{binding:1,resource:{buffer:this.shapeBuffer}},{binding:2,resource:{buffer:this.bodyBuffer}},{binding:3,resource:{buffer:this.pairBuffer}},{binding:6,resource:{buffer:this.witnessBuffer!}}]});
+      this.supportGroup=supportPipeline?supportGroup():null;
     } catch (error) {
       for (const buffer of allocated) buffer.destroy();
       throw error;
@@ -90,7 +100,7 @@ export class SdfNarrowphasePass {
     this.device.queue.writeBuffer(this.pairBuffer,0,packedPairs);
     this.device.queue.writeBuffer(this.paramsBuffer,0,packedParams);
     const encoder=this.device.createCommandEncoder({label:'sdf narrowphase'});
-    if(pairs.length) { const pass=encoder.beginComputePass(); this.encodeSeeds(pass,params); pass.setPipeline(this.pipeline); pass.setBindGroup(0,this.groups[next]); pass.dispatchWorkgroups(Math.ceil(pairs.length/64)); pass.end(); }
+    if(pairs.length) { const pass=encoder.beginComputePass(); this.encodeSeeds(pass,params); this.encodeSupports(pass,pairs.length,params); pass.setPipeline(this.pipeline); pass.setBindGroup(0,this.groups[next]); pass.dispatchWorkgroups(Math.ceil(pairs.length/64)); pass.end(); }
     this.device.queue.submit([encoder.finish()]); this.current=next; this.count=pairs.length; this.stepIndex=(this.stepIndex+1)>>>0;
   }
   /** Internal bridge bindings; poses may be prepared directly from production GPU bodies. */
@@ -110,7 +120,7 @@ export class SdfNarrowphasePass {
     preparePairs?.();
     this.encodeSeeds(pass,params);
     const next=this.current^1;
-    if(pairs.length) { pass.setPipeline(this.pipeline); pass.setBindGroup(0,this.groups[next]); pass.dispatchWorkgroups(Math.ceil(pairs.length/64)); }
+    if(pairs.length) { this.encodeSupports(pass,pairs.length,params); pass.setPipeline(this.pipeline); pass.setBindGroup(0,this.groups[next]); pass.dispatchWorkgroups(Math.ceil(pairs.length/64)); }
     this.current=next; this.count=pairs.length; this.stepIndex=(this.stepIndex+1)>>>0;
   }
   /** GPU broadphase fills candidates and remaps previous slots before dispatch. */
@@ -122,8 +132,13 @@ export class SdfNarrowphasePass {
     preparePairs();
     this.encodeSeeds(pass,params);
     const next=this.current^1;
-    pass.setPipeline(this.pipeline);pass.setBindGroup(0,this.groups[next]);pass.dispatchWorkgroups(Math.ceil(count/64));
+    this.encodeSupports(pass,count,params);pass.setPipeline(this.pipeline);pass.setBindGroup(0,this.groups[next]);pass.dispatchWorkgroups(Math.ceil(count/64));
     this.current=next;this.count=count;this.stepIndex=(this.stepIndex+1)>>>0;
+  }
+  private encodeSupports(pass:GPUComputePassEncoder,count:number,params:CollisionParams) {
+    if(this.supportPipeline && params.meshVertexContacts) {
+      pass.setPipeline(this.supportPipeline);pass.setBindGroup(0,this.supportGroup!);pass.dispatchWorkgroups(Math.min(count,this.device.limits.maxComputeWorkgroupsPerDimension),Math.ceil(count/this.device.limits.maxComputeWorkgroupsPerDimension));
+    }
   }
   private encodeSeeds(pass:GPUComputePassEncoder,params:CollisionParams) {
     if(this.seedPipeline && params.curvatureSampling) {
@@ -137,7 +152,8 @@ export class SdfNarrowphasePass {
     const limit=Math.min(this.device.limits.maxBufferSize,this.device.limits.maxStorageBufferBindingSize);
     if(!Number.isSafeInteger(maxPairs)||maxPairs<this.options.maxPairs||maxPairs*this.resultWords*4>limit||
       Math.ceil(maxPairs/64)>this.device.limits.maxComputeWorkgroupsPerDimension)throw new Error('Invalid SDF growth capacity');
-    return new SdfNarrowphasePass(this.device,this.atlas,{...this.options,maxPairs},this.pipeline,this.historyPipeline,this.seedPipeline,this.seedStride);
+    if(this.witnessBuffer && maxPairs*32>Math.min(limit,64*1024*1024))throw new Error('SDF mesh witness growth exceeds cache byte limit');
+    return new SdfNarrowphasePass(this.device,this.atlas,{...this.options,maxPairs},this.pipeline,this.historyPipeline,this.seedPipeline,this.seedStride,this.supportPipeline);
   }
   /** GPU-only migration. The owner must install the replacement before another step. */
   inheritHistory(previous:SdfNarrowphasePass,retained:readonly boolean[]): void {
@@ -167,7 +183,7 @@ export class SdfNarrowphasePass {
   }
   destroy(): void {
     if(this.disposed) return; this.disposed=true;
-    this.seedBuffer?.destroy();
+    this.seedBuffer?.destroy();this.witnessBuffer?.destroy();
     for(const buffer of [this.shapeBuffer,this.bodyBuffer,this.pairBuffer,this.paramsBuffer,...this.output]) buffer.destroy();
   }
 }

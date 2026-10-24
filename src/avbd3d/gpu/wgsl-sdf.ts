@@ -5,7 +5,7 @@
  * representations about the suitability of this software for any purpose.
  * It is provided "as is" without express or implied warranty.
  */
-import { sdfSupportsSource } from './wgsl-sdf-supports.ts';
+import { sdfSupportsSource, sdfMeshWitnessParallel } from './wgsl-sdf-supports.ts';
 import { SDF_FIELDS_WGSL } from './wgsl-sdf-fields.ts';
 import { SPHERE_FEATURE } from './layout.ts';
 import { SDF_MAX_POINTS } from './sdf-layout.ts';
@@ -13,7 +13,7 @@ import { SDF_MAX_POINTS } from './sdf-layout.ts';
  * candidate, independent per-point normals.
  */
 /** sdfNarrowphaseWGSL for a pass whose pair results hold `maxPoints` points. */
-export const sdfNarrowphaseSource = (maxPoints: number = SDF_MAX_POINTS, seedStride = 0) => /* wgsl */ `
+export const sdfNarrowphaseSource = (maxPoints: number = SDF_MAX_POINTS, seedStride = 0, splitSupports = false, groupsPerRow = 65535) => /* wgsl */ `
 struct Params { counts: vec4u, values: vec4f, distances: vec4f, flags: vec4u, opt: vec4u }
 struct Body { position: vec4f, rotation: vec4f, velocity: vec4f, omega: vec4f, lo: vec4f, hi: vec4f, anchorRotation: vec4f }
 struct Point { x: vec4f, normal: vec4f, anchorA: vec4f, anchorB: vec4f, flags: vec4u, ellipsoidA: vec4f, ellipsoidB: vec4f }
@@ -31,6 +31,9 @@ var<private> seedBodyB: u32;
   let body=bodies[gid.y];let header=atlas[bodyHeader(body)];
   if(gid.x<header.w) { worldSeeds[gid.y*${seedStride}u+gid.x]=vec4f(worldPoint(body,bitcast<vec4f>(atlas[header.z+gid.x]).xyz),0); }
 }` : ''}
+${splitSupports ? `struct MeshWitness { best: vec4f, info: vec4u }
+@group(0) @binding(6) var<storage,read_write> meshWitnesses: array<MeshWitness>;
+var<private> witnessSlot: u32;` : ''}
 var<private> work: Result;
 var<private> bodyA: Body;
 var<private> bodyB: Body;
@@ -185,10 +188,10 @@ fn addPoint(old: Point, seed: vec3f, cached: bool) {
     vec4f(rot(bodyB.anchorRotation,invrot(bodyB.rotation,p-offsetB-bodyB.position.xyz)),0),vec4u(u32(separation<params.distances.x),u32(cached),id,0),ellipsoidA,ellipsoidB);
   work.points[work.identity.w]=point; work.identity.w++;
 }
-${sdfSupportsSource(maxPoints)}
+${sdfSupportsSource(maxPoints,splitSupports)}
 @compute @workgroup_size(64)
 fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
-  let slot=invocation.x; if(slot>=params.counts.x) { return; }
+  let slot=invocation.x; ${splitSupports ? 'witnessSlot=slot;' : ''} if(slot>=params.counts.x) { return; }
   let pair=pairs[slot]; work.identity=vec4u(pair.xyz,0u); work.stats=vec4u(0);
   if(pair.x==0xffffffffu) { results[slot]=work; return; }
   ${seedStride ? 'seedBodyA=pair.x;seedBodyB=pair.y;' : ''}
@@ -238,5 +241,6 @@ fn narrowphase(@builtin(global_invocation_id) invocation: vec3u) {
   if(!meshPlaneContacts(pair)) { _ = meshMeshContacts(pair); }
   results[slot]=work;
 }
+${splitSupports ? sdfMeshWitnessParallel(groupsPerRow) : ''}
 `;
 export const sdfNarrowphaseWGSL = sdfNarrowphaseSource();

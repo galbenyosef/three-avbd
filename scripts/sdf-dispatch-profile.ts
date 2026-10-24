@@ -14,7 +14,7 @@ export function collisionDispatchProfiler(device:GPUDevice){
       if(key==='beginComputePass')return ()=>{
         let pass:GPUComputePassEncoder|undefined,pipeline:GPUComputePipeline;const groups=new Map<number,{group:GPUBindGroup;offsets:number[]}>();
         const start=(timed:boolean)=>{pass=encoder.beginComputePass(timed?{timestampWrites:{querySet:queries,beginningOfPassWriteIndex:index*2,endOfPassWriteIndex:index*2+1}}:{});pass.setPipeline(pipeline);for(const [i,g]of groups)pass.setBindGroup(i,g.group,g.offsets);};
-        return {setPipeline(p:GPUComputePipeline){if(p.label==='sdf transform seeds'&&!names.includes('transformSeeds'))names.splice(6,0,'transformSeeds');pipeline=p;pass?.setPipeline(p);},setBindGroup(i:number,g:GPUBindGroup,offsets:Iterable<number>=[],start=0,length?:number){const values=Array.from(offsets).slice(start,length===undefined?undefined:start+length);groups.set(i,{group:g,offsets:values});pass?.setBindGroup(i,g,values);},
+        return {setPipeline(p:GPUComputePipeline){if(p.label==='sdf transform seeds'&&!names.includes('transformSeeds'))names.splice(6,0,'transformSeeds');if(p.label==='sdf mesh witnesses'&&!names.includes('meshWitnesses'))names.splice(6,0,'meshWitnesses');pipeline=p;pass?.setPipeline(p);},setBindGroup(i:number,g:GPUBindGroup,offsets:Iterable<number>=[],start=0,length?:number){const values=Array.from(offsets).slice(start,length===undefined?undefined:start+length);groups.set(i,{group:g,offsets:values});pass?.setBindGroup(i,g,values);},
           dispatchWorkgroups(...args:[number,number?,number?]){if(index<names.length){pass?.end();start(true);pass!.dispatchWorkgroups(...args);pass!.end();pass=undefined;index++;}else{if(!pass)start(false);pass!.dispatchWorkgroups(...args);}},
           dispatchWorkgroupsIndirect(buffer:GPUBuffer,offset:number){if(index<names.length)throw new Error('Unexpected indirect collision dispatch');if(!pass)start(false);pass!.dispatchWorkgroupsIndirect(buffer,offset);},
           end(){pass?.end();}};
@@ -23,5 +23,5 @@ export function collisionDispatchProfiler(device:GPUDevice){
       const value=Reflect.get(target,key);return typeof value==='function'?value.bind(target):value;
     }});
   };
-  return {arm(){names=names.filter(n=>n!=='transformSeeds');armed=true;},async collect(){await read.mapAsync(GPUMapMode.READ);try{const t=new BigUint64Array(read.getMappedRange());return Object.fromEntries(names.map((name,i)=>[name,Number(t[i*2+1]-t[i*2])/1e6]));}finally{read.unmap();}},destroy(){device.createCommandEncoder=original;queries.destroy();resolve.destroy();read.destroy();}};
+  return {arm(){names=names.filter(n=>n!=='transformSeeds'&&n!=='meshWitnesses');armed=true;},async collect(){await read.mapAsync(GPUMapMode.READ);try{const t=new BigUint64Array(read.getMappedRange());return Object.fromEntries(names.map((name,i)=>[name,Number(t[i*2+1]-t[i*2])/1e6]));}finally{read.unmap();}},destroy(){device.createCommandEncoder=original;queries.destroy();resolve.destroy();read.destroy();}};
 }
