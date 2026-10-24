@@ -3099,3 +3099,17 @@ current custom solve modules retain their own math and the uniform fenced chunk 
 
 Earlier pre-fence measurements remain historical evidence. Timing studies are diagnostic;
 no causal gameplay gain, accepted FPS improvement or zero-drop result is established.
+
+## 2026-10-24 — STE-3005 sustained browser qualification checkpoint
+
+PR43 reconciles #37/#38 on main without importing the excluded #36 change. The separate
+R4 candidate adds opt-in bounded 30-second production-browser measurements, with no solver
+changes. [Protocol, results and raw evidence](SDF_BROWSER_QUALIFICATION.md) distinguish
+rAF submissions, GPU queue envelopes and physical endpoint checks. On M4 Max at 1920×1080
+drawing resolution, repeated small showcases/chairs held about 120 FPS; simpler 128/512-gear
+screens are preliminary. Both mesh-quality bunny trials miss the queue-drain limit, and one
+misses the physics budget. Reference-profile timing is separate. STE-3016 tracks that gap;
+STE-3005 remains in progress. Empty-pass zero timestamps were detected and excluded; the
+final instrument uses real marker dispatches and validates every working sample. Full
+sequential gate: 173 CPU + 185 GPU tests, no failures/skips. No portable 60 FPS guarantee,
+transient-penetration certification or dense-paper-pile performance claim is made.

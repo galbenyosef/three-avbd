@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { FrameCapture, frameReport, waitForGpuDrain } from '../src/sdf-showcase/performance.ts';
+import { FrameCapture, frameReport, waitForGpuDrain, captureDeadline } from '../src/sdf-showcase/performance.ts';
 
 test('browser frame metrics use elapsed time, retain long frames and separate simulation speed', () => {
   const sample = frameReport([10, 10, 10, 70], .05);
@@ -50,4 +50,21 @@ test('GPU drain times out a stalled queue and a subsequent drain can succeed', a
   t.mock.timers.tick(5000);
   await failed;
   await waitForGpuDrain({ onSubmittedWorkDone: () => Promise.resolve(undefined) });
+});
+
+test('sustained capture measures a full 30 seconds after the first recorded frame', () => {
+  const capture = new FrameCapture(0, 0, 30000);
+  assert.equal(capture.record(12, 0), null);
+  assert.equal(capture.record(30000, 29.988), null, 'start-up offset cannot shorten the trial');
+  assert.equal(capture.record(30012, .012)?.durationMs, 30000);
+  assert.throws(() => new FrameCapture(0, 0, 30001), /duration/);
+});
+
+
+test('the finalization deadline covers stalled timestamp maps and inspection after a successful drain', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const pending = captureDeadline(new Promise<never>(() => {}));
+  const failed = assert.rejects(pending, /finalization exceeded/);
+  t.mock.timers.tick(5000); await failed;
+  assert.equal(await captureDeadline(Promise.resolve('retry')), 'retry');
 });

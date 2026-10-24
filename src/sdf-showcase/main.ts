@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { inspectQualificationWorld, qualificationOptions } from '../sdf-showcase/qualification.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodyMesh, World, recommendedLimits, type Body, type Joint, type SdfBodyBinding, type Vec3 } from '../lib/index.ts';
 import { showcaseShapes, type Kind } from './shapes.ts';
@@ -16,6 +17,8 @@ const fail = (error: unknown) => { status.textContent = String(error); console.e
 async function main() {
   inputs.forEach(input => input.disabled = true);
   if (!navigator.gpu) throw new Error('WebGPU is unavailable. Open this demo in a WebGPU-enabled browser.');
+  const qualification = qualificationOptions(new URLSearchParams(location.search));
+  const initialCount = qualification?.count ?? 12, bodyLimit = Math.max(36, initialCount);
   const shapes = await showcaseShapes();
   const renderer = new THREE.WebGPURenderer({ antialias: true, requiredLimits: await recommendedLimits() });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -25,24 +28,29 @@ async function main() {
   document.body.append(renderer.domElement);
   const scene = new THREE.Scene(); scene.background = new THREE.Color(0x101a22);
   scene.fog = new THREE.Fog(0x101a22, 20, 48);
-  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, .1, 80);
+  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, .1, qualification ? 180 : 80);
   camera.position.set(10, 9, 13);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 3, 0); controls.enableDamping = true;
   const frameView = () => {
-    controls.target.set(0, 3, 0);
-    camera.position.copy(new THREE.Vector3(10, 6, 13).multiplyScalar(Math.max(1, .85 / camera.aspect)).add(controls.target));
+    const height = 1.4 + Math.floor((initialCount - 1) / (initialCount > 36 ? 64 : 3)) * 1.75;
+    controls.target.set(0, qualification ? height / 2 : 3, 0);
+    const distanceScale = qualification && initialCount > 12 ? Math.max(2, height / 9) : 1;
+    camera.position.copy(new THREE.Vector3(10, 6, 13).multiplyScalar(distanceScale * Math.max(1, .85 / camera.aspect)).add(controls.target));
     camera.setViewOffset(innerWidth, innerHeight, innerWidth > 650 ? -150 : 0, innerWidth > 650 ? 0 : innerHeight * .16, innerWidth, innerHeight);
     camera.updateProjectionMatrix(); controls.update();
   };
   frameView();
   controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
-  controls.minDistance = 4; controls.maxDistance = 30; controls.maxPolarAngle = Math.PI * .48;
+  controls.minDistance = 4; controls.maxDistance = qualification ? 100 : 30; controls.maxPolarAngle = Math.PI * .48;
   scene.add(new THREE.HemisphereLight(0xc4e1ff, 0x34312b, 2));
   const sun = new THREE.DirectionalLight(0xffe3bd, 3); sun.position.set(4, 12, 6); sun.castShadow = true;
   Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, far: 40 });
+  if (qualification && initialCount > 12) {
+    sun.position.set(12, 28, 18); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, far: 100 });
+  }
   sun.shadow.mapSize.set(1024, 1024); sun.shadow.normalBias = .03; scene.add(sun);
-  const world = await World.create({ renderer, maxBodies: 38, iterations: 12 });
+  const world = await World.create({ renderer, maxBodies: bodyLimit + 2, iterations: 12 });
   world.maxSubsteps = 2; world.readbackEvery = 0;
   const floor = world.addBox({ size: [24, .5, 24], position: [0, -.25, 0], fixed: true })!;
   // A collision-disabled kinematic handle lets the public joint API drag a picked point.
@@ -76,13 +84,13 @@ async function main() {
   }
   function endDrag() { held = false; grab?.remove(); grab = null; controls.enabled = true; report(); }
   function report() {
-    status.textContent = `${kinds.size} / 36 bodies · ${paused ? 'paused' : 'live'}${contactToggle.checked ? ` · ${debugCount} contact points` : ''}`;
+    status.textContent = `${kinds.size} / ${bodyLimit} bodies · ${paused ? 'paused' : 'live'}${contactToggle.checked ? ` · ${debugCount} contact points` : ''}`;
     pause.textContent = paused ? 'Play' : 'Pause';
-    document.querySelector<HTMLButtonElement>('#spawn')!.disabled = busy || kinds.size >= 36;
+    document.querySelector<HTMLButtonElement>('#spawn')!.disabled = busy || kinds.size >= bodyLimit;
   }
   function setPaused(value: boolean) { paused = value; lastFrame = performance.now(); if (value) endDrag(); report(); }
   async function change(reset: boolean) {
-    if (busy || (!reset && kinds.size >= 36)) return;
+    if (busy || (!reset && kinds.size >= bodyLimit)) return;
     perf.reset('Press Play or measure this scene.');
     busy = true; generation++; endDrag(); inputs.forEach(input => input.disabled = true);
     while (inspecting) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -91,22 +99,23 @@ async function main() {
     try {
       if (reset) { for (const body of kinds.keys()) body.remove(); kinds.clear(); }
       const bindings: SdfBodyBinding[] = [];
-      const count = reset ? 12 : Math.min(1, 36 - kinds.size);
+      const count = reset ? initialCount : Math.min(1, bodyLimit - kinds.size);
       const kind = (reset ? preset.value : shapeSelect.value) as Kind;
+      const width = initialCount > 36 ? 8 : 3;
       for (let i = 0; i < count; i++) {
         const n = reset ? i : kinds.size;
         const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(.15 * (n % 3), n * .51, .17 * (n % 2))).toArray() as [number, number, number, number];
         const body = world.addBox({ size: [1, 1, 1], density: 2, friction: .5,
-          position: reset ? [(i % 3 - 1) * 2.1, 1.4 + Math.floor(i / 3) * 1.75, (i % 2 - .5) * .7] : [Math.sin(n) * 2, 8, Math.cos(n) * 2], rotation })!;
+          position: reset ? initialCount > 36 ? [(i % width - 3.5) * 2.1, 1.4 + Math.floor(i / (width * width)) * 1.75, (Math.floor(i / width) % width - 3.5) * 2.1] : [(i % 3 - 1) * 2.1, 1.4 + Math.floor(i / 3) * 1.75, (i % 2 - .5) * .7] : [Math.sin(n) * 2, 8, Math.cos(n) * 2], rotation })!;
         kinds.set(body, kind); bindings.push({ body, field: shapes[kind].field });
       }
       if (world.sdfCollisionsEnabled) await world.updateSdfCollisions(bindings);
-      else await world.enableSdfCollisions(bindings, {}, { maxPairs: 703 });
+      else await world.enableSdfCollisions(bindings, {}, { maxPairs: qualification ? Math.max(703, bodyLimit * 32) : 703 });
       shapeSelect.value = kind; debugCount = 0; report();
     } catch (error) { setPaused(true); fail(error); }
     finally {
       busy = false; lastFrame = performance.now(); inputs.forEach(input => input.disabled = false);
-      document.querySelector<HTMLButtonElement>('#spawn')!.disabled = kinds.size >= 36;
+      document.querySelector<HTMLButtonElement>('#spawn')!.disabled = kinds.size >= bodyLimit;
       document.querySelector<HTMLButtonElement>('#save-performance')!.disabled = !perf.report;
     }
   }
@@ -115,8 +124,15 @@ async function main() {
       bodyKinds: Object.fromEntries((['rings', 'warps', 'gears'] as const).map(kind => [kind, [...kinds.values()].filter(value => value === kind).length])),
       contacts: contactToggle.checked, iterations: 12, fixedDt: world.dt, maxSubsteps: world.maxSubsteps,
       maxPairs: world.sdfCollisionCapacity, pixelRatio: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled }),
-    start: () => { if (busy || inspecting || pickPending) return false; setPaused(false); return true; },
+    start: () => { if (busy || inspecting || pickPending || (qualification && (kinds.size !== initialCount || !world.sdfCollisionsEnabled || world.sdfCollisionsNeedUpdate))) return false; setPaused(false); return true; },
+    inspect: () => inspectQualificationWorld(world),
     pause: () => setPaused(true) });
+  if (qualification) {
+    const kind = new URLSearchParams(location.search).get('preset');
+    if (kind && ['rings', 'warps', 'gears'].includes(kind)) preset.value = kind;
+    const note = document.querySelector('aside > details p');
+    if (note) note.textContent = `${initialCount} initial bodies · ${bodyLimit}-body qualification limit. Same showcase fields and box inertia; larger cases use an 8 × 8 layered grid.`;
+  }
   await change(true);
   document.querySelector('#reset')!.addEventListener('click', () => void change(true));
   preset.addEventListener('change', () => void change(true));
@@ -178,6 +194,7 @@ async function main() {
   }
   renderer.setAnimationLoop((time: number) => {
     if (document.hidden) return;
+    perf.beginFrame(time);
     const dt = Math.max(0, (time - lastFrame) / 1000); lastFrame = time;
     let steps = 0;
     if (!busy && !inspecting && !paused) {
@@ -186,9 +203,10 @@ async function main() {
       catch (error) { perf.cancel('Capture stopped by a simulation error.'); setPaused(true); fail(error); }
     }
     if (simulated && debugNeeded && contactToggle.checked && !pickPending && !busy && !inspecting && time - lastDebug > 150) { lastDebug = time; debugNeeded = false; void contacts(); }
+    perf.afterPhysics(steps);
     controls.update();
     if (renderNeeded && !busy) {
-      renderer.render(scene, camera); renderNeeded = false;
+      renderer.render(scene, camera); perf.afterRender(); renderNeeded = false;
       if (!paused) perf.frame(time, steps * world.dt); else perf.idle();
     }
   });
