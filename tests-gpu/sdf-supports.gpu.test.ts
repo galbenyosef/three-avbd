@@ -112,3 +112,37 @@ gpuTest('mesh-to-mesh vertex witness: exact depth, SDF normal, stable identity, 
     assert.ok(result.points.every(p=>p.id<0x40000000),'default policy never adds vertex witnesses');
   }finally{pass.destroy();geometry.dispose();}
 });
+
+gpuTest('a mesh witness retains valid opposing gap contacts in the same non-convex pair',async device=>{
+  const {BoxGeometry}=await import('three');
+  const {mergeGeometries}=await import('three/addons/utils/BufferGeometryUtils.js');
+  const {bakeVoxelSdf}=await import('../src/avbd3d/ref/sdf/bake.ts');
+  const {SdfBody}=await import('../src/avbd3d/ref/sdf/body.ts');
+  const {collisionParams}=await import('../src/avbd3d/ref/sdf/manifold.ts');
+  const {SdfNarrowphasePass}=await import('../src/avbd3d/gpu/sdf-pass.ts');
+  const {snapshotSdfField}=await import('../src/avbd3d/gpu/sdf-snapshot.ts');
+  // One body has two parallel flanks. The other penetrates the right flank by 2.5 mm,
+  // but has a genuine 12.5 mm gap to the left flank, still inside the contact margin.
+  const left=new BoxGeometry(.2,2,2).translate(-.6,0,0),right=new BoxGeometry(.2,2,2).translate(.6,0,0);
+  const walls=mergeGeometries([left,right]),box=new BoxGeometry(.99,1,1);
+  const fields=[walls,box].map(g=>snapshotSdfField(bakeVoxelSdf(g,{resolution:48}).field,true));
+  const bodies=[new SdfBody(fields[0]),new SdfBody(fields[1],[.0075,0,0])];
+  const pass=await SdfNarrowphasePass.create(device,fields,{maxBodies:2,maxPairs:1,maxPoints:20,meshVertexContacts:true});
+  const params={...collisionParams(),cacheSize:16,randomSamples:4,epsilon:.0001,alpha:0,tolerance:.0001,maxIterations:100,curvatureSampling:false,meshVertexContacts:true};
+  let opposing=0;
+  try{
+    for(let frame=0;frame<8;frame++){
+      pass.step(bodies,[{a:0,b:1,key:42}],0,params);const [result]=await pass.readResults();
+      const witness=result.points.find(p=>p.id>=0x40000000)!;
+      assert.ok(witness,'embedded right flank supplies a vertex witness');
+      for(const p of result.points){
+        if(p.id>=0x40000000||p.x[0]>-.45||Math.abs(p.x[1])>.4||Math.abs(p.x[2])>.4)continue;
+        const a=bodies[0].sample(p.x as [number,number,number]),b=bodies[1].sample(p.x as [number,number,number]);
+        if(a.phi<=0||b.phi<=0||p.separation>=params.margin||p.normal[0]<.9)continue;
+        assert.ok(witness.normal[0]<-.9,'the other flank has an independent opposing normal');
+        opposing++;assert.ok(p.active,'a gap-derived near contact must survive the opposing witness');
+      }
+    }
+    assert.ok(opposing>0,'the search exercises a valid gap contact on the opposite flank');
+  }finally{pass.destroy();for(const g of [left,right,walls,box])g.dispose();}
+});
