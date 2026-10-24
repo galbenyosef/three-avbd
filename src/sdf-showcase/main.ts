@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodyMesh, World, recommendedLimits, type Body, type Joint, type SdfBodyBinding, type Vec3 } from '../lib/index.ts';
 import { showcaseShapes, type Kind } from './shapes.ts';
+import { browserPerformance } from './performance.ts';
 import './style.css';
 
 const status = document.querySelector<HTMLOutputElement>('#status')!;
@@ -9,11 +10,12 @@ const preset = document.querySelector<HTMLSelectElement>('#preset')!;
 const shapeSelect = document.querySelector<HTMLSelectElement>('#shape')!;
 const contactToggle = document.querySelector<HTMLInputElement>('#contacts')!;
 const pause = document.querySelector<HTMLButtonElement>('#pause')!;
-const inputs = [...document.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button,select')];
+const inputs = [...document.querySelectorAll<HTMLButtonElement | HTMLSelectElement | HTMLInputElement>('button,select,input')];
 const fail = (error: unknown) => { status.textContent = String(error); console.error(error); };
 
 async function main() {
   inputs.forEach(input => input.disabled = true);
+  if (!navigator.gpu) throw new Error('WebGPU is unavailable. Open this demo in a WebGPU-enabled browser.');
   const shapes = await showcaseShapes();
   const renderer = new THREE.WebGPURenderer({ antialias: true, requiredLimits: await recommendedLimits() });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -26,7 +28,14 @@ async function main() {
   const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, .1, 80);
   camera.position.set(10, 9, 13);
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(-1.2, 2, 0); controls.enableDamping = true;
+  controls.target.set(0, 3, 0); controls.enableDamping = true;
+  const frameView = () => {
+    controls.target.set(0, 3, 0);
+    camera.position.copy(new THREE.Vector3(10, 6, 13).multiplyScalar(Math.max(1, .85 / camera.aspect)).add(controls.target));
+    camera.setViewOffset(innerWidth, innerHeight, innerWidth > 650 ? -150 : 0, innerWidth > 650 ? 0 : innerHeight * .16, innerWidth, innerHeight);
+    camera.updateProjectionMatrix(); controls.update();
+  };
+  frameView();
   controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
   controls.minDistance = 4; controls.maxDistance = 30; controls.maxPolarAngle = Math.PI * .48;
   scene.add(new THREE.HemisphereLight(0xc4e1ff, 0x34312b, 2));
@@ -52,7 +61,7 @@ async function main() {
   const dotGeometry = new THREE.SphereGeometry(.035, 6, 4);
   const dotMaterial = new THREE.MeshBasicNodeMaterial({ color: 0xffdc77, depthTest: false });
   const lineMaterial = new THREE.LineBasicNodeMaterial({ color: 0xffdc77, depthTest: false });
-  let busy = false, paused = false, inspecting = false, held = false, grab: Joint | null = null;
+  let busy = false, paused = true, inspecting = false, held = false, grab: Joint | null = null;
   let renderNeeded = true, debugNeeded = false, simulated = false, pickPending = false;
   controls.addEventListener('change', () => { renderNeeded = true; });
   let generation = 0, distance = 0, lastDebug = 0, lastFrame = 0, frame = 0, debugCount = 0;
@@ -66,9 +75,15 @@ async function main() {
     }
   }
   function endDrag() { held = false; grab?.remove(); grab = null; controls.enabled = true; report(); }
-  function report() { status.textContent = `${kinds.size} / 36 bodies · ${paused ? 'paused' : 'live'}${contactToggle.checked ? ` · ${debugCount} contact points` : ''}`; }
+  function report() {
+    status.textContent = `${kinds.size} / 36 bodies · ${paused ? 'paused' : 'live'}${contactToggle.checked ? ` · ${debugCount} contact points` : ''}`;
+    pause.textContent = paused ? 'Play' : 'Pause';
+    document.querySelector<HTMLButtonElement>('#spawn')!.disabled = busy || kinds.size >= 36;
+  }
+  function setPaused(value: boolean) { paused = value; lastFrame = performance.now(); if (value) endDrag(); report(); }
   async function change(reset: boolean) {
-    if (busy) return;
+    if (busy || (!reset && kinds.size >= 36)) return;
+    perf.reset('Press Play or measure this scene.');
     busy = true; generation++; endDrag(); inputs.forEach(input => input.disabled = true);
     while (inspecting) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     clearMarkers(); renderNeeded = true; debugNeeded = simulated = false;
@@ -88,15 +103,27 @@ async function main() {
       if (world.sdfCollisionsEnabled) await world.updateSdfCollisions(bindings);
       else await world.enableSdfCollisions(bindings, {}, { maxPairs: 703 });
       shapeSelect.value = kind; debugCount = 0; report();
-    } catch (error) { paused = true; fail(error); }
-    finally { busy = false; inputs.forEach(input => input.disabled = false); }
+    } catch (error) { setPaused(true); fail(error); }
+    finally {
+      busy = false; lastFrame = performance.now(); inputs.forEach(input => input.disabled = false);
+      document.querySelector<HTMLButtonElement>('#spawn')!.disabled = kinds.size >= 36;
+      document.querySelector<HTMLButtonElement>('#save-performance')!.disabled = !perf.report;
+    }
   }
+  const perf = browserPerformance({ canvas: renderer.domElement, device: world.device,
+    context: () => ({ demo: 'interactive', preset: preset.value, dynamicBodies: kinds.size,
+      bodyKinds: Object.fromEntries((['rings', 'warps', 'gears'] as const).map(kind => [kind, [...kinds.values()].filter(value => value === kind).length])),
+      contacts: contactToggle.checked, iterations: 12, fixedDt: world.dt, maxSubsteps: world.maxSubsteps,
+      maxPairs: world.sdfCollisionCapacity, pixelRatio: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled }),
+    start: () => { if (busy || inspecting || pickPending) return false; setPaused(false); return true; },
+    pause: () => setPaused(true) });
   await change(true);
   document.querySelector('#reset')!.addEventListener('click', () => void change(true));
   preset.addEventListener('change', () => void change(true));
   document.querySelector('#spawn')!.addEventListener('click', () => void change(false));
-  pause.addEventListener('click', () => { paused = !paused; pause.textContent = paused ? 'Resume' : 'Pause'; report(); });
-  contactToggle.addEventListener('change', () => { generation++; clearMarkers(); renderNeeded = debugNeeded = true; report(); });
+  pause.addEventListener('click', () => { perf.cancel('Capture cancelled by playback change.'); setPaused(!paused); });
+  document.querySelector('#view')!.addEventListener('click', () => { frameView(); renderNeeded = true; });
+  contactToggle.addEventListener('change', () => { perf.reset('Contact overlay changed. Measure again when ready.'); generation++; clearMarkers(); renderNeeded = debugNeeded = true; report(); });
   function ray(event: PointerEvent) {
     const bounds = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, 1 - (event.clientY - bounds.top) / bounds.height * 2);
@@ -150,18 +177,24 @@ async function main() {
     finally { inspecting = false; }
   }
   renderer.setAnimationLoop((time: number) => {
-    if (document.hidden || time - lastFrame < 1000 / 30) return;
-    const dt = Math.min((time - lastFrame) / 1000, 1 / 30); lastFrame = time;
+    if (document.hidden) return;
+    const dt = Math.max(0, (time - lastFrame) / 1000); lastFrame = time;
+    let steps = 0;
     if (!busy && !inspecting && !paused) {
       if (grab) handle.moveTo(target.toArray() as Vec3);
-      world.update(dt); frame++; renderNeeded = debugNeeded = simulated = true;
+      try { steps = world.update(dt); frame++; renderNeeded = debugNeeded = simulated = true; }
+      catch (error) { perf.cancel('Capture stopped by a simulation error.'); setPaused(true); fail(error); }
     }
     if (simulated && debugNeeded && contactToggle.checked && !pickPending && !busy && !inspecting && time - lastDebug > 150) { lastDebug = time; debugNeeded = false; void contacts(); }
     controls.update();
-    if (renderNeeded && !busy) { renderer.render(scene, camera); renderNeeded = false; }
+    if (renderNeeded && !busy) {
+      renderer.render(scene, camera); renderNeeded = false;
+      if (!paused) perf.frame(time, steps * world.dt); else perf.idle();
+    }
   });
-  addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); renderNeeded = true; });
+  addEventListener('resize', () => { perf.reset('Viewport changed. Measure again when ready.'); camera.aspect = innerWidth / innerHeight; camera.setViewOffset(innerWidth, innerHeight, innerWidth > 650 ? -150 : 0, innerWidth > 650 ? 0 : innerHeight * .16, innerWidth, innerHeight); camera.updateProjectionMatrix(); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight); renderNeeded = true; });
+  document.addEventListener('visibilitychange', () => { lastFrame = performance.now(); perf.idle(); if (document.hidden) { perf.cancel('Capture cancelled: tab was hidden.'); setPaused(true); } });
   // Small, explicit inspection hook for runtime smoke checks; no automatic benchmark.
-  Object.assign(window, { sdfShowcase: { world, get frame() { return frame; }, get busy() { return busy || inspecting; }, pause: () => { paused = true; pause.textContent = 'Resume'; report(); } } });
+  Object.assign(window, { sdfShowcase: { world, get frame() { return frame; }, get busy() { return busy || inspecting; }, get performance() { return perf.report; }, pause: () => { perf.cancel('Capture cancelled.'); setPaused(true); } } });
 }
 void main().catch(fail);
