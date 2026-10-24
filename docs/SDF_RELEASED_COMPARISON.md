@@ -5,8 +5,11 @@ includes the analytic Falling Boxes, Bend, Twist, Displace, Spiky Wheel, Cows on
 Primitives scenes; see FINDINGS 2026-10-18 for their comparison table. The sections below are a
 dated history, starting with the four scenes compared on 2026-10-14.
 
-The viewer starts paused. Run advances at most 30 reference frames per wall-clock second and
-stops after 360 frames (six simulated seconds). Orbit/zoom and scene selection remain available.
+The viewer starts paused. Default smooth playback uses fixed-step GPU simulation without
+per-substep reference readbacks. Expand **Reference comparison** to reset into the diagnostic
+mode: it advances at most 30 reference frames per wall-clock second and stops after 360 frames
+(six simulated seconds). Those readbacks are excluded from the separate smooth-playback FPS
+captures. Orbit/zoom and scene selection remain available. See [demo release notes](SDF_DEMO_RELEASE.md).
 The interactive spawning/dragging showcase remains at `/sdf.html`.
 
 ## Inputs and interpretation

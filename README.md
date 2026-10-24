@@ -30,23 +30,30 @@ spatial filtering, runtime body/field refresh, automatic capacity growth,
 independent normals and warm starts.
 Pair-level contact events and bounded SDF surface raycasts are supported.
 
-Run `pnpm dev` and open `/sdf.html` for the interactive SDF showcase: rings,
-warped boxes and a mesh-baked gear pile. Left-drag a body, right-drag to orbit,
-spawn any of the three shapes, and toggle sampled contact points/normals.
-It starts with 12 bodies and caps spawning at 36, with a 30 Hz display cap and
-at most two physics steps per frame. Pause stops rendering once the view settles;
-hidden tabs stop stepping. Contacts are an optional throttled readback, while
-body rendering uses the GPU buffer directly. Mass/inertia use box proxies: this
-is a visual collision showcase, not a reproduction of the paper's experiments.
+Run `pnpm dev` and open `/sdf.html` for the interactive SDF playground: rings,
+twisted solids and a mesh-baked gear pile. Start with **Play**, grab a body with
+left-drag, right-drag to orbit, or drop another shape. It starts paused with 12
+bodies and caps spawning at 36. Rendering follows the browser's animation frames;
+physics retains its fixed timestep and bounded catch-up. Hidden tabs pause, and
+paused views stop rendering once camera motion settles. Contact points/normals are
+an optional throttled readback; body drawing reads the GPU buffer directly.
+Mass/inertia use box proxies, so this is a collision playground, not a paper benchmark.
 
-Run `/sdf-released.html` for all eleven released scenes: stacked boxes and gears; falling
-plain, bent, twisted and displaced planks; chairs, cows on spikes, bunnies; a spiky wheel; and
-the analytic primitives. They use the original resolution-100 fields, analytic shape parameters,
-poses, mass and full inertia tensors.
-It starts paused and compares live metrics with the captured CPU reference.
-Mesh quality (used for every non-convex scene) activates contacts earlier with the same resting gap; Released
-settings keeps the captured collision parameters. Both use corrected sticking anchors.
-See [measured comparison and remaining gaps](docs/SDF_RELEASED_COMPARISON.md).
+Open `/sdf-released.html` for eleven scenes using the released resolution-100 fields,
+original geometry, poses, mass and full inertia: box/gear stacks, plain and distorted
+planks, chairs, cows on spikes, bunnies, a spiky wheel and analytic primitives.
+Default **smooth playback** runs without per-substep reference readbacks. Expand
+**Reference comparison** to reset into the bounded six-second diagnostic mode with
+CPU-reference metrics; that mode is for numerical inspection, not FPS measurement.
+
+Both pages offer **Measure 4s**: one second of warmup, four seconds of visible browser
+frame intervals, then automatic pause. The report separates frame cadence from simulation
+speed and records final GPU drain time; **Save JSON** exports the raw intervals and context.
+Current local desktop results, verification and release boundaries are in
+[SDF demo release notes](docs/SDF_DEMO_RELEASE.md). These are short observations on one device,
+not a promise of 60 FPS across browsers or a reproduction of paper GPU performance.
+See [API & limitations](docs/SDF_WORLD.md) and
+[released-scene comparisons](docs/SDF_RELEASED_COMPARISON.md).
 
 ## Use it in your project
 
