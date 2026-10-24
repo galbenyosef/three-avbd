@@ -6,7 +6,7 @@ import { prepareGears, createGearTrain, CENTERS, COLORS, TEETH, MODULE, DEPTH, a
 import './style.css';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const status = $<HTMLOutputElement>('status');
+const status = $('status');
 const auto = $<HTMLButtonElement>('auto'), pause = $<HTMLButtonElement>('pause');
 const speed = $<HTMLInputElement>('speed'), contacts = $<HTMLInputElement>('contacts'), coupling = $<HTMLInputElement>('coupling');
 const wheel = $('wheel'), viewport = $('viewport');
@@ -74,6 +74,8 @@ async function main() {
     pause.textContent = paused ? 'Play' : 'Pause';
     $('speed-value').textContent = `${Number(speed.value).toFixed(1)} rpm`;
     wheel.setAttribute('aria-disabled', String(busy));
+    const message = `${paused ? 'Paused' : automatic ? 'Automatic drive' : 'Manual control'}. ${coupling.checked ? 'Tooth collisions enabled' : 'Tooth collisions disabled'}. ${direction > 0 ? 'Counterclockwise' : 'Clockwise'} input.`;
+    if ($('announcement').textContent !== message) $('announcement').textContent = message;
   }
   function release() { drag = null; orbit.enabled = true; }
   function setPaused(value: boolean) { paused = value; status.textContent = value ? 'PAUSED' : 'Running…'; release(); lastTime = 0; dirty = readNeeded = true; syncControls(); }
@@ -169,7 +171,7 @@ async function main() {
   document.addEventListener('visibilitychange', () => { release(); lastTime = 0; fpsStart = frames = simulatedSeconds = 0; });
   function fail(error: unknown) {
     failed = true; paused = true; release(); controlsUI.forEach(e => e.disabled = true);
-    status.textContent = String(error); document.body.classList.add('error'); console.error(error);
+    status.textContent = String(error); $('announcement').textContent = `Simulation stopped. ${String(error)}`; document.body.classList.add('error'); console.error(error);
   }
   async function inspect() {
     if (!world) return;
@@ -202,24 +204,26 @@ async function main() {
   function frame(time: number) {
     if (disposed || failed) return;
     requestAnimationFrame(frame);
-    if (document.hidden || busy || inspecting || !world) { lastTime = time; return; }
-    const dt = lastTime ? Math.min((time - lastTime) / 1000, .05) : 0; lastTime = time;
-    orbit.update();
-    if (!paused && dt > 0) {
-      drive.automatic = automatic; drive.target = manualTarget;
-      drive.speed = direction * Number(speed.value) * 2 * Math.PI / 60;
-      owed = Math.min(owed + dt, 4 * world.dt);
-      while (owed >= world.dt) { drive.step(world.dt); world.step(); owed -= world.dt; simulatedSeconds += world.dt; }
-      inputAngle = drive.angle; dirty = true; rendered = true;
-    }
-    if (dirty) { labels(); renderer.render(scene, camera); dirty = false; }
-    if (!fpsStart) fpsStart = time;
-    frames++;
-    if (time - fpsStart > 1500) {
-      frameRate = frames * 1000 / (time - fpsStart); simulationRate = simulatedSeconds * 1000 / (time - fpsStart);
-      fpsStart = time; frames = simulatedSeconds = 0;
-    }
-    if (time - lastRead > 100 && (!paused || readNeeded)) { lastRead = time; void inspect(); }
+    try {
+      if (document.hidden || busy || inspecting || !world) { lastTime = time; return; }
+      const dt = lastTime ? Math.min((time - lastTime) / 1000, .05) : 0; lastTime = time;
+      orbit.update();
+      if (!paused && dt > 0) {
+        drive.automatic = automatic; drive.target = manualTarget;
+        drive.speed = direction * Number(speed.value) * 2 * Math.PI / 60;
+        owed = Math.min(owed + dt, 4 * world.dt);
+        while (owed >= world.dt) { drive.step(world.dt); world.step(); owed -= world.dt; simulatedSeconds += world.dt; }
+        inputAngle = drive.angle; dirty = true; rendered = true;
+      }
+      if (dirty) { labels(); renderer.render(scene, camera); dirty = false; }
+      if (!fpsStart) fpsStart = time;
+      frames++;
+      if (time - fpsStart > 1500) {
+        frameRate = frames * 1000 / (time - fpsStart); simulationRate = simulatedSeconds * 1000 / (time - fpsStart);
+        fpsStart = time; frames = simulatedSeconds = 0;
+      }
+      if (time - lastRead > 100 && (!paused || readNeeded)) { lastRead = time; void inspect(); }
+    } catch (error) { fail(error); }
   }
   await reset(); fit(); syncControls(); document.body.classList.remove('loading');
   requestAnimationFrame(frame);
@@ -231,4 +235,4 @@ async function main() {
   addEventListener('pagehide', dispose, { once: true });
   if (import.meta.hot) import.meta.hot.dispose(dispose);
 }
-main().catch(error => { status.textContent = String(error); document.body.classList.add('error'); console.error(error); });
+main().catch(error => { status.textContent = String(error); $('announcement').textContent = `Simulation stopped. ${String(error)}`; document.body.classList.add('error'); console.error(error); });
