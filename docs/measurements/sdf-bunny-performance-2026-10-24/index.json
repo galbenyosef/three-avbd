@@ -1,0 +1,137 @@
+{
+  "scope": "All diagnostic and browser trials retained. Final candidate source: source-paced.json. Serial ablation: source-paced-serial.json. Matched 11-seed ensemble accepted without changing thresholds; existing bunny seed-3 failure retained.",
+  "files": [
+    {
+      "file": "baseline-repeat.json.gz",
+      "storedBytes": 631613,
+      "sha256": "c7779b5b16f591fa2f5bdcf3bc4d5c284227b95615c545a0f3932fdcddaa5125",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "baseline.json.gz",
+      "storedBytes": 631613,
+      "sha256": "2df8e080d261a760862c20161bbf1dbfbc9a73f5c47e25cd52c2457b6de5dcf1",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-audit.json",
+      "storedBytes": 3547,
+      "sha256": "63ea33858e87815f9d230a08bdcb8a6bdc72e3e2305fb249ad3eaa14680bb498",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "browser-candidate-1.json.gz",
+      "storedBytes": 17550,
+      "sha256": "33a362ac916d3dd53cc7fee23d26a81c6cdb1ad8b108b35801182b5817b8e9cf",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-candidate-2.json.gz",
+      "storedBytes": 17079,
+      "sha256": "0b7d6c79c6ee1d55906609f9e11ca78109fd9a2fdd6958dca740c559495e4ff7",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-chairs-paced.json.gz",
+      "storedBytes": 16649,
+      "sha256": "e642ab7ec78b356b27e56e8622284022cff9cabedfe9200e1398222a7d7e62f4",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-paced-1.json.gz",
+      "storedBytes": 17180,
+      "sha256": "74aff7073d886b6934c9cf4943cea4d1034a934458e7cf5e8b4cb7a088e548a0",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-paced-2.json.gz",
+      "storedBytes": 17041,
+      "sha256": "6f0657147799bded081c0361be801647c288ad0dea5d3bf06d28e939f7259a73",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-paced-3.json.gz",
+      "storedBytes": 17187,
+      "sha256": "e389612da4e2236b8e64642c8422e6f50830bb2b96a5a086c91942c20547c52d",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-paced-serial-1.json.gz",
+      "storedBytes": 14265,
+      "sha256": "5199f7d3523fb86394304d17f83f3a86d989cf15d54abcfca89b052f853f9ec7",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-paced-serial-2.json.gz",
+      "storedBytes": 14008,
+      "sha256": "9e20a8c82cd20b2f2cc0ce5697cf421652c1e3c01d4b91682c63878100a48d46",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "browser-start-failure.json.gz",
+      "storedBytes": 490,
+      "sha256": "bb1ecd1d488f5c6d3f6cca22a5a05e9ce0a47f743804736add1ea0f2906f0f7c",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "dispatch.json.gz",
+      "storedBytes": 291444,
+      "sha256": "f26ce9040ca4d50f9d999e3c00b5cb0621136e55b687613f6b4d39cce0a5f4fd",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "ensemble-summary.json",
+      "storedBytes": 11681,
+      "sha256": "d7f1d11a1e6b54a026bb59c9b1c22ce7fc1125bd7a9be8a8fbbce93fb39cbba6",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "final-dispatch.json.gz",
+      "storedBytes": 62408,
+      "sha256": "af250da008614f11c95fbe566069986a2458dfa28cc253ff739c4862bb5dd5b5",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "matched-ensemble.json.gz",
+      "storedBytes": 712583,
+      "sha256": "31ea3db4a78d8ecb9445b6fd6280fa2043c21986295ed8d05e428030b63ba8fe",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "parallel-scalar-candidate.json.gz",
+      "storedBytes": 631624,
+      "sha256": "f51bdd4a197c25ca46e5126d92bd7977c56848a34b72ff025b824d039f39c6e8",
+      "hashScope": "decompressed bytes"
+    },
+    {
+      "file": "parity.json",
+      "storedBytes": 172,
+      "sha256": "b04df06c007d3558a4993f480539ffdbffd3697f8dbca4b3ddfe0eeff8416976",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "physical-endpoints.json",
+      "storedBytes": 609,
+      "sha256": "5430589b8fb9d870e2f6bfefd2adc235b9b2532704304b28d517262937c54c84",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "source-cooperative.json",
+      "storedBytes": 25866,
+      "sha256": "1ebb21167a8e84891af80d917ea3f555a72eae42c3c2845d6a9e6502c4848455",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "source-paced-serial.json",
+      "storedBytes": 25479,
+      "sha256": "b0dbc713373f65876f249739cb6197eb7660c29df457b652cf35db15fe4c7bf4",
+      "hashScope": "file bytes"
+    },
+    {
+      "file": "source-paced.json",
+      "storedBytes": 25964,
+      "sha256": "e8814400ebcebe33d892ac4457e26ef4f0ed5e04e47419db8fc903f0b426e9bc",
+      "hashScope": "file bytes"
+    }
+  ]
+}

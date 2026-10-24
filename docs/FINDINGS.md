@@ -3113,3 +3113,29 @@ STE-3005 remains in progress. Empty-pass zero timestamps were detected and exclu
 final instrument uses real marker dispatches and validates every working sample. Full
 sequential gate: 173 CPU + 185 GPU tests, no failures/skips. No portable 60 FPS guarantee,
 transient-penetration certification or dense-paper-pile performance claim is made.
+
+## 2026-10-24 — STE-3016 cooperative mesh witnesses and bounded playback queue
+
+The 27-bunny mesh-quality browser gap has a candidate fix: parallelize the exact vertex
+witness scan per pair, re-evaluate the winner in the original scalar context, and bound
+released-demo playback to two outstanding frames while retaining deferred simulation time.
+Independent normals, feature IDs, history/warm starts and quality settings remain unchanged.
+Early split-pass/cached-arithmetic variants were rejected for rounding differences; the
+retained scalar-winner path passes strict direct/parallel contacts and all 180 matched
+rollout pose/contact hashes. Cooperative search alone improved FPS but still failed one
+physics and one final-drain screen. The combined candidate passes both subsequent 30-second
+bunny trials at 118.5–119.6 FPS, physics p95 3.801 ms, final drain 6.9–7.8 ms, simulation 1.00×;
+chairs pass at 120 FPS. M4 Max only, queue envelopes rather than active GPU timings.
+[Protocol, limitations, failed trials and evidence](SDF_BUNNY_PERFORMANCE.md).
+
+Final candidate gate: 177 CPU + 186 real GPU tests, zero failures/skips; both builds and
+typecheck pass. The full 11-seed, 360-frame matched chair/bunny ensemble passes its unchanged
+no-regression rule with every recorded metric series exactly equal. Chairs retain zero
+failing seeds; bunnies retain the existing seed-3 final-energy failure (0.0579925 J > 0.01 J).
+No merge or deployment of the optimization has occurred.
+
+A final same-demo ablation with original serial search and the same two-frame queue fails
+both 30-second screens (57.2/59.7 FPS, 0.945/0.978× simulation). Restoring the cooperative
+candidate passes again at 119.3 FPS, 1.00× simulation, 5.6 ms drain. The additional GPU path
+is retained on this practical evidence; variable native dispatch traces do not independently
+establish a robust isolated-kernel speedup. All raw trials and build hashes are retained.

@@ -1,0 +1,20 @@
+[
+  {
+    "file": "browser-chairs-paced.json.gz",
+    "energy": 0.0000072604042041960724,
+    "belowExistingSettlingLimit": true,
+    "scope": "Post-capture only; not transient penetration certification."
+  },
+  {
+    "file": "browser-paced-1.json.gz",
+    "energy": 0.0005739125492032764,
+    "belowExistingSettlingLimit": true,
+    "scope": "Post-capture only; not transient penetration certification."
+  },
+  {
+    "file": "browser-paced-2.json.gz",
+    "energy": 0.00053203925504453,
+    "belowExistingSettlingLimit": true,
+    "scope": "Post-capture only; not transient penetration certification."
+  }
+]

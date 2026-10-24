@@ -1,0 +1,432 @@
+{
+  "complete": true,
+  "accepted": true,
+  "allRecordedMetricSeriesExactlyEqual": true,
+  "frames": 360,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "limits": {
+    "6": {
+      "peak": 0.04,
+      "final": 0.005,
+      "energy": 0.01
+    },
+    "9": {
+      "peak": 0.03,
+      "final": 0.01,
+      "energy": 0.01
+    }
+  },
+  "decisionRule": "Per scene: failures, count of frame probes >=5mm and median peak must not increase. All seeds retained; no extended failure window.",
+  "summary": [
+    {
+      "id": 6,
+      "byVariant": [
+        {
+          "variant": "baseline",
+          "rows": [
+            {
+              "seed": 0,
+              "peak": 0.002965312683954835,
+              "final": 0,
+              "energy": 4.587917117484243e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 1,
+              "peak": 0.00042157882126048207,
+              "final": 0,
+              "energy": 2.6372693043246128e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 2,
+              "peak": 0.01000838540494442,
+              "final": 0,
+              "energy": 0.00013168138897954394,
+              "probesOver5mm": 2,
+              "fails": false
+            },
+            {
+              "seed": 3,
+              "peak": 0.012519956566393375,
+              "final": 0,
+              "energy": 3.3918891161525477e-05,
+              "probesOver5mm": 3,
+              "fails": false
+            },
+            {
+              "seed": 4,
+              "peak": 0.012906288728117943,
+              "final": 0,
+              "energy": 1.0489545682360415e-05,
+              "probesOver5mm": 5,
+              "fails": false
+            },
+            {
+              "seed": 5,
+              "peak": 0.015901684761047363,
+              "final": 0,
+              "energy": 0.001701490474372236,
+              "probesOver5mm": 12,
+              "fails": false
+            },
+            {
+              "seed": 6,
+              "peak": 0,
+              "final": 0,
+              "energy": 6.7187402845747734e-06,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 7,
+              "peak": 0.012901357375085354,
+              "final": 0,
+              "energy": 9.949679819846373e-06,
+              "probesOver5mm": 4,
+              "fails": false
+            },
+            {
+              "seed": 8,
+              "peak": 0.011965278536081314,
+              "final": 0,
+              "energy": 0.00012276644706363924,
+              "probesOver5mm": 2,
+              "fails": false
+            },
+            {
+              "seed": 9,
+              "peak": 0.01290001068264246,
+              "final": 0.003924330696463585,
+              "energy": 0.00047285046577762207,
+              "probesOver5mm": 9,
+              "fails": false
+            },
+            {
+              "seed": 10,
+              "peak": 0.0007674098014831543,
+              "final": 0,
+              "energy": 5.0764410556579195e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            }
+          ],
+          "failures": 0,
+          "probesOver5mm": 37,
+          "medianPeak": 0.011965278536081314
+        },
+        {
+          "variant": "candidate",
+          "rows": [
+            {
+              "seed": 0,
+              "peak": 0.002965312683954835,
+              "final": 0,
+              "energy": 4.587917117484243e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 1,
+              "peak": 0.00042157882126048207,
+              "final": 0,
+              "energy": 2.6372693043246128e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 2,
+              "peak": 0.01000838540494442,
+              "final": 0,
+              "energy": 0.00013168138897954394,
+              "probesOver5mm": 2,
+              "fails": false
+            },
+            {
+              "seed": 3,
+              "peak": 0.012519956566393375,
+              "final": 0,
+              "energy": 3.3918891161525477e-05,
+              "probesOver5mm": 3,
+              "fails": false
+            },
+            {
+              "seed": 4,
+              "peak": 0.012906288728117943,
+              "final": 0,
+              "energy": 1.0489545682360415e-05,
+              "probesOver5mm": 5,
+              "fails": false
+            },
+            {
+              "seed": 5,
+              "peak": 0.015901684761047363,
+              "final": 0,
+              "energy": 0.001701490474372236,
+              "probesOver5mm": 12,
+              "fails": false
+            },
+            {
+              "seed": 6,
+              "peak": 0,
+              "final": 0,
+              "energy": 6.7187402845747734e-06,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 7,
+              "peak": 0.012901357375085354,
+              "final": 0,
+              "energy": 9.949679819846373e-06,
+              "probesOver5mm": 4,
+              "fails": false
+            },
+            {
+              "seed": 8,
+              "peak": 0.011965278536081314,
+              "final": 0,
+              "energy": 0.00012276644706363924,
+              "probesOver5mm": 2,
+              "fails": false
+            },
+            {
+              "seed": 9,
+              "peak": 0.01290001068264246,
+              "final": 0.003924330696463585,
+              "energy": 0.00047285046577762207,
+              "probesOver5mm": 9,
+              "fails": false
+            },
+            {
+              "seed": 10,
+              "peak": 0.0007674098014831543,
+              "final": 0,
+              "energy": 5.0764410556579195e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            }
+          ],
+          "failures": 0,
+          "probesOver5mm": 37,
+          "medianPeak": 0.011965278536081314
+        }
+      ],
+      "complete": true,
+      "accepted": true
+    },
+    {
+      "id": 9,
+      "byVariant": [
+        {
+          "variant": "baseline",
+          "rows": [
+            {
+              "seed": 0,
+              "peak": 0.0017457568319514394,
+              "final": 0,
+              "energy": 0.0006618579104793604,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 1,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.00020673501316536416,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 2,
+              "peak": 0.0008132436778396368,
+              "final": 0,
+              "energy": 6.773050524928153e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 3,
+              "peak": 0.009100879542529583,
+              "final": 0,
+              "energy": 0.05799250109057309,
+              "probesOver5mm": 4,
+              "fails": true
+            },
+            {
+              "seed": 4,
+              "peak": 0.015351565554738045,
+              "final": 0,
+              "energy": 0.00031717589922009796,
+              "probesOver5mm": 9,
+              "fails": false
+            },
+            {
+              "seed": 5,
+              "peak": 0.012490878812968731,
+              "final": 0,
+              "energy": 0.0004053253997204425,
+              "probesOver5mm": 1,
+              "fails": false
+            },
+            {
+              "seed": 6,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.0006779432377395701,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 7,
+              "peak": 0,
+              "final": 0,
+              "energy": 7.363009164255335e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 8,
+              "peak": 0,
+              "final": 0,
+              "energy": 3.16299922483767e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 9,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.0014817042094006784,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 10,
+              "peak": 0.0016078074695542455,
+              "final": 0.0010884706862270832,
+              "energy": 0.005704433147261461,
+              "probesOver5mm": 0,
+              "fails": false
+            }
+          ],
+          "failures": 1,
+          "probesOver5mm": 14,
+          "medianPeak": 0.0008132436778396368
+        },
+        {
+          "variant": "candidate",
+          "rows": [
+            {
+              "seed": 0,
+              "peak": 0.0017457568319514394,
+              "final": 0,
+              "energy": 0.0006618579104793604,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 1,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.00020673501316536416,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 2,
+              "peak": 0.0008132436778396368,
+              "final": 0,
+              "energy": 6.773050524928153e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 3,
+              "peak": 0.009100879542529583,
+              "final": 0,
+              "energy": 0.05799250109057309,
+              "probesOver5mm": 4,
+              "fails": true
+            },
+            {
+              "seed": 4,
+              "peak": 0.015351565554738045,
+              "final": 0,
+              "energy": 0.00031717589922009796,
+              "probesOver5mm": 9,
+              "fails": false
+            },
+            {
+              "seed": 5,
+              "peak": 0.012490878812968731,
+              "final": 0,
+              "energy": 0.0004053253997204425,
+              "probesOver5mm": 1,
+              "fails": false
+            },
+            {
+              "seed": 6,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.0006779432377395701,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 7,
+              "peak": 0,
+              "final": 0,
+              "energy": 7.363009164255335e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 8,
+              "peak": 0,
+              "final": 0,
+              "energy": 3.16299922483767e-05,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 9,
+              "peak": 0,
+              "final": 0,
+              "energy": 0.0014817042094006784,
+              "probesOver5mm": 0,
+              "fails": false
+            },
+            {
+              "seed": 10,
+              "peak": 0.0016078074695542455,
+              "final": 0.0010884706862270832,
+              "energy": 0.005704433147261461,
+              "probesOver5mm": 0,
+              "fails": false
+            }
+          ],
+          "failures": 1,
+          "probesOver5mm": 14,
+          "medianPeak": 0.0008132436778396368
+        }
+      ],
+      "complete": true,
+      "accepted": true
+    }
+  ]
+}
