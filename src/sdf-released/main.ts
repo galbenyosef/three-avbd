@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { inspectQualificationWorld, qualificationOptions } from '../sdf-showcase/qualification.ts';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BodyMesh, recommendedLimits } from '../lib/index.ts';
 import { browserPerformance } from '../sdf-showcase/performance.ts';
@@ -57,6 +58,7 @@ async function main() {
       maxSubsteps: simulation!.world.maxSubsteps, maxPairs: simulation!.world.sdfCollisionCapacity,
       pixelRatio: renderer.getPixelRatio(), shadows: renderer.shadowMap.enabled }),
     start: () => { if (loading || inFlight || !simulation || comparison.checked) return false; setPaused(false); return true; },
+    inspect: () => inspectQualificationWorld(simulation!.world),
     pause: () => setPaused(true) });
   function metrics(actual: Sample) {
     const reference = prepared!.capture.samples[actual.frame - 1];
@@ -137,9 +139,16 @@ async function main() {
     if (comparison.checked && frame >= 360) { void load(); return; }
     setPaused(!paused);
   });
+  if (qualificationOptions(new URLSearchParams(location.search))) {
+    const query = new URLSearchParams(location.search);
+    const id = query.get('scene'), requestedProfile = query.get('profile');
+    if (id && [...select.options].some(option => option.value === id)) select.value = id;
+    if (requestedProfile === 'reference' || requestedProfile === 'mesh-quality') profile.value = requestedProfile;
+  }
   await load();
   renderer.setAnimationLoop((time: number) => {
     if (document.hidden) return;
+    perf.beginFrame(time);
     const dt = Math.max(0, (time - last) / 1000); last = time; controls.update();
     let simulatedSeconds = 0;
     if (!paused && !loading && !inFlight && simulation && prepared) {
@@ -159,8 +168,9 @@ async function main() {
         } catch (error) { perf.cancel('Capture stopped by a simulation error.'); setPaused(true); status.textContent = String(error); console.error(error); }
       }
     }
+    perf.afterPhysics(simulation ? Math.round(simulatedSeconds / simulation.world.dt) : 0);
     if (dirty && !loading) {
-      renderer.render(scene, camera); dirty = false;
+      renderer.render(scene, camera); perf.afterRender(); dirty = false;
       if (!paused && !comparison.checked) perf.frame(time, simulatedSeconds); else perf.idle();
     }
   });

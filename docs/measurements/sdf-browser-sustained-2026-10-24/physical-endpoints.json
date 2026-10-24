@@ -1,0 +1,32 @@
+[
+  {
+    "capture": "bunnies27-v2-1.json",
+    "kineticEnergy": 0.004215691663548821,
+    "maxSpeed": 0.11075644371289702,
+    "scope": "Postcapture only, original mass/principal inertia; not a transient penetration or 360-frame ensemble check."
+  },
+  {
+    "capture": "bunnies27-v2-2.json",
+    "kineticEnergy": 0.0015324291352148303,
+    "maxSpeed": 0.0973131203200407,
+    "scope": "Postcapture only, original mass/principal inertia; not a transient penetration or 360-frame ensemble check."
+  },
+  {
+    "capture": "bunnies27-v2-reference.json",
+    "kineticEnergy": 0.0000476670272653385,
+    "maxSpeed": 0.012678463311395181,
+    "scope": "Postcapture only, original mass/principal inertia; not a transient penetration or 360-frame ensemble check."
+  },
+  {
+    "capture": "chairs27-v2-1.json",
+    "kineticEnergy": 0.000006487613300864114,
+    "maxSpeed": 0.017583408812271193,
+    "scope": "Postcapture only, original mass/principal inertia; not a transient penetration or 360-frame ensemble check."
+  },
+  {
+    "capture": "chairs27-v2-2-orbit.json",
+    "kineticEnergy": 0.000006487613300864114,
+    "maxSpeed": 0.017583408812271193,
+    "scope": "Postcapture only, original mass/principal inertia; not a transient penetration or 360-frame ensemble check."
+  }
+]

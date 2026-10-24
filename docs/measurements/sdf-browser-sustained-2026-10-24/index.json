@@ -1,0 +1,717 @@
+{
+  "device": "Apple M4 Max, 128 GiB unified memory",
+  "scope": "30-second render-submission screens, not compositor presentation or hardware portability certification",
+  "runs": [
+    {
+      "file": "bunnies27-v2-1.json.gz",
+      "rawSha256": "e4fb01e86c1ab858cff44e54114dc834ba52712281ce612fd651e74aaf21338e",
+      "build": "v2",
+      "fps": 87.8084542712898,
+      "p95Ms": 16.899999999997817,
+      "worstMs": 25.400000000001455,
+      "over25Ms": 11,
+      "simulationRate": 0.9916635227102104,
+      "drainMs": 48,
+      "physics": {
+        "count": 189,
+        "p50": 4.25984,
+        "p95": 5.636096,
+        "worst": 8.257536
+      },
+      "total": {
+        "count": 189,
+        "p50": 4.390912,
+        "p95": 5.832704,
+        "worst": 8.781824
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": false,
+      "acceptedScreen": false,
+      "context": {
+        "demo": "released",
+        "scene": "Bunny Pile",
+        "sceneId": 9,
+        "profile": "mesh-quality",
+        "comparison": false,
+        "frameStart": 0,
+        "dynamicBodies": 27,
+        "iterations": 20,
+        "fixedDt": 0.004166666875,
+        "maxSubsteps": 4,
+        "maxPairs": 378,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "bunnies27-v2-2.json.gz",
+      "rawSha256": "67daf37ae8c797c2d32936859b35fec57dd3791dd7cf8f859406a26834af78d6",
+      "build": "v2",
+      "fps": 68.04852039456145,
+      "p95Ms": 17.60000000000582,
+      "worstMs": 26.69999999999709,
+      "over25Ms": 15,
+      "simulationRate": 0.9844597488586365,
+      "drainMs": 62.5,
+      "physics": {
+        "count": 187,
+        "p50": 6.422528,
+        "p95": 7.405568,
+        "worst": 9.437184
+      },
+      "total": {
+        "count": 187,
+        "p50": 6.619136,
+        "p95": 7.667712,
+        "worst": 9.437184
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": false,
+      "acceptedScreen": false,
+      "context": {
+        "demo": "released",
+        "scene": "Bunny Pile",
+        "sceneId": 9,
+        "profile": "mesh-quality",
+        "comparison": false,
+        "frameStart": 0,
+        "dynamicBodies": 27,
+        "iterations": 20,
+        "fixedDt": 0.004166666875,
+        "maxSubsteps": 4,
+        "maxPairs": 378,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "bunnies27-v2-reference.json.gz",
+      "rawSha256": "e673fc08dcfb046894c18f80c6b86c41fe4d5b263ddc25d178a3ad14ef4baf21",
+      "build": "v2",
+      "fps": 119.90135963743002,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 16.700000000000728,
+      "over25Ms": 0,
+      "simulationRate": 1.0000111581494269,
+      "drainMs": 6.900000095367432,
+      "physics": {
+        "count": 193,
+        "p50": 3.211264,
+        "p95": 4.58752,
+        "worst": 5.505024
+      },
+      "total": {
+        "count": 193,
+        "p50": 3.342336,
+        "p95": 4.653056,
+        "worst": 5.636096
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "released",
+        "scene": "Bunny Pile",
+        "sceneId": 9,
+        "profile": "reference",
+        "comparison": false,
+        "frameStart": 0,
+        "dynamicBodies": 27,
+        "iterations": 20,
+        "fixedDt": 0.004166666875,
+        "maxSubsteps": 4,
+        "maxPairs": 378,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "chairs27-v2-1.json.gz",
+      "rawSha256": "7a00d76bf05e471f30386d43cc854e71b5ac2b4d03ceafbf36f88571ca7b5b29",
+      "build": "v2",
+      "fps": 120.00093308140134,
+      "p95Ms": 10.299999999999272,
+      "worstMs": 10.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 1.0000078256786664,
+      "drainMs": 8.800000190734863,
+      "physics": {
+        "count": 192,
+        "p50": 3.080192,
+        "p95": 3.473408,
+        "worst": 4.849664
+      },
+      "total": {
+        "count": 192,
+        "p50": 3.211264,
+        "p95": 3.60448,
+        "worst": 4.849664
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "released",
+        "scene": "Pile of Chairs",
+        "sceneId": 6,
+        "profile": "mesh-quality",
+        "comparison": false,
+        "frameStart": 0,
+        "dynamicBodies": 27,
+        "iterations": 20,
+        "fixedDt": 0.004166666875,
+        "maxSubsteps": 4,
+        "maxPairs": 378,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "chairs27-v2-2-orbit.json.gz",
+      "rawSha256": "1706d1df3e72f430fdd222ae933f1ddd87e31f9ec399f1aa375f7c8dc2fbdb03",
+      "build": "v2",
+      "fps": 120.00093308140133,
+      "p95Ms": 10.200000000011642,
+      "worstMs": 10.400000000008731,
+      "over25Ms": 0,
+      "simulationRate": 1.0000078256786662,
+      "drainMs": 7.599999904632568,
+      "physics": {
+        "count": 192,
+        "p50": 3.145728,
+        "p95": 3.407872,
+        "worst": 4.849664
+      },
+      "total": {
+        "count": 192,
+        "p50": 3.2768,
+        "p95": 3.538944,
+        "worst": 7.471104
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "released",
+        "scene": "Pile of Chairs",
+        "sceneId": 6,
+        "profile": "mesh-quality",
+        "comparison": false,
+        "frameStart": 0,
+        "dynamicBodies": 27,
+        "iterations": 20,
+        "fixedDt": 0.004166666875,
+        "maxSubsteps": 4,
+        "maxPairs": 378,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "gears12-v2-1.json.gz",
+      "rawSha256": "9045b34f88aa61c6915f14728fc6f342edc8a7221637b8b747b781b30839e632",
+      "build": "v2",
+      "fps": 119.99933352216871,
+      "p95Ms": 10.200000000000728,
+      "worstMs": 10.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9997167469216914,
+      "drainMs": 0.5,
+      "physics": {
+        "count": 100,
+        "p50": 1.441792,
+        "p95": 2.686976,
+        "worst": 2.883584
+      },
+      "total": {
+        "count": 100,
+        "p50": 1.703936,
+        "p95": 3.080192,
+        "worst": 3.473408
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "gears",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 0,
+          "gears": 12
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "gears128-v2-1.json.gz",
+      "rawSha256": "a489266a3780caf0f822fe377292adfca2c3eafabb8e989199cb17aa2bf6b264",
+      "build": "v2",
+      "fps": 120.0005331875954,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.5,
+      "over25Ms": 0,
+      "simulationRate": 0.9997267413573482,
+      "drainMs": 0.7999999523162842,
+      "physics": {
+        "count": 89,
+        "p50": 0.851968,
+        "p95": 2.555904,
+        "worst": 3.145728
+      },
+      "total": {
+        "count": 89,
+        "p50": 1.114112,
+        "p95": 2.818048,
+        "worst": 3.60448
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "gears",
+        "dynamicBodies": 128,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 0,
+          "gears": 128
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 4096,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "gears36-v2-1.json.gz",
+      "rawSha256": "fd677193d0374a8a9feba58a1dce006acb75b055772f386e01ef1d6eabfb0946",
+      "build": "v2",
+      "fps": 119.99840002133304,
+      "p95Ms": 10.299999999999272,
+      "worstMs": 10.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9999866668444279,
+      "drainMs": 7.5,
+      "physics": {
+        "count": 89,
+        "p50": 1.245184,
+        "p95": 3.080192,
+        "worst": 6.946816
+      },
+      "total": {
+        "count": 89,
+        "p50": 1.507328,
+        "p95": 3.407872,
+        "worst": 7.012352
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "gears",
+        "dynamicBodies": 36,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 0,
+          "gears": 36
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "gears512-v2-1.json.gz",
+      "rawSha256": "73e9ac80d21618ca62f1145c35b7a57b2c0ab399c5a57b20da98c86e4c0da4c1",
+      "build": "v2",
+      "fps": 120,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9999999999999859,
+      "drainMs": 8.899999856948853,
+      "physics": {
+        "count": 101,
+        "p50": 1.245184,
+        "p95": 3.080192,
+        "worst": 3.60448
+      },
+      "total": {
+        "count": 101,
+        "p50": 1.441792,
+        "p95": 3.407872,
+        "worst": 3.866624
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "gears",
+        "dynamicBodies": 512,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 0,
+          "gears": 512
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 16384,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "rings12-1.json.gz",
+      "rawSha256": "fd43f0148ab744e8b119ae253e98391ae4ffb6b857ddf54afb80d63cf9281032",
+      "build": "v1-invalid-empty-timestamps",
+      "fps": 120.00013329645465,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.5,
+      "over25Ms": 0,
+      "simulationRate": 0.9997234098565922,
+      "drainMs": 0.5,
+      "physics": {
+        "count": 93,
+        "p50": 0,
+        "p95": 0,
+        "worst": 0
+      },
+      "total": {
+        "count": 93,
+        "p50": 0,
+        "p95": 0,
+        "worst": 0
+      },
+      "validWorkingTimestamps": false,
+      "pacingPassed": true,
+      "acceptedScreen": false,
+      "context": {
+        "demo": "interactive",
+        "preset": "rings",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 12,
+          "warps": 0,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "rings12-v2-1.json.gz",
+      "rawSha256": "bd8facd4b6fa9e315546999807ff8f05e41df4d14044adf68f0ccc7a67b6ab41",
+      "build": "v2",
+      "fps": 119.99973340797911,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9997200783780401,
+      "drainMs": 0.7999999523162842,
+      "physics": {
+        "count": 101,
+        "p50": 1.048576,
+        "p95": 2.62144,
+        "worst": 2.883584
+      },
+      "total": {
+        "count": 101,
+        "p50": 1.31072,
+        "p95": 3.014656,
+        "worst": 3.735552
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "rings",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 12,
+          "warps": 0,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "rings12-v2-2.json.gz",
+      "rawSha256": "29c19bef3685e638d467d760e8fe289782e4ff1b6700ed9152b68085dcb536d0",
+      "build": "v2",
+      "fps": 120.00053318759541,
+      "p95Ms": 9.299999999988358,
+      "worstMs": 9.400000000008731,
+      "over25Ms": 0,
+      "simulationRate": 1.0002821451025468,
+      "drainMs": 5.799999952316284,
+      "physics": {
+        "count": 96,
+        "p50": 0.98304,
+        "p95": 1.048576,
+        "worst": 2.424832
+      },
+      "total": {
+        "count": 96,
+        "p50": 1.114112,
+        "p95": 1.245184,
+        "worst": 2.62144
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "rings",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 12,
+          "warps": 0,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "rings12-v2-no-timestamps-drag.json.gz",
+      "rawSha256": "fb1f33b9be2a9b92e236ca0c3fd13bc05c08782e6e48ddcaf8b06371b48dda4f",
+      "build": "v2",
+      "fps": 119.99999999999999,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.5,
+      "over25Ms": 0,
+      "simulationRate": 0.9999999999999858,
+      "drainMs": 5.299999952316284,
+      "physics": null,
+      "total": null,
+      "validWorkingTimestamps": false,
+      "pacingPassed": true,
+      "acceptedScreen": false,
+      "context": {
+        "demo": "interactive",
+        "preset": "rings",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 12,
+          "warps": 0,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "rings12-v2-overlay.json.gz",
+      "rawSha256": "59cee8b43d56e21cd1c556680c78acb2d1a259a3bcc1d6ca0b773f84afe91944",
+      "build": "v2",
+      "fps": 119.09722106484183,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 17.599999999998545,
+      "over25Ms": 0,
+      "simulationRate": 0.992199070910554,
+      "drainMs": 0.40000009536743164,
+      "physics": {
+        "count": 102,
+        "p50": 0.917504,
+        "p95": 2.94912,
+        "worst": 4.194304
+      },
+      "total": {
+        "count": 102,
+        "p50": 1.441792,
+        "p95": 5.373952,
+        "worst": 6.88128
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "rings",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 12,
+          "warps": 0,
+          "gears": 0
+        },
+        "contacts": true,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "warps12-v2-1.json.gz",
+      "rawSha256": "809ac6a6f8718cb119e68ab2be4e225948a9a109a282be5525aa7d13c130bff4",
+      "build": "v2",
+      "fps": 119.99680008533106,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 10.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9999733340444115,
+      "drainMs": 4.299999952316284,
+      "physics": {
+        "count": 96,
+        "p50": 1.769472,
+        "p95": 2.818048,
+        "worst": 3.342336
+      },
+      "total": {
+        "count": 96,
+        "p50": 2.031616,
+        "p95": 3.145728,
+        "worst": 3.60448
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "warps",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 12,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "gears36-v3-2.json.gz",
+      "rawSha256": "f1305979474e9ed036d911164cd4893d748fea28c9fdf9e015fc681227e8d261",
+      "build": "v3",
+      "fps": 120.00373241267152,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.999753394162759,
+      "drainMs": 3.5,
+      "physics": {
+        "count": 103,
+        "p50": 1.179648,
+        "p95": 2.883584,
+        "worst": 4.58752
+      },
+      "total": {
+        "count": 103,
+        "p50": 1.376256,
+        "p95": 3.145728,
+        "worst": 4.58752
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "gears",
+        "dynamicBodies": 36,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 0,
+          "gears": 36
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    },
+    {
+      "file": "warps12-v3-2.json.gz",
+      "rawSha256": "71d3b6ced48ddb57dc7ba01115ddfa60339fb075f84d04b0fff3fb543a46a809",
+      "build": "v3",
+      "fps": 120.00053318759541,
+      "p95Ms": 9.299999999999272,
+      "worstMs": 9.400000000001455,
+      "over25Ms": 0,
+      "simulationRate": 0.9997267413573484,
+      "drainMs": 0.40000009536743164,
+      "physics": {
+        "count": 99,
+        "p50": 1.048576,
+        "p95": 2.686976,
+        "worst": 3.014656
+      },
+      "total": {
+        "count": 99,
+        "p50": 1.245184,
+        "p95": 3.014656,
+        "worst": 3.407872
+      },
+      "validWorkingTimestamps": true,
+      "pacingPassed": true,
+      "acceptedScreen": true,
+      "context": {
+        "demo": "interactive",
+        "preset": "warps",
+        "dynamicBodies": 12,
+        "bodyKinds": {
+          "rings": 0,
+          "warps": 12,
+          "gears": 0
+        },
+        "contacts": false,
+        "iterations": 12,
+        "fixedDt": 0.016666666666666666,
+        "maxSubsteps": 2,
+        "maxPairs": 1152,
+        "pixelRatio": 1.5,
+        "shadows": true
+      }
+    }
+  ]
+}
